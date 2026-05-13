@@ -1,8 +1,7 @@
 package http
 
 import (
-	"encoding/json"
-	"net/http"
+	stdhttp "net/http"
 )
 
 type healthResponse struct {
@@ -10,15 +9,14 @@ type healthResponse struct {
 	Service string `json:"service"`
 }
 
-func healthHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		w.Header().Set("Allow", http.MethodGet)
-		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+func healthHandler(w stdhttp.ResponseWriter, r *stdhttp.Request) {
+	if r.Method != stdhttp.MethodGet {
+		w.Header().Set("Allow", stdhttp.MethodGet)
+		WriteError(w, r, NewAppError(stdhttp.StatusMethodNotAllowed, ErrorCodeMethodNotAllowed, "请求方法不允许"))
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(healthResponse{
+	WriteJSON(w, stdhttp.StatusOK, healthResponse{
 		Status:  "ok",
 		Service: "weopen-api",
 	})
