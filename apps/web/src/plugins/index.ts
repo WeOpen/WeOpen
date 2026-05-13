@@ -63,7 +63,7 @@ export const builtinPluginManifests: PluginManifest[] = [
       {
         id: "storage-objects",
         title: "R2 文件",
-        description: "对象存储插件占位",
+        description: "对象存储索引和直传",
         href: "/storage",
         status: "neutral"
       }

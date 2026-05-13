@@ -2,15 +2,17 @@ import { PluginRegistry } from "@weopen/plugin-sdk";
 import type { PluginManifest } from "@weopen/plugin-sdk";
 import { BlogPluginPage } from "./blog";
 import { builtinPluginManifests } from "./index";
+import { StorageR2PluginPage } from "./storage-r2";
 
 export type WebPluginComponent = (props: { manifest: PluginManifest }) => React.ReactNode;
 
 export const webPluginRegistry = new PluginRegistry<WebPluginComponent>();
 
 for (const manifest of builtinPluginManifests) {
+  const component = manifest.id === "blog" ? BlogPluginPage : manifest.id === "storage-r2" ? StorageR2PluginPage : PlaceholderPluginPage;
   webPluginRegistry.register({
     manifest,
-    component: manifest.id === "blog" ? BlogPluginPage : PlaceholderPluginPage
+    component
   });
 }
 
