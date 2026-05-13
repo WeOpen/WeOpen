@@ -4,25 +4,25 @@ import (
 	"errors"
 	"log"
 	"net/http"
-	"os"
 	"time"
 
+	"github.com/WeOpen/WeOpen/services/api/internal/config"
 	apihttp "github.com/WeOpen/WeOpen/services/api/internal/http"
 )
 
 func main() {
-	addr := os.Getenv("API_ADDR")
-	if addr == "" {
-		addr = ":8080"
+	cfg, err := config.Load()
+	if err != nil {
+		log.Fatalf("invalid configuration: %v", err)
 	}
 
 	server := &http.Server{
-		Addr:              addr,
+		Addr:              cfg.Addr,
 		Handler:           apihttp.NewServer(),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 
-	log.Printf("weopen-api listening on %s", addr)
+	log.Printf("weopen-api listening on %s", cfg.Addr)
 	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Fatalf("api server failed: %v", err)
 	}
