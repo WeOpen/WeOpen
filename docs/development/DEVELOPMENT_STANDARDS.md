@@ -166,9 +166,197 @@ Not-tested: Third-party plugin packages
 - 表格、表单、危险操作、空状态、错误状态必须一致。
 - 危险操作必须有确认文案，不允许只有图标按钮。
 
-## 8. Go API 规范
+## 8. 注释规范
 
-### 8.1 结构
+### 8.1 总原则
+
+注释解释“为什么”和“边界”，不重复代码已经清楚表达的“做什么”。
+
+必须写注释的情况：
+
+- 文件承担跨模块约定、平台边界、插件协议或安全边界。
+- 包、模块、类、接口、导出函数、导出类型会被其他目录或包使用。
+- 方法包含非显而易见的业务规则、外部平台限制、兼容性处理或安全原因。
+- 错误处理、重试、缓存、加密、权限、迁移、数据修复逻辑可能被未来维护者误改。
+- TODO、FIXME、临时 workaround 需要明确后续处理条件。
+
+不应写注释的情况：
+
+- 重复代码字面含义，例如“设置变量”“返回结果”“循环列表”。
+- 用注释解释糟糕命名；应先改命名。
+- 注释与代码不同步；必须同步修改或删除。
+- 大段历史说明；历史原因应放提交信息、设计文档或 ADR。
+- 注释掉的旧代码；应删除，需要时从 Git 历史找回。
+
+### 8.2 文件注释
+
+普通业务文件不强制文件头。以下文件必须在顶部说明职责：
+
+- 平台核心协议文件，例如插件 manifest、权限、API error contract。
+- provider 适配器入口，例如 Cloudflare、R2、Vercel。
+- 数据迁移或一次性脚本。
+- 安全敏感模块，例如 secret 加密、session、权限校验。
+- 非标准构建配置、兼容性 shim、Wails/Next/Vercel 特殊适配。
+
+文件注释模板：
+
+```ts
+// Defines the frontend plugin contract shared by Web and Desktop surfaces.
+// Keep this file framework-neutral so plugins can be reused outside Next.js routes.
+```
+
+```go
+// Package secrets owns encrypted storage and redacted presentation of external
+// provider credentials. Callers must not receive decrypted secret values.
+package secrets
+```
+
+### 8.3 方法和函数注释
+
+公共 API、导出函数、复杂业务函数必须注释。
+
+注释必须包含：
+
+- 调用目的。
+- 关键前置条件。
+- 重要副作用。
+- 错误语义。
+- 安全或外部平台约束。
+
+Go 导出符号注释必须以符号名开头，符合 Go doc 风格：
+
+```go
+// NewRegistry creates a plugin registry that rejects duplicate plugin IDs.
+// The returned registry is safe to build during application startup only.
+func NewRegistry() *Registry {
+    return &Registry{}
+}
+```
+
+TypeScript 公共函数优先使用 JSDoc：
+
+```ts
+/**
+ * Builds the visible navigation tree from enabled plugin manifests.
+ *
+ * Disabled plugins are intentionally excluded here because API access is
+ * blocked server-side and the UI should not advertise unavailable routes.
+ */
+export function buildPluginNavigation(manifests: PluginManifest[]): NavItem[] {
+  return []
+}
+```
+
+内部小函数如果命名和测试已经足够清楚，可以不写注释。
+
+### 8.4 类型、接口和常量注释
+
+以下类型必须注释：
+
+- 跨包导出的 TypeScript 类型。
+- Go 导出 struct/interface。
+- API DTO。
+- 插件 manifest、permission、setting schema。
+- 错误码、权限码、状态机状态。
+
+模板：
+
+```ts
+/**
+ * Permission declares a capability a plugin may request.
+ * Server-side checks remain authoritative; this type only describes intent.
+ */
+export type Permission = "blog:read" | "blog:write" | "storage:read";
+```
+
+```go
+// HealthInfo is returned to the desktop frontend to confirm the local Wails
+// service binding is alive.
+type HealthInfo struct {
+    Status  string `json:"status"`
+    Service string `json:"service"`
+    Version string `json:"version"`
+}
+```
+
+### 8.5 React 组件和 Hook 注释
+
+普通展示组件不强制注释。以下组件和 Hook 必须注释：
+
+- 跨插件复用组件。
+- 处理权限、secret、上传、外部 API 同步的组件。
+- 自定义 Hook。
+- 有非显而易见渲染分支或副作用边界的组件。
+
+模板：
+
+```tsx
+/**
+ * StorageObjectTable renders indexed R2 objects only.
+ * It never lists R2 directly, so stale rows must be refreshed through sync.
+ */
+export function StorageObjectTable() {
+  return null
+}
+```
+
+### 8.6 API 和错误注释
+
+API handler 或 service 注释必须写清：
+
+- 是否需要认证。
+- 需要哪些插件权限。
+- 是否写审计日志。
+- 是否调用外部服务。
+- 是否幂等。
+
+示例：
+
+```go
+// createUploadURL creates a short-lived presigned R2 upload URL.
+// It requires storage:write and records no audit log until the object is completed.
+func (h *Handler) createUploadURL(w http.ResponseWriter, r *http.Request) {
+}
+```
+
+错误码必须在定义处说明用户可见含义和典型触发条件。
+
+### 8.7 TODO / FIXME / Deprecated
+
+TODO 必须包含负责人或触发条件，不能留下空泛待办。
+
+推荐格式：
+
+```ts
+// TODO(m1-auth): Replace local placeholder with session-aware user data.
+```
+
+```go
+// FIXME(r2-presign): Reject content types after the upload policy is finalized.
+```
+
+弃用注释必须说明替代方案：
+
+```ts
+/**
+ * @deprecated Use createPluginRoute() so permissions are registered with the route.
+ */
+export function createLegacyRoute() {}
+```
+
+### 8.8 注释审查清单
+
+每次评审注释时检查：
+
+- 注释是否解释了原因、边界或风险。
+- 注释是否仍与代码一致。
+- 是否能通过更好的命名、类型或测试删除注释。
+- 安全、权限、外部服务和迁移逻辑是否有足够背景。
+- TODO 是否有明确归属、阶段或触发条件。
+
+## 9. Go API 规范
+
+### 9.1 结构
 
 Go API 按以下层次组织：
 
@@ -184,7 +372,7 @@ handler -> validation -> service -> repository/provider
 - provider 只封装外部服务。
 - 不把 Cloudflare、R2、Vercel SDK 调用散落在业务代码里。
 
-### 8.2 Go 风格
+### 9.2 Go 风格
 
 - Go 代码必须使用 `gofmt`。
 - 错误必须带上下文，但不得泄露密钥。
@@ -192,7 +380,7 @@ handler -> validation -> service -> repository/provider
 - handler 必须返回统一 JSON 错误结构。
 - serverless 路径不得依赖内存状态、常驻 goroutine 或本地磁盘持久化。
 
-### 8.3 测试
+### 9.3 测试
 
 以下逻辑必须测试：
 
@@ -212,9 +400,9 @@ go test ./apps/desktop/...
 
 如后续增加 Go 模块，必须同步更新根脚本，不能要求开发者记忆特殊路径。
 
-## 9. API 规范
+## 10. API 规范
 
-### 9.1 REST 与 OpenAPI
+### 10.1 REST 与 OpenAPI
 
 - HTTP API 必须维护 OpenAPI 描述。
 - 前端 SDK 从 OpenAPI 生成或与 OpenAPI 保持同步。
@@ -222,7 +410,7 @@ go test ./apps/desktop/...
 - 插件 API 统一挂在 `/api/plugins/{pluginId}/*`。
 - 破坏性 API 变化必须更新 OpenAPI、SDK、调用方和迁移说明。
 
-### 9.2 响应格式
+### 10.2 响应格式
 
 成功响应保持稳定 JSON。
 
@@ -244,16 +432,16 @@ go test ./apps/desktop/...
 - 错误码稳定，可用于 UI 分支和测试断言。
 - 写操作必须记录审计日志。
 
-### 9.3 幂等与分页
+### 10.3 幂等与分页
 
 - 列表接口必须预留分页。
 - 同步类接口必须可重复调用。
 - 删除、替换、批量操作必须有确认和审计。
 - 外部服务写操作必须先显示 diff，再执行。
 
-## 10. 插件开发规范
+## 11. 插件开发规范
 
-### 10.1 插件边界
+### 11.1 插件边界
 
 v1 插件是编译期内置插件，不做远程动态安装。
 
@@ -269,7 +457,7 @@ v1 插件是编译期内置插件，不做远程动态安装。
 - API namespace
 - 数据迁移
 
-### 10.2 插件目录
+### 11.2 插件目录
 
 后端插件：
 
@@ -291,7 +479,7 @@ apps/web/src/plugins/<plugin-id>/
   components/
 ```
 
-### 10.3 插件规则
+### 11.3 插件规则
 
 - 插件不得直接读取其他插件数据库表，必须通过平台服务或明确接口。
 - 插件不得直接读取 secret 原文，必须通过受控 provider。
@@ -299,7 +487,7 @@ apps/web/src/plugins/<plugin-id>/
 - 插件配置必须可导出、可迁移、可审计。
 - 插件权限新增必须更新本文档或插件开发说明。
 
-## 11. 数据库与迁移规范
+## 12. 数据库与迁移规范
 
 - 所有 schema 变化必须写迁移。
 - 迁移文件必须成对提供 up/down，除非明确不可逆并写明原因。
@@ -308,9 +496,9 @@ apps/web/src/plugins/<plugin-id>/
 - JSON 字段只存扩展配置；高频查询字段必须拆列。
 - 删除数据优先软删除或审计，除非产品明确要求硬删除。
 
-## 12. 安全规范
+## 13. 安全规范
 
-### 12.1 密钥
+### 13.1 密钥
 
 - 密钥不得提交到仓库。
 - `.env.local` 和 `.env.*.local` 必须忽略。
@@ -319,30 +507,30 @@ apps/web/src/plugins/<plugin-id>/
 - 前端只展示脱敏信息，例如 provider、name、last4。
 - 禁止把密钥放入 `NEXT_PUBLIC_*`。
 
-### 12.2 认证与权限
+### 13.2 认证与权限
 
 - 默认拒绝，显式允许。
 - 所有 `/api/*` 非公开接口必须鉴权。
 - 插件权限必须在服务端校验，不能只靠前端隐藏。
 - 高风险操作必须二次确认。
 
-### 12.3 输入输出
+### 13.3 输入输出
 
 - 所有 API 输入必须校验。
 - Markdown 渲染必须防 XSS。
 - URL、文件类型、文件大小必须校验。
 - 日志中不得包含 token、cookie、authorization header、R2 secret、数据库 URL。
 
-### 12.4 外部服务
+### 13.4 外部服务
 
 - Cloudflare、R2、Vercel token 必须最小权限。
 - 域名/DNS v1 默认只读。
 - 外部 API 失败必须返回可理解的错误码。
 - 重试必须有限制，不能无限循环。
 
-## 13. 测试规范
+## 14. 测试规范
 
-### 13.1 测试金字塔
+### 14.1 测试金字塔
 
 优先级：
 
@@ -352,7 +540,7 @@ apps/web/src/plugins/<plugin-id>/
 4. 组件和交互测试。
 5. 关键路径 E2E smoke test。
 
-### 13.2 必测场景
+### 14.2 必测场景
 
 - 登录、会话过期、退出。
 - 插件注册、启用、禁用。
@@ -362,7 +550,7 @@ apps/web/src/plugins/<plugin-id>/
 - 域名同步失败、token 权限不足。
 - 开发者工具的输入错误。
 
-### 13.3 最低验证命令
+### 14.3 最低验证命令
 
 普通代码变更至少运行相关子集：
 
@@ -399,7 +587,7 @@ go test ./apps/desktop/...
 
 如果某项无法运行，最终报告必须说明原因、影响和替代验证。
 
-## 14. 配置与部署规范
+## 15. 配置与部署规范
 
 - 配置来自环境变量，不写死到代码。
 - `.env.example` 必须随新增配置同步更新。
@@ -409,7 +597,7 @@ go test ./apps/desktop/...
 - 日志输出到 stdout/stderr，由部署平台采集。
 - Serverless API 不做长任务；长任务必须拆分或交给外部调度。
 
-## 15. 文档规范
+## 16. 文档规范
 
 以下变更必须更新文档：
 
@@ -430,7 +618,7 @@ go test ./apps/desktop/...
 - 部署文档：`docs/deployment/`
 - 安全文档：`docs/security/`
 
-## 16. 性能与可维护性
+## 17. 性能与可维护性
 
 - 默认先做清晰正确，再做性能优化。
 - 性能优化必须有指标或可复现实验。
@@ -440,7 +628,7 @@ go test ./apps/desktop/...
 - Go provider 调用必须设置超时。
 - R2 上传优先直传，不通过 API 转发大文件。
 
-## 17. AI / Agent 开发规范
+## 18. AI / Agent 开发规范
 
 使用 AI 或代理开发时必须：
 
@@ -454,12 +642,13 @@ go test ./apps/desktop/...
 
 AI 生成代码必须接受和人工代码一样的测试、审查和提交要求。
 
-## 18. 每次交付清单
+## 19. 每次交付清单
 
 提交或交付前检查：
 
 - [ ] 目标和非目标清楚。
 - [ ] 相关代码、测试、文档已同步。
+- [ ] 必要的文件、类型、方法、组件和安全边界注释已补齐。
 - [ ] 没有密钥、缓存、机器本地文件。
 - [ ] 错误处理和空状态可理解。
 - [ ] 高风险操作有确认和审计。
@@ -467,7 +656,7 @@ AI 生成代码必须接受和人工代码一样的测试、审查和提交要�
 - [ ] 最终说明包含变更、验证、风险。
 - [ ] 提交信息符合 Lore Commit Protocol。
 
-## 19. 当前项目默认命令
+## 20. 当前项目默认命令
 
 ```powershell
 pnpm install
@@ -482,7 +671,7 @@ pnpm test:go
 go test ./apps/desktop/...
 ```
 
-## 20. 参考链接
+## 21. 参考链接
 
 - Google Engineering Practices - Code Review: https://google.github.io/eng-practices/review/
 - Conventional Commits 1.0.0: https://www.conventionalcommits.org/en/v1.0.0/
@@ -497,4 +686,3 @@ go test ./apps/desktop/...
 - React Rules: https://react.dev/reference/rules
 - Next.js Production Checklist: https://nextjs.org/docs/app/guides/production-checklist
 - Vercel Environment Variables: https://vercel.com/docs/projects/environment-variables
-
