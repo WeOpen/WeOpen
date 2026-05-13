@@ -2,6 +2,7 @@ package http
 
 import "net/http"
 
+import "github.com/WeOpen/WeOpen/internal/core/plugin"
 import "github.com/WeOpen/WeOpen/services/api/internal/auth"
 import "github.com/WeOpen/WeOpen/services/api/internal/audit"
 import "github.com/WeOpen/WeOpen/services/api/internal/secrets"
@@ -11,6 +12,7 @@ type ServerOptions struct {
 	Auth      *auth.Service
 	Secrets   *secrets.Service
 	Audit     *audit.Service
+	Plugins   *plugin.Registry
 }
 
 func NewServer(options ...ServerOptions) http.Handler {
@@ -34,6 +36,11 @@ func NewServer(options ...ServerOptions) http.Handler {
 		}
 		mux.HandleFunc("/api/settings", settingsHandlers.settings)
 		mux.HandleFunc("/api/audit-logs", settingsHandlers.auditLogs)
+	}
+	if opts.Auth != nil && opts.Plugins != nil {
+		pluginHandlers := pluginHandlers{auth: opts.Auth, registry: opts.Plugins}
+		mux.HandleFunc("/api/plugins", pluginHandlers.plugins)
+		mux.HandleFunc("/api/plugins/", pluginHandlers.pluginByID)
 	}
 	return Chain(mux, WithRequestID, WithRecovery, WithCORS(opts.WebOrigin))
 }

@@ -69,3 +69,22 @@ type Plugin interface {
 	Migrate(ctx context.Context, db DB) error
 	Dashboard(ctx context.Context, userID string) ([]Widget, error)
 }
+
+type StaticPlugin struct {
+	manifest Manifest
+	widgets  []Widget
+}
+
+func NewStaticPlugin(manifest Manifest, widgets ...Widget) StaticPlugin {
+	return StaticPlugin{manifest: manifest, widgets: widgets}
+}
+
+func (p StaticPlugin) ID() string                          { return p.manifest.ID }
+func (p StaticPlugin) Name() string                        { return p.manifest.Name }
+func (p StaticPlugin) Version() string                     { return p.manifest.Version }
+func (p StaticPlugin) Manifest() Manifest                  { return p.manifest }
+func (p StaticPlugin) RegisterRoutes(Router, Dependencies) {}
+func (p StaticPlugin) Migrate(context.Context, DB) error   { return nil }
+func (p StaticPlugin) Dashboard(context.Context, string) ([]Widget, error) {
+	return p.widgets, nil
+}
