@@ -6,10 +6,11 @@ import type { StorageVisibility } from "@/lib/storage-r2";
 
 type UploadPanelProps = {
   isUploading: boolean;
+  keyPrefix?: string;
   onUpload: (file: File, visibility: StorageVisibility) => Promise<void>;
 };
 
-export function UploadPanel({ isUploading, onUpload }: UploadPanelProps) {
+export function UploadPanel({ isUploading, keyPrefix = "uploads", onUpload }: UploadPanelProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [visibility, setVisibility] = useState<StorageVisibility>("private");
   const [isDragging, setIsDragging] = useState(false);
@@ -42,7 +43,7 @@ export function UploadPanel({ isUploading, onUpload }: UploadPanelProps) {
       <div>
         <div className="page-kicker">Upload</div>
         <h2>上传到 R2</h2>
-        <p>文件会直接 PUT 到预签名 URL，API 只保存对象索引。</p>
+        <p>文件会直接 PUT 到预签名 URL，API 只保存对象索引。当前前缀：{keyPrefix}</p>
       </div>
       <label className="ui-input-field">
         <span className="ui-input-label">可见性</span>

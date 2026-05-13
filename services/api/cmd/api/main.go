@@ -41,7 +41,7 @@ func main() {
 		log.Fatalf("initialize r2 provider: %v", err)
 	}
 	storageService := storage.NewService(storage.NewMemoryRepository(), r2Client, storageAuditRecorder{audit: auditService})
-	blogService := blog.NewService(blog.NewMemoryRepository(), blogAuditRecorder{audit: auditService})
+	blogService := blog.NewServiceWithCoverValidator(blog.NewMemoryRepository(), blogAuditRecorder{audit: auditService}, storageService)
 	pluginRegistry := newBuiltinPluginRegistry(blogService, storageService)
 
 	server := &http.Server{

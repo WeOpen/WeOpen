@@ -17,10 +17,16 @@ type AuditRecorder interface {
 	RecordBlogEvent(ctx context.Context, event AuditEvent) error
 }
 
+// CoverObjectValidator verifies storage object keys before a blog post references them.
+type CoverObjectValidator interface {
+	ValidateCoverObject(ctx context.Context, key string) error
+}
+
 // Service coordinates blog repository operations and audit recording.
 type Service struct {
 	repository Repository
 	audit      AuditRecorder
+	covers     CoverObjectValidator
 }
 
 // NewService creates a blog service.
@@ -28,8 +34,16 @@ func NewService(repository Repository, audit AuditRecorder) *Service {
 	return &Service{repository: repository, audit: audit}
 }
 
+// NewServiceWithCoverValidator creates a blog service that validates cover media.
+func NewServiceWithCoverValidator(repository Repository, audit AuditRecorder, covers CoverObjectValidator) *Service {
+	return &Service{repository: repository, audit: audit, covers: covers}
+}
+
 // CreatePost creates a blog post and records an audit event.
 func (s *Service) CreatePost(ctx context.Context, actorUserID string, input CreatePostInput) (Post, error) {
+	if err := s.validateCover(ctx, input.CoverObjectKey); err != nil {
+		return Post{}, err
+	}
 	post, err := s.repository.Create(ctx, input)
 	if err != nil {
 		return Post{}, err
@@ -62,6 +76,9 @@ func (s *Service) GetPost(ctx context.Context, id string) (Post, error) {
 
 // UpdatePost updates a blog post and records an audit event.
 func (s *Service) UpdatePost(ctx context.Context, actorUserID string, id string, input UpdatePostInput) (Post, error) {
+	if err := s.validateCover(ctx, input.CoverObjectKey); err != nil {
+		return Post{}, err
+	}
 	post, err := s.repository.Update(ctx, id, input)
 	if err != nil {
 		return Post{}, err
@@ -104,4 +121,12 @@ func (s *Service) record(ctx context.Context, event AuditEvent) error {
 		event.Metadata = map[string]any{}
 	}
 	return s.audit.RecordBlogEvent(ctx, event)
+}
+
+func (s *Service) validateCover(ctx context.Context, key string) error {
+	key = normalizeOptionalKey(key)
+	if key == "" || s.covers == nil {
+		return nil
+	}
+	return s.covers.ValidateCoverObject(ctx, key)
 }

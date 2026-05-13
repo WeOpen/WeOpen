@@ -1,15 +1,27 @@
+import Image from "next/image";
 import type { BlogPostInput } from "@/lib/blog";
 
 type BlogPostPreviewProps = {
   post: BlogPostInput;
+  coverUrl?: string;
 };
 
-export function BlogPostPreview({ post }: BlogPostPreviewProps) {
+export function BlogPostPreview({ coverUrl, post }: BlogPostPreviewProps) {
   const blocks = markdownBlocks(post.contentMarkdown);
 
   return (
     <article className="blog-preview" aria-label="文章预览">
       <div className="blog-preview-status">{statusLabel(post.status)}</div>
+      {coverUrl ? (
+        <Image
+          alt=""
+          className="blog-preview-cover"
+          height={360}
+          src={coverUrl}
+          unoptimized
+          width={640}
+        />
+      ) : null}
       <h1>{post.title || "未命名文章"}</h1>
       {post.summary ? <p className="blog-preview-summary">{post.summary}</p> : null}
       <div className="blog-preview-body">

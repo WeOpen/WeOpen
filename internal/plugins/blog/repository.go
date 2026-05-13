@@ -11,10 +11,11 @@ import (
 )
 
 var (
-	ErrPostNotFound  = errors.New("blog post not found")
-	ErrDuplicateSlug = errors.New("blog post slug already exists")
-	ErrInvalidStatus = errors.New("invalid blog post status")
-	ErrInvalidPost   = errors.New("invalid blog post")
+	ErrPostNotFound        = errors.New("blog post not found")
+	ErrDuplicateSlug       = errors.New("blog post slug already exists")
+	ErrInvalidStatus       = errors.New("invalid blog post status")
+	ErrInvalidPost         = errors.New("invalid blog post")
+	ErrCoverObjectNotFound = errors.New("blog cover object not found")
 )
 
 // PostStatus is the lifecycle state of a blog post.
@@ -51,6 +52,7 @@ type Post struct {
 	Slug            string     `json:"slug"`
 	Summary         string     `json:"summary"`
 	ContentMarkdown string     `json:"contentMarkdown"`
+	CoverObjectKey  string     `json:"coverObjectKey,omitempty"`
 	Status          PostStatus `json:"status"`
 	Terms           []Term     `json:"terms"`
 	PublishedAt     *time.Time `json:"publishedAt,omitempty"`
@@ -71,6 +73,7 @@ type CreatePostInput struct {
 	Slug            string      `json:"slug"`
 	Summary         string      `json:"summary"`
 	ContentMarkdown string      `json:"contentMarkdown"`
+	CoverObjectKey  string      `json:"coverObjectKey"`
 	Status          PostStatus  `json:"status"`
 	Terms           []TermInput `json:"terms"`
 }
@@ -81,6 +84,7 @@ type UpdatePostInput struct {
 	Slug            string      `json:"slug"`
 	Summary         string      `json:"summary"`
 	ContentMarkdown string      `json:"contentMarkdown"`
+	CoverObjectKey  string      `json:"coverObjectKey"`
 	Status          PostStatus  `json:"status"`
 	Terms           []TermInput `json:"terms"`
 }
@@ -148,6 +152,7 @@ func (r *MemoryRepository) Create(_ context.Context, input CreatePostInput) (Pos
 		Slug:            slug,
 		Summary:         strings.TrimSpace(input.Summary),
 		ContentMarkdown: input.ContentMarkdown,
+		CoverObjectKey:  normalizeOptionalKey(input.CoverObjectKey),
 		Status:          status,
 		Terms:           r.upsertTermsLocked(input.Terms, now),
 		CreatedAt:       now,
@@ -230,6 +235,7 @@ func (r *MemoryRepository) Update(_ context.Context, id string, input UpdatePost
 	post.Slug = slug
 	post.Summary = strings.TrimSpace(input.Summary)
 	post.ContentMarkdown = input.ContentMarkdown
+	post.CoverObjectKey = normalizeOptionalKey(input.CoverObjectKey)
 	post.Status = status
 	post.Terms = r.upsertTermsLocked(input.Terms, now)
 	post.UpdatedAt = now
@@ -304,6 +310,10 @@ func normalizeSlug(slug string) (string, error) {
 		return "", fmt.Errorf("%w: slug is required", ErrInvalidPost)
 	}
 	return slug, nil
+}
+
+func normalizeOptionalKey(key string) string {
+	return strings.TrimLeft(strings.TrimSpace(key), "/")
 }
 
 func validTermType(termType TermType) bool {

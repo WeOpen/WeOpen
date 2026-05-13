@@ -10,6 +10,8 @@ import {
   listBlogPosts,
   updateBlogPost
 } from "@/lib/blog";
+import type { StorageObject } from "@/lib/storage-r2";
+import { listStorageObjects, uploadStorageFile } from "@/lib/storage-r2";
 import { BlogPostEditor, emptyBlogDraft } from "./post-editor";
 import { BlogPostPreview } from "./post-preview";
 
@@ -24,15 +26,21 @@ export function BlogPostsPage({ initialPostId }: BlogPostsPageProps) {
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploadingCover, setIsUploadingCover] = useState(false);
+  const [storageObjects, setStorageObjects] = useState<StorageObject[]>([]);
 
   useEffect(() => {
     let cancelled = false;
     async function loadPosts() {
       setIsLoading(true);
       try {
-        const nextPosts = await listBlogPosts();
+        const [nextPosts, nextObjects] = await Promise.all([
+          listBlogPosts(),
+          listStorageObjects().catch(() => [] as StorageObject[])
+        ]);
         if (!cancelled) {
           setPosts(nextPosts);
+          setStorageObjects(nextObjects);
           setMessage("");
         }
       } catch (error) {
@@ -85,10 +93,17 @@ export function BlogPostsPage({ initialPostId }: BlogPostsPageProps) {
       { archived: 0, draft: 0, published: 0 }
     );
   }, [posts]);
+  const selectedCover = useMemo(() => {
+    return storageObjects.find((object) => object.key === draft.coverObjectKey);
+  }, [draft.coverObjectKey, storageObjects]);
 
   async function refreshPosts(nextSelectedId?: string) {
-    const nextPosts = await listBlogPosts();
+    const [nextPosts, nextObjects] = await Promise.all([
+      listBlogPosts(),
+      listStorageObjects().catch(() => storageObjects)
+    ]);
     setPosts(nextPosts);
+    setStorageObjects(nextObjects);
     if (nextSelectedId !== undefined) {
       setSelectedPostId(nextSelectedId);
     }
@@ -126,6 +141,32 @@ export function BlogPostsPage({ initialPostId }: BlogPostsPageProps) {
       setMessage(error instanceof Error ? error.message : "文章删除失败");
     } finally {
       setIsSaving(false);
+    }
+  }
+
+  async function uploadCover(file: File) {
+    setIsUploadingCover(true);
+    setMessage("");
+    try {
+      const key = `blog/covers/${Date.now()}-${slugifyFilename(file.name)}`;
+      const object = await uploadStorageFile(
+        {
+          key,
+          filename: file.name,
+          contentType: file.type || "application/octet-stream",
+          size: file.size,
+          visibility: "public"
+        },
+        file
+      );
+      const nextObjects = await listStorageObjects();
+      setStorageObjects(nextObjects);
+      setDraft((current) => ({ ...current, coverObjectKey: object.key }));
+      setMessage("封面已上传并关联到文章");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "封面上传失败");
+    } finally {
+      setIsUploadingCover(false);
     }
   }
 
@@ -177,7 +218,10 @@ export function BlogPostsPage({ initialPostId }: BlogPostsPageProps) {
         <BlogPostEditor
           draft={draft}
           isSaving={isSaving}
+          isUploadingCover={isUploadingCover}
+          storageObjects={storageObjects}
           onChange={setDraft}
+          onCoverUpload={uploadCover}
           onDelete={removePost}
           onNew={() => {
             setSelectedPostId(undefined);
@@ -188,7 +232,7 @@ export function BlogPostsPage({ initialPostId }: BlogPostsPageProps) {
           selectedPostId={selectedPostId}
         />
 
-        <BlogPostPreview post={draft} />
+        <BlogPostPreview coverUrl={selectedCover?.downloadUrl} post={draft} />
       </div>
     </section>
   );
@@ -200,6 +244,7 @@ function toInput(post: BlogPost): BlogPostInput {
     slug: post.slug,
     summary: post.summary,
     contentMarkdown: post.contentMarkdown,
+    coverObjectKey: post.coverObjectKey ?? "",
     status: post.status,
     terms: post.terms.map((term) => ({
       name: term.name,
@@ -207,6 +252,14 @@ function toInput(post: BlogPost): BlogPostInput {
       type: term.type
     }))
   };
+}
+
+function slugifyFilename(name: string) {
+  return name
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9.\-_]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 }
 
 function statusLabel(status: BlogPost["status"]) {

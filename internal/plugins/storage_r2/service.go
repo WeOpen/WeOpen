@@ -138,6 +138,16 @@ func (s *Service) ObjectByKey(ctx context.Context, key string) (StorageObject, e
 	return s.repository.GetByKey(ctx, key)
 }
 
+// ValidateCoverObject verifies that a blog cover object has been indexed.
+func (s *Service) ValidateCoverObject(ctx context.Context, key string) error {
+	key, err := normalizeKey(key)
+	if err != nil {
+		return err
+	}
+	_, err = s.repository.GetByKey(ctx, key)
+	return err
+}
+
 // SetVisibility changes public/private metadata and records an audit event.
 func (s *Service) SetVisibility(ctx context.Context, actorUserID string, id string, visibility Visibility) (StorageObject, error) {
 	visibility, err := normalizeVisibility(visibility)

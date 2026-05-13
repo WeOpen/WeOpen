@@ -16,6 +16,7 @@ export type BlogPost = {
   slug: string;
   summary: string;
   contentMarkdown: string;
+  coverObjectKey?: string;
   status: BlogPostStatus;
   terms: BlogTerm[];
   publishedAt?: string;
@@ -28,6 +29,7 @@ export type BlogPostInput = {
   slug: string;
   summary: string;
   contentMarkdown: string;
+  coverObjectKey?: string;
   status: BlogPostStatus;
   terms: Array<{
     name: string;

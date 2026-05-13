@@ -2,11 +2,15 @@
 
 import { Button } from "@weopen/ui";
 import type { BlogPostInput, BlogPostStatus } from "@/lib/blog";
+import type { StorageObject } from "@/lib/storage-r2";
 
 type BlogPostEditorProps = {
   draft: BlogPostInput;
   isSaving: boolean;
+  isUploadingCover: boolean;
+  storageObjects: StorageObject[];
   onChange: (draft: BlogPostInput) => void;
+  onCoverUpload: (file: File) => Promise<void>;
   onDelete: () => void;
   onNew: () => void;
   onSubmit: () => void;
@@ -22,7 +26,10 @@ const statuses: Array<{ label: string; value: BlogPostStatus }> = [
 export function BlogPostEditor({
   draft,
   isSaving,
+  isUploadingCover,
+  storageObjects,
   onChange,
+  onCoverUpload,
   onDelete,
   onNew,
   onSubmit,
@@ -36,6 +43,9 @@ export function BlogPostEditor({
     .filter((term) => term.type === "tag")
     .map((term) => term.name)
     .join(", ");
+  const coverCandidates = storageObjects.filter((object) =>
+    object.contentType.toLowerCase().startsWith("image/")
+  );
 
   return (
     <form
@@ -126,6 +136,39 @@ export function BlogPostEditor({
         </label>
       </div>
 
+      <div className="blog-cover-panel">
+        <label className="ui-input-field">
+          <span className="ui-input-label">封面对象</span>
+          <select
+            className="ui-input"
+            onChange={(event) => onChange({ ...draft, coverObjectKey: event.target.value })}
+            value={draft.coverObjectKey ?? ""}
+          >
+            <option value="">不设置封面</option>
+            {coverCandidates.map((object) => (
+              <option key={object.id} value={object.key}>
+                {object.filename}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="blog-cover-upload">
+          <span>{isUploadingCover ? "封面上传中" : "上传封面"}</span>
+          <input
+            accept="image/*"
+            disabled={isUploadingCover}
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              if (file) {
+                void onCoverUpload(file);
+                event.currentTarget.value = "";
+              }
+            }}
+            type="file"
+          />
+        </label>
+      </div>
+
       <label className="ui-input-field">
         <span className="ui-input-label">Markdown</span>
         <textarea
@@ -156,6 +199,7 @@ export function emptyBlogDraft(): BlogPostInput {
     slug: "",
     summary: "",
     contentMarkdown: "# 新文章\n\n从这里开始写。",
+    coverObjectKey: "",
     status: "draft",
     terms: []
   };

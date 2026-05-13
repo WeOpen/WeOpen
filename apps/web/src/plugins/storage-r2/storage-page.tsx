@@ -126,7 +126,7 @@ export function StoragePage() {
       {message ? <p className="form-message">{message}</p> : null}
 
       <div className="storage-layout">
-        <UploadPanel isUploading={isUploading} onUpload={upload} />
+        <UploadPanel isUploading={isUploading} keyPrefix="uploads" onUpload={upload} />
         <ObjectTable
           objects={objects}
           onDelete={remove}
