@@ -4,5 +4,6 @@ use (
 	./apps/desktop
 	./internal/core
 	./internal/plugins/blog
+	./internal/providers/r2
 	./services/api
 )
