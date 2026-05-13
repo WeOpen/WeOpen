@@ -1,5 +1,6 @@
 import { PluginRegistry } from "@weopen/plugin-sdk";
 import type { PluginManifest } from "@weopen/plugin-sdk";
+import { BlogPluginPage } from "./blog";
 import { builtinPluginManifests } from "./index";
 
 export type WebPluginComponent = (props: { manifest: PluginManifest }) => React.ReactNode;
@@ -9,7 +10,7 @@ export const webPluginRegistry = new PluginRegistry<WebPluginComponent>();
 for (const manifest of builtinPluginManifests) {
   webPluginRegistry.register({
     manifest,
-    component: PlaceholderPluginPage
+    component: manifest.id === "blog" ? BlogPluginPage : PlaceholderPluginPage
   });
 }
 

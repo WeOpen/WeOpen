@@ -4,15 +4,15 @@ export const builtinPluginManifests: PluginManifest[] = [
   {
     id: "blog",
     name: "博客管理",
-    description: "管理 Markdown 文章、草稿、标签、封面图和发布状态。",
+    description: "管理 Markdown 文章、草稿、标签、分类和发布状态。",
     version: "0.1.0",
     permissions: ["blog:read", "blog:write"],
     nav: [{ title: "博客", path: "/blog", icon: "file-text", order: 10 }],
     widgets: [
       {
-        id: "blog-drafts",
-        title: "博客草稿",
-        description: "文章管理插件占位",
+        id: "blog-posts",
+        title: "博客文章",
+        description: "文章管理插件",
         href: "/blog",
         status: "neutral"
       }

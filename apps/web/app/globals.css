@@ -29,6 +29,7 @@ a {
 
 button,
 input,
+select,
 textarea {
   font: inherit;
 }
@@ -209,6 +210,16 @@ textarea {
   padding: 0 12px;
 }
 
+.ui-textarea {
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--foreground);
+  line-height: 1.55;
+  padding: 10px 12px;
+  resize: vertical;
+}
+
 .auth-form,
 .settings-form {
   background: var(--panel);
@@ -264,6 +275,144 @@ textarea {
   margin: 0;
 }
 
+.blog-workspace {
+  display: grid;
+  gap: 18px;
+}
+
+.blog-stats {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.blog-layout {
+  align-items: start;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(220px, 0.72fr) minmax(320px, 1.2fr) minmax(300px, 1fr);
+}
+
+.blog-post-list,
+.blog-editor,
+.blog-preview {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.blog-list-header,
+.blog-editor-toolbar,
+.blog-editor-actions {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.blog-list-header h2,
+.blog-editor-toolbar h2 {
+  font-size: 16px;
+  margin: 0;
+}
+
+.blog-list-header span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.blog-post-list {
+  display: grid;
+  gap: 10px;
+}
+
+.blog-post-row {
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--foreground);
+  cursor: pointer;
+  display: grid;
+  gap: 5px;
+  min-height: 68px;
+  padding: 10px 12px;
+  text-align: left;
+}
+
+.blog-post-row:hover,
+.blog-post-row-active {
+  border-color: #8cc8c1;
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.08);
+}
+
+.blog-post-row span {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.blog-post-row small,
+.blog-empty,
+.blog-preview-empty {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.blog-editor {
+  display: grid;
+  gap: 14px;
+}
+
+.blog-editor-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.blog-markdown {
+  min-height: 310px;
+}
+
+.blog-preview {
+  color: #22304a;
+  min-height: 520px;
+}
+
+.blog-preview-status {
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.blog-preview h1 {
+  font-size: 28px;
+  line-height: 1.2;
+  margin: 10px 0;
+}
+
+.blog-preview h2 {
+  font-size: 20px;
+  margin: 22px 0 8px;
+}
+
+.blog-preview h3 {
+  font-size: 16px;
+  margin: 18px 0 8px;
+}
+
+.blog-preview p,
+.blog-preview li {
+  line-height: 1.7;
+}
+
+.blog-preview-summary {
+  color: var(--muted);
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+}
+
 @media (max-width: 760px) {
   .app-shell {
     grid-template-columns: 1fr;
@@ -283,5 +432,11 @@ textarea {
     flex-direction: column;
     gap: 6px;
     justify-content: center;
+  }
+
+  .blog-stats,
+  .blog-layout,
+  .blog-editor-grid {
+    grid-template-columns: 1fr;
   }
 }
