@@ -17,6 +17,10 @@ type Config struct {
 	SecretEncryptionKey string
 	AdminEmail          string
 	AdminPassword       string
+	R2AccountID         string
+	R2Bucket            string
+	R2AccessKeyID       string
+	R2SecretAccessKey   string
 }
 
 func Load() (Config, error) {
@@ -34,6 +38,10 @@ func LoadFromLookup(lookup func(string) (string, bool)) (Config, error) {
 		SecretEncryptionKey: valueOrDefault(lookup, "SECRET_ENCRYPTION_KEY", ""),
 		AdminEmail:          valueOrDefault(lookup, "ADMIN_EMAIL", "admin@example.com"),
 		AdminPassword:       valueOrDefault(lookup, "ADMIN_PASSWORD", ""),
+		R2AccountID:         valueOrDefault(lookup, "R2_ACCOUNT_ID", ""),
+		R2Bucket:            valueOrDefault(lookup, "R2_BUCKET", ""),
+		R2AccessKeyID:       valueOrDefault(lookup, "R2_ACCESS_KEY_ID", ""),
+		R2SecretAccessKey:   valueOrDefault(lookup, "R2_SECRET_ACCESS_KEY", ""),
 	}
 
 	if cfg.AppEnv == "local" {
@@ -46,6 +54,18 @@ func LoadFromLookup(lookup func(string) (string, bool)) (Config, error) {
 		if cfg.AdminPassword == "" {
 			cfg.AdminPassword = "admin"
 		}
+		if cfg.R2AccountID == "" {
+			cfg.R2AccountID = "local-account"
+		}
+		if cfg.R2Bucket == "" {
+			cfg.R2Bucket = "weopen-local"
+		}
+		if cfg.R2AccessKeyID == "" {
+			cfg.R2AccessKeyID = "local-r2-access"
+		}
+		if cfg.R2SecretAccessKey == "" {
+			cfg.R2SecretAccessKey = "local-r2-secret"
+		}
 		return cfg, nil
 	}
 
@@ -56,6 +76,10 @@ func LoadFromLookup(lookup func(string) (string, bool)) (Config, error) {
 		"SECRET_ENCRYPTION_KEY": cfg.SecretEncryptionKey,
 		"ADMIN_EMAIL":           cfg.AdminEmail,
 		"ADMIN_PASSWORD":        cfg.AdminPassword,
+		"R2_ACCOUNT_ID":         cfg.R2AccountID,
+		"R2_BUCKET":             cfg.R2Bucket,
+		"R2_ACCESS_KEY_ID":      cfg.R2AccessKeyID,
+		"R2_SECRET_ACCESS_KEY":  cfg.R2SecretAccessKey,
 	} {
 		if value == "" {
 			missing = append(missing, name)

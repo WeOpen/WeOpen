@@ -27,6 +27,9 @@ func TestLoadFromLookupUsesLocalDefaults(t *testing.T) {
 	if cfg.SecretEncryptionKey == "" {
 		t.Fatal("expected local encryption key default")
 	}
+	if cfg.R2Bucket != "weopen-local" {
+		t.Fatalf("expected local R2 bucket default, got %q", cfg.R2Bucket)
+	}
 }
 
 func TestLoadFromLookupRequiresProductionSecrets(t *testing.T) {
@@ -43,7 +46,7 @@ func TestLoadFromLookupRequiresProductionSecrets(t *testing.T) {
 	}
 
 	message := err.Error()
-	for _, required := range []string{"DATABASE_URL", "SESSION_SECRET", "SECRET_ENCRYPTION_KEY", "ADMIN_PASSWORD"} {
+	for _, required := range []string{"DATABASE_URL", "SESSION_SECRET", "SECRET_ENCRYPTION_KEY", "ADMIN_PASSWORD", "R2_ACCOUNT_ID", "R2_BUCKET", "R2_ACCESS_KEY_ID", "R2_SECRET_ACCESS_KEY"} {
 		if !strings.Contains(message, required) {
 			t.Fatalf("expected error to mention %s, got %q", required, message)
 		}
@@ -63,6 +66,10 @@ func TestLoadFromLookupReadsExplicitValues(t *testing.T) {
 		"SECRET_ENCRYPTION_KEY": "encryption-secret",
 		"ADMIN_EMAIL":           "owner@example.com",
 		"ADMIN_PASSWORD":        "correct horse battery staple",
+		"R2_ACCOUNT_ID":         "account",
+		"R2_BUCKET":             "bucket",
+		"R2_ACCESS_KEY_ID":      "r2-access",
+		"R2_SECRET_ACCESS_KEY":  "r2-secret",
 	}
 
 	cfg, err := LoadFromLookup(func(key string) (string, bool) {
@@ -81,5 +88,8 @@ func TestLoadFromLookupReadsExplicitValues(t *testing.T) {
 	}
 	if cfg.AdminEmail != "owner@example.com" {
 		t.Fatalf("expected admin email, got %q", cfg.AdminEmail)
+	}
+	if cfg.R2Bucket != "bucket" {
+		t.Fatalf("expected R2 bucket, got %q", cfg.R2Bucket)
 	}
 }

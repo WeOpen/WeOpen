@@ -9,6 +9,8 @@ import (
 
 	"github.com/WeOpen/WeOpen/internal/core/plugin"
 	"github.com/WeOpen/WeOpen/internal/plugins/blog"
+	storage "github.com/WeOpen/WeOpen/internal/plugins/storage_r2"
+	r2provider "github.com/WeOpen/WeOpen/internal/providers/r2"
 	"github.com/WeOpen/WeOpen/services/api/internal/audit"
 	"github.com/WeOpen/WeOpen/services/api/internal/auth"
 	"github.com/WeOpen/WeOpen/services/api/internal/config"
@@ -28,8 +30,19 @@ func main() {
 	authService := auth.NewService(authStore)
 	secretService := secrets.NewService(secrets.NewMemoryStore(), secrets.NewCrypto(cfg.SecretEncryptionKey))
 	auditService := audit.NewService()
+
+	r2Client, err := r2provider.NewClient(r2provider.Config{
+		AccountID:       cfg.R2AccountID,
+		Bucket:          cfg.R2Bucket,
+		AccessKeyID:     cfg.R2AccessKeyID,
+		SecretAccessKey: cfg.R2SecretAccessKey,
+	})
+	if err != nil {
+		log.Fatalf("initialize r2 provider: %v", err)
+	}
+	storageService := storage.NewService(storage.NewMemoryRepository(), r2Client, storageAuditRecorder{audit: auditService})
 	blogService := blog.NewService(blog.NewMemoryRepository(), blogAuditRecorder{audit: auditService})
-	pluginRegistry := newBuiltinPluginRegistry(blogService)
+	pluginRegistry := newBuiltinPluginRegistry(blogService, storageService)
 
 	server := &http.Server{
 		Addr: cfg.Addr,
@@ -41,6 +54,7 @@ func main() {
 			Plugins:   pluginRegistry,
 			PluginRoutes: []apihttp.PluginRoute{
 				{Prefix: "/api/plugins/blog", Handler: blog.NewHTTPHandler(blogService)},
+				{Prefix: "/api/plugins/storage-r2", Handler: storage.NewHTTPHandler(storageService)},
 			},
 		}),
 		ReadHeaderTimeout: 5 * time.Second,
@@ -52,7 +66,7 @@ func main() {
 	}
 }
 
-func newBuiltinPluginRegistry(blogService *blog.Service) *plugin.Registry {
+func newBuiltinPluginRegistry(blogService *blog.Service, storageService *storage.Service) *plugin.Registry {
 	registry := plugin.NewRegistry()
 	registry.MustRegister(blog.NewPlugin(blogService))
 	registry.MustRegister(plugin.NewStaticPlugin(plugin.Manifest{
@@ -71,14 +85,7 @@ func newBuiltinPluginRegistry(blogService *blog.Service) *plugin.Registry {
 		Permissions: []plugin.Permission{plugin.PermissionDomainRead},
 		Navigation:  []plugin.NavItem{{Title: "域名", Path: "/domains", Icon: "globe", Order: 30}},
 	}, plugin.Widget{ID: "domains-watch", PluginID: "domains", Title: "域名监控", Description: "只读域名同步插件占位", Href: "/domains"}))
-	registry.MustRegister(plugin.NewStaticPlugin(plugin.Manifest{
-		ID:          "storage-r2",
-		Name:        "云存储",
-		Description: "管理 R2 对象、博客素材和备份文件。",
-		Version:     "0.1.0",
-		Permissions: []plugin.Permission{plugin.PermissionStorageRead, plugin.PermissionStorageWrite},
-		Navigation:  []plugin.NavItem{{Title: "云存储", Path: "/storage", Icon: "hard-drive", Order: 40}},
-	}, plugin.Widget{ID: "storage-objects", PluginID: "storage-r2", Title: "R2 文件", Description: "对象存储插件占位", Href: "/storage"}))
+	registry.MustRegister(storage.NewPlugin(storageService))
 	return registry
 }
 
@@ -87,6 +94,22 @@ type blogAuditRecorder struct {
 }
 
 func (r blogAuditRecorder) RecordBlogEvent(ctx context.Context, event blog.AuditEvent) error {
+	_, err := r.audit.Record(ctx, audit.Entry{
+		ActorUserID: event.ActorUserID,
+		PluginID:    event.PluginID,
+		Action:      event.Action,
+		TargetType:  event.TargetType,
+		TargetID:    event.TargetID,
+		Metadata:    event.Metadata,
+	})
+	return err
+}
+
+type storageAuditRecorder struct {
+	audit *audit.Service
+}
+
+func (r storageAuditRecorder) RecordStorageEvent(ctx context.Context, event storage.AuditEvent) error {
 	_, err := r.audit.Record(ctx, audit.Entry{
 		ActorUserID: event.ActorUserID,
 		PluginID:    event.PluginID,
