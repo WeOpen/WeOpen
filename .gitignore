@@ -19,13 +19,22 @@ profile.cov
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
+node_modules/
+.pnpm-store/
 
-# Go workspace file
-go.work
+# JavaScript build outputs
+.next/
+dist/
+build/
+coverage/
+
+# Go workspace checksum
 go.work.sum
 
 # env file
 .env
+.env.local
+.env.*.local
 
 # Editor/IDE
 # .idea/

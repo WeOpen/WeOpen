@@ -1,0 +1,22 @@
+{
+  "name": "weopen-personal-platform",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@10.18.2",
+  "scripts": {
+    "dev:web": "pnpm --filter @weopen/web dev",
+    "dev:api": "go run ./services/api/cmd/api",
+    "dev:desktop": "pnpm --filter @weopen/desktop dev",
+    "lint": "pnpm -r --if-present lint",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "test": "pnpm -r --if-present test",
+    "build": "pnpm -r --if-present build",
+    "format": "pnpm -r --if-present format"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "eslint": "^9.39.1",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.46.3"
+  }
+}
