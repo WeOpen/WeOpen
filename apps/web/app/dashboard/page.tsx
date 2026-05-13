@@ -1,4 +1,5 @@
 import { AppShell } from "@/components/app-shell";
+import { Card } from "@weopen/ui";
 
 const cards = [
   {
@@ -31,10 +32,7 @@ export default function DashboardPage() {
       </section>
       <section className="dashboard-grid" aria-label="插件占位卡片">
         {cards.map((card) => (
-          <article className="dashboard-card" key={card.title}>
-            <h2 className="card-title">{card.title}</h2>
-            <p className="card-copy">{card.copy}</p>
-          </article>
+          <Card description={card.copy} key={card.title} title={card.title} />
         ))}
       </section>
     </AppShell>

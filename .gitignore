@@ -27,6 +27,7 @@ node_modules/
 dist/
 build/
 coverage/
+*.tsbuildinfo
 
 # Go workspace checksum
 go.work.sum

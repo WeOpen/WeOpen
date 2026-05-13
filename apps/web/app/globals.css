@@ -137,24 +137,76 @@ textarea {
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 
-.dashboard-card {
+.ui-card {
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 18px;
 }
 
-.card-title {
+.ui-card-title {
   font-size: 15px;
   font-weight: 700;
   margin: 0 0 8px;
 }
 
-.card-copy {
+.ui-card-description {
   color: var(--muted);
   font-size: 14px;
   line-height: 1.55;
   margin: 0;
+}
+
+.ui-button {
+  align-items: center;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  font-weight: 700;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 14px;
+}
+
+.ui-button-primary {
+  background: var(--primary);
+  color: #ffffff;
+}
+
+.ui-button-primary:hover {
+  background: var(--primary-strong);
+}
+
+.ui-button-secondary {
+  background: #ffffff;
+  border-color: var(--line);
+  color: var(--foreground);
+}
+
+.ui-button-ghost {
+  background: transparent;
+  color: var(--primary-strong);
+}
+
+.ui-input-field {
+  display: grid;
+  gap: 6px;
+}
+
+.ui-input-label {
+  color: #354057;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.ui-input {
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--foreground);
+  min-height: 40px;
+  padding: 0 12px;
 }
 
 @media (max-width: 760px) {
