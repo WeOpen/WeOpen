@@ -43,7 +43,7 @@ func TestLoadFromLookupRequiresProductionSecrets(t *testing.T) {
 	}
 
 	message := err.Error()
-	for _, required := range []string{"DATABASE_URL", "SESSION_SECRET", "SECRET_ENCRYPTION_KEY"} {
+	for _, required := range []string{"DATABASE_URL", "SESSION_SECRET", "SECRET_ENCRYPTION_KEY", "ADMIN_PASSWORD"} {
 		if !strings.Contains(message, required) {
 			t.Fatalf("expected error to mention %s, got %q", required, message)
 		}
@@ -61,6 +61,8 @@ func TestLoadFromLookupReadsExplicitValues(t *testing.T) {
 		"DATABASE_URL":          "postgres://example",
 		"SESSION_SECRET":        "session-secret",
 		"SECRET_ENCRYPTION_KEY": "encryption-secret",
+		"ADMIN_EMAIL":           "owner@example.com",
+		"ADMIN_PASSWORD":        "correct horse battery staple",
 	}
 
 	cfg, err := LoadFromLookup(func(key string) (string, bool) {
@@ -76,5 +78,8 @@ func TestLoadFromLookupReadsExplicitValues(t *testing.T) {
 	}
 	if !cfg.IsProductionLike() {
 		t.Fatal("expected preview config to be production-like")
+	}
+	if cfg.AdminEmail != "owner@example.com" {
+		t.Fatalf("expected admin email, got %q", cfg.AdminEmail)
 	}
 }

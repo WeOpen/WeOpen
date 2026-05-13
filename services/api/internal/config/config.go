@@ -15,6 +15,8 @@ type Config struct {
 	DatabaseURL         string
 	SessionSecret       string
 	SecretEncryptionKey string
+	AdminEmail          string
+	AdminPassword       string
 }
 
 func Load() (Config, error) {
@@ -30,6 +32,8 @@ func LoadFromLookup(lookup func(string) (string, bool)) (Config, error) {
 		DatabaseURL:         valueOrDefault(lookup, "DATABASE_URL", ""),
 		SessionSecret:       valueOrDefault(lookup, "SESSION_SECRET", ""),
 		SecretEncryptionKey: valueOrDefault(lookup, "SECRET_ENCRYPTION_KEY", ""),
+		AdminEmail:          valueOrDefault(lookup, "ADMIN_EMAIL", "admin@example.com"),
+		AdminPassword:       valueOrDefault(lookup, "ADMIN_PASSWORD", ""),
 	}
 
 	if cfg.AppEnv == "local" {
@@ -39,6 +43,9 @@ func LoadFromLookup(lookup func(string) (string, bool)) (Config, error) {
 		if cfg.SecretEncryptionKey == "" {
 			cfg.SecretEncryptionKey = "local-secret-encryption-key"
 		}
+		if cfg.AdminPassword == "" {
+			cfg.AdminPassword = "admin"
+		}
 		return cfg, nil
 	}
 
@@ -47,6 +54,8 @@ func LoadFromLookup(lookup func(string) (string, bool)) (Config, error) {
 		"DATABASE_URL":          cfg.DatabaseURL,
 		"SESSION_SECRET":        cfg.SessionSecret,
 		"SECRET_ENCRYPTION_KEY": cfg.SecretEncryptionKey,
+		"ADMIN_EMAIL":           cfg.AdminEmail,
+		"ADMIN_PASSWORD":        cfg.AdminPassword,
 	} {
 		if value == "" {
 			missing = append(missing, name)

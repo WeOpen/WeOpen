@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/WeOpen/WeOpen/services/api/internal/auth"
 	"github.com/WeOpen/WeOpen/services/api/internal/config"
 	apihttp "github.com/WeOpen/WeOpen/services/api/internal/http"
 )
@@ -15,10 +16,17 @@ func main() {
 	if err != nil {
 		log.Fatalf("invalid configuration: %v", err)
 	}
+	authStore, err := auth.NewMemoryStore(cfg.AdminEmail, cfg.AdminPassword)
+	if err != nil {
+		log.Fatalf("initialize auth store: %v", err)
+	}
 
 	server := &http.Server{
-		Addr:              cfg.Addr,
-		Handler:           apihttp.NewServer(),
+		Addr: cfg.Addr,
+		Handler: apihttp.NewServer(apihttp.ServerOptions{
+			WebOrigin: cfg.WebOrigin,
+			Auth:      auth.NewService(authStore),
+		}),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 
