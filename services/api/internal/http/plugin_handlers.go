@@ -1,17 +1,20 @@
 package http
 
 import (
+	"context"
 	"encoding/json"
 	stdhttp "net/http"
 	"strings"
 
 	"github.com/WeOpen/WeOpen/internal/core/plugin"
 	"github.com/WeOpen/WeOpen/services/api/internal/auth"
+	"github.com/WeOpen/WeOpen/services/api/internal/pluginstate"
 )
 
 type pluginHandlers struct {
 	auth     *auth.Service
 	registry *plugin.Registry
+	states   pluginstate.Store
 }
 
 type pluginResponse struct {
@@ -67,14 +70,24 @@ func (h pluginHandlers) pluginByID(w stdhttp.ResponseWriter, r *stdhttp.Request)
 		return
 	}
 
-	if err := h.registry.SetEnabled(id, req.Enabled); err != nil {
+	registered, ok := h.findRegisteredPlugin(id)
+	if !ok {
 		WriteError(w, r, NewAppError(stdhttp.StatusNotFound, ErrorCodeNotFound, "插件不存在"))
 		return
 	}
+	if err := h.states.SetEnabled(r.Context(), registered.Plugin.Manifest(), req.Enabled); err != nil {
+		WriteError(w, r, NewAppError(stdhttp.StatusInternalServerError, ErrorCodeInternal, "插件状态保存失败"))
+		return
+	}
+	_ = h.registry.SetEnabled(id, req.Enabled)
 	h.list(w, r)
 }
 
 func (h pluginHandlers) list(w stdhttp.ResponseWriter, r *stdhttp.Request) {
+	if err := h.syncRegistryState(r.Context()); err != nil {
+		WriteError(w, r, NewAppError(stdhttp.StatusInternalServerError, ErrorCodeInternal, "插件状态读取失败"))
+		return
+	}
 	registered := h.registry.All()
 	response := pluginsResponse{Plugins: make([]pluginResponse, 0, len(registered))}
 	for _, item := range registered {
@@ -91,6 +104,41 @@ func (h pluginHandlers) list(w stdhttp.ResponseWriter, r *stdhttp.Request) {
 		})
 	}
 	WriteJSON(w, stdhttp.StatusOK, response)
+}
+
+func (h pluginHandlers) syncRegistryState(ctx context.Context) error {
+	registered := h.registry.All()
+	manifests := make([]plugin.Manifest, 0, len(registered))
+	for _, item := range registered {
+		manifests = append(manifests, item.Plugin.Manifest())
+	}
+	if err := h.states.Seed(ctx, manifests); err != nil {
+		return err
+	}
+	states, err := h.states.Enabled(ctx)
+	if err != nil {
+		return err
+	}
+	for _, item := range registered {
+		manifest := item.Plugin.Manifest()
+		enabled, ok := states[manifest.ID]
+		if !ok {
+			enabled = true
+		}
+		if err := h.registry.SetEnabled(manifest.ID, enabled); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (h pluginHandlers) findRegisteredPlugin(id string) (plugin.RegisteredPlugin, bool) {
+	for _, item := range h.registry.All() {
+		if item.Plugin.ID() == id {
+			return item, true
+		}
+	}
+	return plugin.RegisteredPlugin{}, false
 }
 
 func (h pluginHandlers) requireUser(w stdhttp.ResponseWriter, r *stdhttp.Request) (auth.User, bool) {

@@ -9,12 +9,14 @@ import (
 
 	"github.com/WeOpen/WeOpen/internal/core/plugin"
 	"github.com/WeOpen/WeOpen/services/api/internal/auth"
+	"github.com/WeOpen/WeOpen/services/api/internal/pluginstate"
 )
 
 func TestPluginHandlersListAndUpdatePluginState(t *testing.T) {
 	t.Parallel()
 
-	server, token := newAuthenticatedPluginServer(t)
+	states := pluginstate.NewMemoryStore()
+	server, token := newAuthenticatedPluginServer(t, states)
 
 	listReq := httptest.NewRequest(stdhttp.MethodGet, "/api/plugins", nil)
 	listReq.Header.Set("Authorization", "Bearer "+token)
@@ -51,9 +53,26 @@ func TestPluginHandlersListAndUpdatePluginState(t *testing.T) {
 	if patchBody.Plugins[0].Enabled {
 		t.Fatal("expected plugin to be disabled")
 	}
+
+	secondServer, secondToken := newAuthenticatedPluginServer(t, states)
+	secondListReq := httptest.NewRequest(stdhttp.MethodGet, "/api/plugins", nil)
+	secondListReq.Header.Set("Authorization", "Bearer "+secondToken)
+	secondListRec := httptest.NewRecorder()
+	secondServer.ServeHTTP(secondListRec, secondListReq)
+
+	if secondListRec.Code != stdhttp.StatusOK {
+		t.Fatalf("expected second plugin list status %d, got %d body=%s", stdhttp.StatusOK, secondListRec.Code, secondListRec.Body.String())
+	}
+	var secondListBody pluginsResponse
+	if err := json.Unmarshal(secondListRec.Body.Bytes(), &secondListBody); err != nil {
+		t.Fatalf("expected second plugin JSON: %v", err)
+	}
+	if secondListBody.Plugins[0].Enabled {
+		t.Fatal("expected plugin disabled state to come from the shared state store")
+	}
 }
 
-func newAuthenticatedPluginServer(t *testing.T) (stdhttp.Handler, string) {
+func newAuthenticatedPluginServer(t *testing.T, states pluginstate.Store) (stdhttp.Handler, string) {
 	t.Helper()
 
 	authStore, err := auth.NewMemoryStore("admin@example.com", "admin")
@@ -75,5 +94,5 @@ func newAuthenticatedPluginServer(t *testing.T) (stdhttp.Handler, string) {
 		Permissions: []plugin.Permission{plugin.PermissionBlogRead},
 	}))
 
-	return NewServer(ServerOptions{Auth: authService, Plugins: registry}), login.Token
+	return NewServer(ServerOptions{Auth: authService, Plugins: registry, PluginStates: states}), login.Token
 }
