@@ -28,6 +28,11 @@ dist/
 build/
 coverage/
 *.tsbuildinfo
+apps/desktop/bin/
+!apps/desktop/build/
+!apps/desktop/build/config.yml
+!apps/desktop/frontend/dist/
+!apps/desktop/frontend/dist/index.html
 
 # Go workspace checksum
 go.work.sum
