@@ -209,7 +209,8 @@ textarea {
   padding: 0 12px;
 }
 
-.auth-form {
+.auth-form,
+.settings-form {
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 8px;

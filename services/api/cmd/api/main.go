@@ -6,9 +6,11 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/WeOpen/WeOpen/services/api/internal/audit"
 	"github.com/WeOpen/WeOpen/services/api/internal/auth"
 	"github.com/WeOpen/WeOpen/services/api/internal/config"
 	apihttp "github.com/WeOpen/WeOpen/services/api/internal/http"
+	"github.com/WeOpen/WeOpen/services/api/internal/secrets"
 )
 
 func main() {
@@ -20,12 +22,17 @@ func main() {
 	if err != nil {
 		log.Fatalf("initialize auth store: %v", err)
 	}
+	authService := auth.NewService(authStore)
+	secretService := secrets.NewService(secrets.NewMemoryStore(), secrets.NewCrypto(cfg.SecretEncryptionKey))
+	auditService := audit.NewService()
 
 	server := &http.Server{
 		Addr: cfg.Addr,
 		Handler: apihttp.NewServer(apihttp.ServerOptions{
 			WebOrigin: cfg.WebOrigin,
-			Auth:      auth.NewService(authStore),
+			Auth:      authService,
+			Secrets:   secretService,
+			Audit:     auditService,
 		}),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
