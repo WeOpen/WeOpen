@@ -1,12 +1,14 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"log"
 	"net/http"
 	"time"
 
 	"github.com/WeOpen/WeOpen/internal/core/plugin"
+	"github.com/WeOpen/WeOpen/internal/plugins/blog"
 	"github.com/WeOpen/WeOpen/services/api/internal/audit"
 	"github.com/WeOpen/WeOpen/services/api/internal/auth"
 	"github.com/WeOpen/WeOpen/services/api/internal/config"
@@ -26,7 +28,8 @@ func main() {
 	authService := auth.NewService(authStore)
 	secretService := secrets.NewService(secrets.NewMemoryStore(), secrets.NewCrypto(cfg.SecretEncryptionKey))
 	auditService := audit.NewService()
-	pluginRegistry := newBuiltinPluginRegistry()
+	blogService := blog.NewService(blog.NewMemoryRepository(), blogAuditRecorder{audit: auditService})
+	pluginRegistry := newBuiltinPluginRegistry(blogService)
 
 	server := &http.Server{
 		Addr: cfg.Addr,
@@ -36,6 +39,9 @@ func main() {
 			Secrets:   secretService,
 			Audit:     auditService,
 			Plugins:   pluginRegistry,
+			PluginRoutes: []apihttp.PluginRoute{
+				{Prefix: "/api/plugins/blog", Handler: blog.NewHTTPHandler(blogService)},
+			},
 		}),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
@@ -46,16 +52,9 @@ func main() {
 	}
 }
 
-func newBuiltinPluginRegistry() *plugin.Registry {
+func newBuiltinPluginRegistry(blogService *blog.Service) *plugin.Registry {
 	registry := plugin.NewRegistry()
-	registry.MustRegister(plugin.NewStaticPlugin(plugin.Manifest{
-		ID:          "blog",
-		Name:        "博客管理",
-		Description: "管理 Markdown 文章、草稿、标签和发布状态。",
-		Version:     "0.1.0",
-		Permissions: []plugin.Permission{plugin.PermissionBlogRead, plugin.PermissionBlogWrite},
-		Navigation:  []plugin.NavItem{{Title: "博客", Path: "/blog", Icon: "file-text", Order: 10}},
-	}, plugin.Widget{ID: "blog-drafts", PluginID: "blog", Title: "博客草稿", Description: "文章管理插件占位", Href: "/blog"}))
+	registry.MustRegister(blog.NewPlugin(blogService))
 	registry.MustRegister(plugin.NewStaticPlugin(plugin.Manifest{
 		ID:          "devtools",
 		Name:        "程序员工具",
@@ -81,4 +80,20 @@ func newBuiltinPluginRegistry() *plugin.Registry {
 		Navigation:  []plugin.NavItem{{Title: "云存储", Path: "/storage", Icon: "hard-drive", Order: 40}},
 	}, plugin.Widget{ID: "storage-objects", PluginID: "storage-r2", Title: "R2 文件", Description: "对象存储插件占位", Href: "/storage"}))
 	return registry
+}
+
+type blogAuditRecorder struct {
+	audit *audit.Service
+}
+
+func (r blogAuditRecorder) RecordBlogEvent(ctx context.Context, event blog.AuditEvent) error {
+	_, err := r.audit.Record(ctx, audit.Entry{
+		ActorUserID: event.ActorUserID,
+		PluginID:    event.PluginID,
+		Action:      event.Action,
+		TargetType:  event.TargetType,
+		TargetID:    event.TargetID,
+		Metadata:    event.Metadata,
+	})
+	return err
 }

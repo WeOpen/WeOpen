@@ -2,6 +2,7 @@ package http
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/WeOpen/WeOpen/internal/core/plugin"
 	"github.com/WeOpen/WeOpen/services/api/internal/audit"
@@ -17,6 +18,12 @@ type ServerOptions struct {
 	Audit        *audit.Service
 	Plugins      *plugin.Registry
 	PluginStates pluginstate.Store
+	PluginRoutes []PluginRoute
+}
+
+type PluginRoute struct {
+	Prefix  string
+	Handler http.Handler
 }
 
 func NewServer(options ...ServerOptions) http.Handler {
@@ -50,5 +57,38 @@ func NewServer(options ...ServerOptions) http.Handler {
 		mux.HandleFunc("/api/plugins", pluginHandlers.plugins)
 		mux.HandleFunc("/api/plugins/", pluginHandlers.pluginByID)
 	}
+	if opts.Auth != nil {
+		for _, route := range opts.PluginRoutes {
+			prefix := strings.TrimRight(route.Prefix, "/")
+			if prefix == "" || route.Handler == nil {
+				continue
+			}
+			handler := authenticatedPluginRoute{
+				auth:    opts.Auth,
+				prefix:  prefix,
+				handler: route.Handler,
+			}
+			mux.Handle(prefix, handler)
+			mux.Handle(prefix+"/", handler)
+		}
+	}
 	return Chain(mux, WithRequestID, WithRecovery, WithCORS(opts.WebOrigin))
+}
+
+type authenticatedPluginRoute struct {
+	auth    *auth.Service
+	prefix  string
+	handler http.Handler
+}
+
+func (h authenticatedPluginRoute) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	user, err := h.auth.UserForToken(r.Context(), bearerOrCookieToken(r))
+	if err != nil {
+		WriteError(w, r, NewAppError(http.StatusUnauthorized, "AUTH_SESSION_EXPIRED", "请重新登录"))
+		return
+	}
+	request := r.Clone(r.Context())
+	request.Header = r.Header.Clone()
+	request.Header.Set("X-WeOpen-Actor-ID", user.ID)
+	http.StripPrefix(h.prefix, h.handler).ServeHTTP(w, request)
 }
