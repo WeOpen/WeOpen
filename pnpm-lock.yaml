@@ -54,6 +54,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@weopen/plugin-sdk':
+        specifier: workspace:*
+        version: link:../../packages/plugin-sdk
       '@weopen/ui':
         specifier: workspace:*
         version: link:../../packages/ui

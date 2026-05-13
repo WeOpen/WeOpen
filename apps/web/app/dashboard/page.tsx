@@ -1,26 +1,10 @@
 import { AppShell } from "@/components/app-shell";
+import { pluginDashboardWidgets } from "@/plugins/registry";
 import { Card } from "@weopen/ui";
 
-const cards = [
-  {
-    title: "博客管理",
-    copy: "草稿、发布、标签、封面图和 R2 素材会在这里汇总。"
-  },
-  {
-    title: "程序员工具",
-    copy: "JSON、JWT、Base64、时间戳、UUID 等高频工具优先本地运行。"
-  },
-  {
-    title: "域名管理",
-    copy: "域名、DNS、SSL 和到期提醒先做只读同步，降低误操作风险。"
-  },
-  {
-    title: "云存储",
-    copy: "R2 文件、博客附件、图片素材和备份对象统一管理。"
-  }
-];
-
 export default function DashboardPage() {
+  const widgets = pluginDashboardWidgets();
+
   return (
     <AppShell>
       <section className="page-header">
@@ -31,8 +15,12 @@ export default function DashboardPage() {
         </p>
       </section>
       <section className="dashboard-grid" aria-label="插件占位卡片">
-        {cards.map((card) => (
-          <Card description={card.copy} key={card.title} title={card.title} />
+        {widgets.map((widget) => (
+          <Card
+            description={`${widget.pluginName} - ${widget.description ?? ""}`}
+            key={`${widget.pluginId}:${widget.id}`}
+            title={widget.title}
+          />
         ))}
       </section>
     </AppShell>

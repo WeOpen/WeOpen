@@ -226,6 +226,44 @@ textarea {
   margin: 0;
 }
 
+.plugin-card-meta {
+  color: var(--muted);
+  font-size: 13px;
+  margin: 12px 0 0;
+}
+
+.plugin-placeholder {
+  display: grid;
+  gap: 18px;
+}
+
+.plugin-meta {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  max-width: 680px;
+  padding: 18px;
+}
+
+.plugin-meta div {
+  display: grid;
+  gap: 4px;
+}
+
+.plugin-meta dt {
+  color: #354057;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.plugin-meta dd {
+  color: var(--muted);
+  margin: 0;
+}
+
 @media (max-width: 760px) {
   .app-shell {
     grid-template-columns: 1fr;

@@ -1,11 +1,9 @@
 import Link from "next/link";
+import { pluginNavigation } from "@/plugins/registry";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard" },
-  { href: "/blog", label: "博客" },
-  { href: "/tools", label: "工具箱" },
-  { href: "/domains", label: "域名" },
-  { href: "/storage", label: "云存储" },
+  ...pluginNavigation.map((item) => ({ href: item.path, label: item.title })),
   { href: "/plugins", label: "插件" },
   { href: "/settings", label: "设置" }
 ];
