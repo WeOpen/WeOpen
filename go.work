@@ -3,5 +3,6 @@ go 1.25.2
 use (
 	./apps/desktop
 	./internal/core
+	./internal/plugins/blog
 	./services/api
 )
