@@ -1,0 +1,7 @@
+DROP TABLE IF EXISTS notifications;
+DROP TABLE IF EXISTS audit_logs;
+DROP TABLE IF EXISTS secrets;
+DROP TABLE IF EXISTS plugin_settings;
+DROP TABLE IF EXISTS plugins;
+DROP TABLE IF EXISTS sessions;
+DROP TABLE IF EXISTS users;
