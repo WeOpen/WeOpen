@@ -5,6 +5,7 @@ import (
 
 	"github.com/WeOpen/WeOpen/internal/core/plugin"
 	"github.com/WeOpen/WeOpen/internal/plugins/blog"
+	"github.com/WeOpen/WeOpen/internal/plugins/devtools"
 	storage "github.com/WeOpen/WeOpen/internal/plugins/storage_r2"
 	apihttp "github.com/WeOpen/WeOpen/services/api/internal/adapters/http"
 	"github.com/WeOpen/WeOpen/services/api/internal/domain/audit"
@@ -28,14 +29,7 @@ func builtinPluginRoutes(blogService *blog.Service, storageService *storage.Serv
 func newBuiltinPluginRegistry(blogService *blog.Service, storageService *storage.Service) *plugin.Registry {
 	registry := plugin.NewRegistry()
 	registry.MustRegister(blog.NewPlugin(blogService))
-	registry.MustRegister(plugin.NewStaticPlugin(plugin.Manifest{
-		ID:          "devtools",
-		Name:        "程序员工具",
-		Description: "提供 JSON、JWT、Base64、时间戳等常用工具。",
-		Version:     "0.1.0",
-		Permissions: []plugin.Permission{},
-		Navigation:  []plugin.NavItem{{Title: "工具箱", Path: "/tools", Icon: "wrench", Order: 20}},
-	}, plugin.Widget{ID: "devtools-local", PluginID: "devtools", Title: "工具箱", Description: "本地优先工具插件占位", Href: "/tools"}))
+	registry.MustRegister(devtools.NewPlugin())
 	registry.MustRegister(plugin.NewStaticPlugin(plugin.Manifest{
 		ID:          "domains",
 		Name:        "域名管理",

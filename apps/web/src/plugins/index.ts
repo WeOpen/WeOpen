@@ -21,16 +21,17 @@ export const builtinPluginManifests: PluginManifest[] = [
   },
   {
     id: "devtools",
-    name: "程序员工具",
-    description: "提供 JSON、JWT、Base64、时间戳等常用工具。",
+    name: "Developer Tools",
+    description: "Local-first JSON, encoding, time, UUID, JWT, hash, HMAC, and regex utilities.",
     version: "0.1.0",
     permissions: [],
-    nav: [{ title: "工具箱", path: "/tools", icon: "wrench", order: 20 }],
+    nav: [{ title: "Tools", path: "/tools", icon: "wrench", order: 20 }],
     widgets: [
       {
         id: "devtools-local",
-        title: "工具箱",
-        description: "本地优先工具插件占位",
+        title: "Developer tools",
+        value: "13",
+        description: "Client-safe utilities with no backend round-trip; cron parser deferred.",
         href: "/tools",
         status: "neutral"
       }

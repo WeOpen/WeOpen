@@ -3,6 +3,7 @@ import { PluginRegistry } from "@weopen/plugin-sdk";
 import type { PluginManifest } from "@weopen/plugin-sdk";
 import { BlogPluginPage } from "@/features/blog";
 import { builtinPluginManifests } from "./index";
+import { DevtoolsPluginPage } from "./devtools";
 import { StorageR2PluginPage } from "@/features/storage-r2";
 
 /** WebPluginComponent is the React entry point associated with one plugin manifest. */
@@ -12,7 +13,14 @@ export type WebPluginComponent = (props: { manifest: PluginManifest }) => React.
 export const webPluginRegistry = new PluginRegistry<WebPluginComponent>();
 
 for (const manifest of builtinPluginManifests) {
-  const component = manifest.id === "blog" ? BlogPluginPage : manifest.id === "storage-r2" ? StorageR2PluginPage : PlaceholderPluginPage;
+  const component =
+    manifest.id === "blog"
+      ? BlogPluginPage
+      : manifest.id === "storage-r2"
+        ? StorageR2PluginPage
+        : manifest.id === "devtools"
+          ? DevtoolsPluginPage
+          : PlaceholderPluginPage;
   webPluginRegistry.register({
     manifest,
     component

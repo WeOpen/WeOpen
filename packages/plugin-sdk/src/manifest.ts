@@ -26,6 +26,7 @@ export type PluginNavItem = {
 export type PluginWidgetManifest = {
   id: string;
   title: string;
+  value?: string;
   description?: string;
   href?: string;
   status?: "neutral" | "success" | "warning" | "danger";
