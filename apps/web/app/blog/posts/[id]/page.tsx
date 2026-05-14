@@ -1,5 +1,5 @@
-import { AppShell } from "@/components/app-shell";
-import { BlogPluginPage } from "@/plugins/blog";
+import { AppShell } from "@/shared/layout/app-shell";
+import { BlogPluginPage } from "@/features/blog";
 
 type BlogPostPageProps = {
   params: Promise<{ id: string }>;

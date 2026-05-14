@@ -4,6 +4,7 @@ import (
 	"embed"
 	"log"
 
+	desktopapp "github.com/WeOpen/WeOpen/apps/desktop/internal/app"
 	"github.com/wailsapp/wails/v3/pkg/application"
 )
 
@@ -13,7 +14,7 @@ const appVersion = "0.1.0"
 var assets embed.FS
 
 func main() {
-	appService := NewApp(appVersion)
+	appService := desktopapp.NewApp(appVersion)
 
 	app := application.New(application.Options{
 		Name:        "WeOpen",

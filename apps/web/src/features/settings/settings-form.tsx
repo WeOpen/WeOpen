@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button, Input } from "@weopen/ui";
-import { updateSettings } from "@/lib/settings";
+import { updateSettings } from "@/shared/api/settings";
 
 export function SettingsForm() {
   const [cloudflareApiToken, setCloudflareApiToken] = useState("");

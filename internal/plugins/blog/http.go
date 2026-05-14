@@ -34,7 +34,7 @@ func (h httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case strings.HasPrefix(path, "/posts/"):
 		h.postByID(w, r, strings.TrimPrefix(path, "/posts/"))
 	default:
-		writeHTTPError(w, http.StatusNotFound, "blog route not found")
+		writeHTTPError(w, http.StatusNotFound, "NOT_FOUND", "blog route not found")
 	}
 }
 
@@ -51,7 +51,7 @@ func (h httpHandler) posts(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPost:
 		var input CreatePostInput
 		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-			writeHTTPError(w, http.StatusBadRequest, "invalid request JSON")
+			writeHTTPError(w, http.StatusBadRequest, "VALIDATION_FAILED", "invalid request JSON")
 			return
 		}
 		post, err := h.service.CreatePost(r.Context(), r.Header.Get(ActorIDHeader), input)
@@ -62,13 +62,13 @@ func (h httpHandler) posts(w http.ResponseWriter, r *http.Request) {
 		writeHTTPJSON(w, http.StatusCreated, post)
 	default:
 		w.Header().Set("Allow", "GET, POST")
-		writeHTTPError(w, http.StatusMethodNotAllowed, "method not allowed")
+		writeHTTPError(w, http.StatusMethodNotAllowed, "METHOD_NOT_ALLOWED", "method not allowed")
 	}
 }
 
 func (h httpHandler) postByID(w http.ResponseWriter, r *http.Request, id string) {
 	if id == "" || strings.Contains(id, "/") {
-		writeHTTPError(w, http.StatusNotFound, "blog post not found")
+		writeHTTPError(w, http.StatusNotFound, "NOT_FOUND", "blog post not found")
 		return
 	}
 	switch r.Method {
@@ -82,7 +82,7 @@ func (h httpHandler) postByID(w http.ResponseWriter, r *http.Request, id string)
 	case http.MethodPatch:
 		var input UpdatePostInput
 		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-			writeHTTPError(w, http.StatusBadRequest, "invalid request JSON")
+			writeHTTPError(w, http.StatusBadRequest, "VALIDATION_FAILED", "invalid request JSON")
 			return
 		}
 		post, err := h.service.UpdatePost(r.Context(), r.Header.Get(ActorIDHeader), id, input)
@@ -99,18 +99,18 @@ func (h httpHandler) postByID(w http.ResponseWriter, r *http.Request, id string)
 		w.WriteHeader(http.StatusNoContent)
 	default:
 		w.Header().Set("Allow", "GET, PATCH, DELETE")
-		writeHTTPError(w, http.StatusMethodNotAllowed, "method not allowed")
+		writeHTTPError(w, http.StatusMethodNotAllowed, "METHOD_NOT_ALLOWED", "method not allowed")
 	}
 }
 
 func writeBlogError(w http.ResponseWriter, err error) {
 	switch {
 	case errors.Is(err, ErrPostNotFound):
-		writeHTTPError(w, http.StatusNotFound, err.Error())
+		writeHTTPError(w, http.StatusNotFound, "NOT_FOUND", err.Error())
 	case errors.Is(err, ErrDuplicateSlug), errors.Is(err, ErrInvalidStatus), errors.Is(err, ErrInvalidPost):
-		writeHTTPError(w, http.StatusBadRequest, err.Error())
+		writeHTTPError(w, http.StatusBadRequest, "VALIDATION_FAILED", err.Error())
 	default:
-		writeHTTPError(w, http.StatusInternalServerError, "blog request failed")
+		writeHTTPError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "blog request failed")
 	}
 }
 
@@ -120,10 +120,12 @@ func writeHTTPJSON(w http.ResponseWriter, status int, payload any) {
 	_ = json.NewEncoder(w).Encode(payload)
 }
 
-func writeHTTPError(w http.ResponseWriter, status int, message string) {
+func writeHTTPError(w http.ResponseWriter, status int, code string, message string) {
 	writeHTTPJSON(w, status, map[string]any{
 		"error": map[string]string{
-			"message": message,
+			"code":      code,
+			"message":   message,
+			"requestId": w.Header().Get("X-Request-Id"),
 		},
 	})
 }

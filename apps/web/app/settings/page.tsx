@@ -1,4 +1,4 @@
-import { AppShell } from "@/components/app-shell";
+import { AppShell } from "@/shared/layout/app-shell";
 import { SettingsForm } from "@/features/settings/settings-form";
 
 export default function SettingsPage() {

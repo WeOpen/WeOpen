@@ -42,14 +42,14 @@ func (h httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case strings.HasPrefix(path, "/objects/"):
 		h.objectByID(w, r, strings.TrimPrefix(path, "/objects/"))
 	default:
-		writeHTTPError(w, http.StatusNotFound, "storage route not found")
+		writeHTTPError(w, http.StatusNotFound, "NOT_FOUND", "storage route not found")
 	}
 }
 
 func (h httpHandler) objects(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.Header().Set("Allow", http.MethodGet)
-		writeHTTPError(w, http.StatusMethodNotAllowed, "method not allowed")
+		writeHTTPError(w, http.StatusMethodNotAllowed, "METHOD_NOT_ALLOWED", "method not allowed")
 		return
 	}
 	objects, err := h.service.ListObjects(r.Context())
@@ -63,12 +63,12 @@ func (h httpHandler) objects(w http.ResponseWriter, r *http.Request) {
 func (h httpHandler) uploadURL(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.Header().Set("Allow", http.MethodPost)
-		writeHTTPError(w, http.StatusMethodNotAllowed, "method not allowed")
+		writeHTTPError(w, http.StatusMethodNotAllowed, "METHOD_NOT_ALLOWED", "method not allowed")
 		return
 	}
 	var input CreateUploadInput
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		writeHTTPError(w, http.StatusBadRequest, "invalid request JSON")
+		writeHTTPError(w, http.StatusBadRequest, "VALIDATION_FAILED", "invalid request JSON")
 		return
 	}
 	result, err := h.service.CreateUploadURL(r.Context(), r.Header.Get(ActorIDHeader), input)
@@ -82,12 +82,12 @@ func (h httpHandler) uploadURL(w http.ResponseWriter, r *http.Request) {
 func (h httpHandler) complete(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.Header().Set("Allow", http.MethodPost)
-		writeHTTPError(w, http.StatusMethodNotAllowed, "method not allowed")
+		writeHTTPError(w, http.StatusMethodNotAllowed, "METHOD_NOT_ALLOWED", "method not allowed")
 		return
 	}
 	var input CompleteUploadInput
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		writeHTTPError(w, http.StatusBadRequest, "invalid request JSON")
+		writeHTTPError(w, http.StatusBadRequest, "VALIDATION_FAILED", "invalid request JSON")
 		return
 	}
 	object, err := h.service.CompleteUpload(r.Context(), r.Header.Get(ActorIDHeader), input)
@@ -100,14 +100,14 @@ func (h httpHandler) complete(w http.ResponseWriter, r *http.Request) {
 
 func (h httpHandler) objectByID(w http.ResponseWriter, r *http.Request, id string) {
 	if id == "" || strings.Contains(id, "/") {
-		writeHTTPError(w, http.StatusNotFound, "storage object not found")
+		writeHTTPError(w, http.StatusNotFound, "NOT_FOUND", "storage object not found")
 		return
 	}
 	switch r.Method {
 	case http.MethodPatch:
 		var input visibilityRequest
 		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-			writeHTTPError(w, http.StatusBadRequest, "invalid request JSON")
+			writeHTTPError(w, http.StatusBadRequest, "VALIDATION_FAILED", "invalid request JSON")
 			return
 		}
 		object, err := h.service.SetVisibility(r.Context(), r.Header.Get(ActorIDHeader), id, input.Visibility)
@@ -124,18 +124,18 @@ func (h httpHandler) objectByID(w http.ResponseWriter, r *http.Request, id strin
 		w.WriteHeader(http.StatusNoContent)
 	default:
 		w.Header().Set("Allow", "PATCH, DELETE")
-		writeHTTPError(w, http.StatusMethodNotAllowed, "method not allowed")
+		writeHTTPError(w, http.StatusMethodNotAllowed, "METHOD_NOT_ALLOWED", "method not allowed")
 	}
 }
 
 func writeStorageError(w http.ResponseWriter, err error) {
 	switch {
 	case errors.Is(err, ErrObjectNotFound):
-		writeHTTPError(w, http.StatusNotFound, err.Error())
+		writeHTTPError(w, http.StatusNotFound, "NOT_FOUND", err.Error())
 	case errors.Is(err, ErrInvalidObject), errors.Is(err, ErrInvalidVisibility):
-		writeHTTPError(w, http.StatusBadRequest, err.Error())
+		writeHTTPError(w, http.StatusBadRequest, "VALIDATION_FAILED", err.Error())
 	default:
-		writeHTTPError(w, http.StatusInternalServerError, "storage request failed")
+		writeHTTPError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "storage request failed")
 	}
 }
 
@@ -145,10 +145,12 @@ func writeHTTPJSON(w http.ResponseWriter, status int, payload any) {
 	_ = json.NewEncoder(w).Encode(payload)
 }
 
-func writeHTTPError(w http.ResponseWriter, status int, message string) {
+func writeHTTPError(w http.ResponseWriter, status int, code string, message string) {
 	writeHTTPJSON(w, status, map[string]any{
 		"error": map[string]string{
-			"message": message,
+			"code":      code,
+			"message":   message,
+			"requestId": w.Header().Get("X-Request-Id"),
 		},
 	})
 }

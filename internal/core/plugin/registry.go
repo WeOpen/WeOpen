@@ -9,24 +9,30 @@ import (
 )
 
 var (
+	// ErrDuplicatePlugin is returned when two plugins share the same stable ID.
 	ErrDuplicatePlugin = errors.New("duplicate plugin")
-	ErrPluginNotFound  = errors.New("plugin not found")
+	// ErrPluginNotFound is returned when registry state is requested for an unknown plugin ID.
+	ErrPluginNotFound = errors.New("plugin not found")
 )
 
+// RegisteredPlugin combines a plugin implementation with its enabled state.
 type RegisteredPlugin struct {
 	Plugin  Plugin
 	Enabled bool
 }
 
+// Registry stores built-in plugins and keeps list operations deterministic.
 type Registry struct {
 	mu      sync.RWMutex
 	plugins map[string]RegisteredPlugin
 }
 
+// NewRegistry creates an empty in-memory plugin registry.
 func NewRegistry() *Registry {
 	return &Registry{plugins: map[string]RegisteredPlugin{}}
 }
 
+// Register adds a plugin enabled by default and rejects empty or duplicate IDs.
 func (r *Registry) Register(plugin Plugin) error {
 	if plugin == nil {
 		return errors.New("plugin is required")
@@ -45,12 +51,14 @@ func (r *Registry) Register(plugin Plugin) error {
 	return nil
 }
 
+// MustRegister registers a plugin and panics on programmer configuration errors.
 func (r *Registry) MustRegister(plugin Plugin) {
 	if err := r.Register(plugin); err != nil {
 		panic(err)
 	}
 }
 
+// SetEnabled updates runtime plugin availability without changing registration order.
 func (r *Registry) SetEnabled(id string, enabled bool) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -63,18 +71,21 @@ func (r *Registry) SetEnabled(id string, enabled bool) error {
 	return nil
 }
 
+// All returns every registered plugin sorted by stable plugin ID.
 func (r *Registry) All() []RegisteredPlugin {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	return r.sorted(false)
 }
 
+// Enabled returns enabled plugins sorted by stable plugin ID.
 func (r *Registry) Enabled() []RegisteredPlugin {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	return r.sorted(true)
 }
 
+// Manifests returns serializable plugin metadata, optionally including disabled plugins.
 func (r *Registry) Manifests(includeDisabled bool) []Manifest {
 	registered := r.All()
 	manifests := make([]Manifest, 0, len(registered))
@@ -87,6 +98,7 @@ func (r *Registry) Manifests(includeDisabled bool) []Manifest {
 	return manifests
 }
 
+// Dashboard aggregates widgets from enabled plugins and stops on the first plugin error.
 func (r *Registry) Dashboard(ctx context.Context, userID string) ([]Widget, error) {
 	registered := r.Enabled()
 	var widgets []Widget

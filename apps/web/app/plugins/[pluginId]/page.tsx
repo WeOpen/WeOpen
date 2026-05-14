@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { AppShell } from "@/components/app-shell";
+import { AppShell } from "@/shared/layout/app-shell";
 import { webPluginRegistry } from "@/plugins/registry";
 
 type PluginDetailPageProps = {

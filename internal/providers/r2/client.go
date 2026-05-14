@@ -1,3 +1,4 @@
+// Package r2 wraps Cloudflare R2 S3-compatible calls behind a provider boundary.
 package r2
 
 import (
@@ -13,6 +14,7 @@ import (
 	"time"
 )
 
+// ErrInvalidConfig indicates that required R2 provider settings are missing or malformed.
 var ErrInvalidConfig = errors.New("invalid r2 config")
 
 type httpDoer interface {
@@ -47,7 +49,7 @@ func NewClient(config Config) (*Client, error) {
 	return &Client{
 		config:     config,
 		endpoint:   endpoint,
-		httpClient: http.DefaultClient,
+		httpClient: &http.Client{Timeout: 15 * time.Second},
 		now:        time.Now,
 	}, nil
 }

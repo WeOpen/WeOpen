@@ -1,5 +1,5 @@
-import { AppShell } from "@/components/app-shell";
-import { StorageR2PluginPage } from "@/plugins/storage-r2";
+import { AppShell } from "@/shared/layout/app-shell";
+import { StorageR2PluginPage } from "@/features/storage-r2";
 
 export default function StoragePage() {
   return (

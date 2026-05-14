@@ -14,6 +14,7 @@ export type Permission =
   | "audit:read"
   | "task:schedule";
 
+/** PluginNavItem is a serializable navigation entry contributed by a plugin manifest. */
 export type PluginNavItem = {
   title: string;
   path: string;
@@ -21,6 +22,7 @@ export type PluginNavItem = {
   order?: number;
 };
 
+/** PluginWidgetManifest describes a dashboard widget without executable code. */
 export type PluginWidgetManifest = {
   id: string;
   title: string;
@@ -29,6 +31,7 @@ export type PluginWidgetManifest = {
   status?: "neutral" | "success" | "warning" | "danger";
 };
 
+/** PluginSettingSchema describes plugin settings while keeping stored values outside the manifest. */
 export type PluginSettingSchema = {
   key: string;
   label: string;
@@ -52,6 +55,7 @@ export type PluginManifest = {
   settings?: PluginSettingSchema[];
 };
 
+/** RegisteredPlugin binds a manifest to an optional UI component and runtime enabled state. */
 export type RegisteredPlugin<TComponent = unknown> = {
   manifest: PluginManifest;
   component?: TComponent;

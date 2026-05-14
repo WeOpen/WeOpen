@@ -1,3 +1,4 @@
+// Package blog implements the built-in blog plugin, including article state, audit events, and cover validation through storage.
 package blog
 
 import (

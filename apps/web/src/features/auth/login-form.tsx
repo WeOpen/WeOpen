@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button, Input } from "@weopen/ui";
-import { login } from "@/lib/auth";
+import { login } from "@/shared/api/auth";
 
 export function LoginForm() {
   const [email, setEmail] = useState("admin@example.com");

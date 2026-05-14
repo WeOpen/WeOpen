@@ -9,6 +9,19 @@ import (
 	"time"
 )
 
+func TestNewClientUsesBoundedHTTPTimeout(t *testing.T) {
+	t.Parallel()
+
+	client := newTestClient(t)
+	httpClient, ok := client.httpClient.(*http.Client)
+	if !ok {
+		t.Fatalf("expected default R2 HTTP client type, got %T", client.httpClient)
+	}
+	if httpClient.Timeout <= 0 {
+		t.Fatalf("expected bounded R2 HTTP timeout, got %s", httpClient.Timeout)
+	}
+}
+
 func TestNewClientValidatesConfig(t *testing.T) {
 	t.Parallel()
 

@@ -1,3 +1,4 @@
+// Built-in plugin manifests drive web navigation/widgets; backend manifests and permissions remain authoritative.
 import type { PluginManifest } from "@weopen/plugin-sdk";
 
 export const builtinPluginManifests: PluginManifest[] = [

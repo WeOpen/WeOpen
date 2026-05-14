@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { AppShell } from "@/components/app-shell";
+import { AppShell } from "@/shared/layout/app-shell";
 import { pluginManifests } from "@/plugins/registry";
 import { Card } from "@weopen/ui";
 

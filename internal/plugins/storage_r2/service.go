@@ -226,6 +226,7 @@ func normalizeVisibility(visibility Visibility) (Visibility, error) {
 	return visibility, nil
 }
 
+// IsObjectNotFound reports whether an error represents a missing storage object.
 func IsObjectNotFound(err error) bool {
 	return errors.Is(err, ErrObjectNotFound)
 }

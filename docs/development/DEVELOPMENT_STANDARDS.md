@@ -361,8 +361,10 @@ export function createLegacyRoute() {}
 Go API 按以下层次组织：
 
 ```text
-handler -> validation -> service -> repository/provider
+adapters/http -> validation -> domain services -> repository/provider adapters
 ```
+
+其中 `services/api/internal/app` 负责应用装配，`cmd/api/main.go` 只保留启动入口。
 
 要求：
 
@@ -470,13 +472,17 @@ internal/plugins/<plugin-id>/
   *_test.go
 ```
 
-前端插件：
+前端插件边界：
 
 ```text
-apps/web/src/plugins/<plugin-id>/
-  index.tsx
-  <feature-page>.tsx
+apps/web/src/plugins/index.ts
+apps/web/src/plugins/registry.tsx
+apps/web/src/features/<plugin-id>/
   components/
+  hooks/
+  <feature-page>.tsx
+apps/web/src/shared/api/
+apps/web/src/shared/layout/
 ```
 
 ### 11.3 插件规则

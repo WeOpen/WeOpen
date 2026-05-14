@@ -1,3 +1,4 @@
+// Package storage_r2 implements the built-in R2 storage plugin and owns object metadata, presigned upload, and audit behavior.
 package storage_r2
 
 import (

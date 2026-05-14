@@ -55,18 +55,29 @@ personal-platform/
   apps/
     web/
       app/
-      components/
+      src/
+        features/
+        plugins/
+        shared/
       next.config.ts
       package.json
     desktop/
       frontend/
+        src/
+          features/
+          shared/
       internal/
+        app/
       wails.json
       go.mod
   services/
     api/
       cmd/api/
       internal/
+        adapters/
+        app/
+        config/
+        domain/
       go.mod
   packages/
     ui/
@@ -203,13 +214,15 @@ Go API 必须满足：
 ### 6.1 分层
 
 ```text
-HTTP handler
+services/api/internal/adapters/http
   -> request validation
   -> auth/session middleware
-  -> service
-  -> repository/provider
+  -> services/api/internal/domain/{auth,audit,pluginstate}
+  -> repository/provider adapters
   -> response mapper
 ```
+
+应用装配放在 `services/api/internal/app`，`cmd/api/main.go` 只保留启动入口。
 
 ### 6.2 错误结构
 
@@ -349,21 +362,7 @@ export interface PluginNavItem {
 
 ### 7.5 前端插件加载
 
-v1 前端插件也采用编译期注册：
-
-```ts
-import { blogPlugin } from "@/plugins/blog"
-import { devtoolsPlugin } from "@/plugins/devtools"
-import { domainsPlugin } from "@/plugins/domains"
-import { storageR2Plugin } from "@/plugins/storage-r2"
-
-export const builtinPlugins = [
-  blogPlugin,
-  devtoolsPlugin,
-  domainsPlugin,
-  storageR2Plugin,
-]
-```
+v1 前端也采用编译期注册，插件边界保持在 `apps/web/src/plugins/index.ts` 和 `apps/web/src/plugins/registry.tsx`。具体业务 UI 放在 feature 目录，例如 `apps/web/src/features/blog` 与 `apps/web/src/features/storage-r2`，共享 API 客户端与布局分别放在 `apps/web/src/shared/api` 和 `apps/web/src/shared/layout`。
 
 插件前端需要提供：
 
@@ -652,6 +651,8 @@ API 使用 `SECRET_ENCRYPTION_KEY` 加密 `secrets.encrypted_value`。
 - 连接远程 API 查看 Dashboard、博客草稿和文件。
 
 ### 12.2 Wails 绑定
+
+桌面端 Go 服务放在 `apps/desktop/internal/app`，根目录 `apps/desktop/main.go` 保持不动以满足 Wails `go:embed` 约束。桌面前端首页 UI 放在 `apps/desktop/frontend/src/features/home`，`apps/desktop/frontend/src/shared` 预留给未来共享前端代码。
 
 桌面端 Go 暴露本地能力：
 

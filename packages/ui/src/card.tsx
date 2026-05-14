@@ -1,10 +1,12 @@
 import type { HTMLAttributes, ReactNode } from "react";
 
+/** CardProps exposes a shared article wrapper with optional heading and description slots. */
 export type CardProps = HTMLAttributes<HTMLElement> & {
   title?: ReactNode;
   description?: ReactNode;
 };
 
+/** Card renders shared dashboard/content panels with consistent semantic structure. */
 export function Card({
   children,
   className,
