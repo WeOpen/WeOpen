@@ -1,4 +1,5 @@
 import type { HTMLAttributes, ReactNode } from "react";
+import { cn } from "./utils";
 
 /** CardProps exposes a shared article wrapper with optional heading and description slots. */
 export type CardProps = HTMLAttributes<HTMLElement> & {
@@ -14,7 +15,7 @@ export function Card({
   title,
   ...props
 }: CardProps) {
-  const classes = ["ui-card", className].filter(Boolean).join(" ");
+  const classes = cn("ui-card", className);
 
   return (
     <article className={classes} {...props}>

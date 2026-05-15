@@ -46,7 +46,7 @@ export function AdminShell({
             </span>
           </a>
           <div className="admin-search" role="search">
-            <span aria-hidden="true">⌘</span>
+            <span aria-hidden="true">⌕</span>
             <input aria-label="Search" placeholder={searchPlaceholder} readOnly />
             <kbd>Ctrl K</kbd>
           </div>

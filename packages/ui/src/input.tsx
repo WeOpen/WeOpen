@@ -1,4 +1,5 @@
 import type { InputHTMLAttributes } from "react";
+import { cn } from "./utils";
 
 /** InputProps keeps the optional label text colocated with native input props. */
 export type InputProps = InputHTMLAttributes<HTMLInputElement> & {
@@ -8,7 +9,7 @@ export type InputProps = InputHTMLAttributes<HTMLInputElement> & {
 /** Input wraps the control in a label and derives htmlFor from id or name. */
 export function Input({ className, id, label, ...props }: InputProps) {
   const inputId = id ?? props.name;
-  const classes = ["ui-input", className].filter(Boolean).join(" ");
+  const classes = cn("ui-input", className);
 
   return (
     <label className="ui-input-field" htmlFor={inputId}>

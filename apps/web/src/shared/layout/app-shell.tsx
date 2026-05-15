@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { AdminShell, createAdminNavigation } from "@weopen/ui";
+import { AdminShell, ThemeToggle, createAdminNavigation } from "@weopen/ui";
 import { pluginNavigation } from "@/plugins/registry";
 
 const navItems = createAdminNavigation(
@@ -20,6 +20,7 @@ export function AppShell({
     <AdminShell
       appMark="W"
       appName="WeOpen"
+      actionSlot={<ThemeToggle />}
       currentPath={currentPath}
       navItems={navItems}
       renderNavItem={(item, className, isActive) => (

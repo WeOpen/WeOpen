@@ -49,3 +49,5 @@ go.work.sum
 
 .omx/
 .claude/
+.thesvg/
+thesvg/
