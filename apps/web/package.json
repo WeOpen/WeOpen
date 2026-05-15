@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@weopen/plugin-sdk": "workspace:*",
+    "@weopen/sdk": "workspace:*",
     "@weopen/ui": "workspace:*",
     "next": "^16.0.8",
     "react": "^19.2.1",
