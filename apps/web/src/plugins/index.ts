@@ -40,7 +40,7 @@ export const builtinPluginManifests: PluginManifest[] = [
   {
     id: "domains",
     name: "域名管理",
-    description: "同步域名、DNS、证书状态和到期提醒。",
+    description: "只读同步 Cloudflare 域名、DNS、证书状态和到期提醒；v1 禁用 DNS 写入。",
     version: "0.1.0",
     permissions: ["domain:read"],
     nav: [{ title: "域名", path: "/domains", icon: "globe", order: 30 }],
@@ -48,7 +48,7 @@ export const builtinPluginManifests: PluginManifest[] = [
       {
         id: "domains-watch",
         title: "域名监控",
-        description: "只读域名同步插件占位",
+        description: "只读域名、DNS 与证书风险",
         href: "/domains",
         status: "neutral"
       }

@@ -70,6 +70,7 @@ func TestLoadFromLookupReadsExplicitValues(t *testing.T) {
 		"R2_BUCKET":             "bucket",
 		"R2_ACCESS_KEY_ID":      "r2-access",
 		"R2_SECRET_ACCESS_KEY":  "r2-secret",
+		"CLOUDFLARE_API_TOKEN":  "cf-token",
 	}
 
 	cfg, err := LoadFromLookup(func(key string) (string, bool) {
@@ -91,5 +92,8 @@ func TestLoadFromLookupReadsExplicitValues(t *testing.T) {
 	}
 	if cfg.R2Bucket != "bucket" {
 		t.Fatalf("expected R2 bucket, got %q", cfg.R2Bucket)
+	}
+	if cfg.CloudflareAPIToken != "cf-token" {
+		t.Fatalf("expected Cloudflare API token, got %q", cfg.CloudflareAPIToken)
 	}
 }

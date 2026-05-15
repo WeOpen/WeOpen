@@ -3,12 +3,14 @@ import type { PluginManifest } from "@weopen/plugin-sdk";
 import { BlogPluginPage } from "@/features/blog";
 import { builtinPluginManifests } from "./index";
 import { DevtoolsPluginPage } from "./devtools";
+import { DomainsPluginPage } from "./domains";
 import { StorageR2PluginPage } from "@/features/storage-r2";
 
 export type WebPluginComponent = (props: { manifest: PluginManifest }) => React.ReactNode;
 
 const pluginComponents: Partial<Record<string, WebPluginComponent>> = {
   blog: BlogPluginPage,
+  domains: DomainsPluginPage,
   devtools: DevtoolsPluginPage,
   "storage-r2": StorageR2PluginPage
 };

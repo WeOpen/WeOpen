@@ -21,6 +21,7 @@ type Config struct {
 	R2Bucket            string
 	R2AccessKeyID       string
 	R2SecretAccessKey   string
+	CloudflareAPIToken  string
 }
 
 func Load() (Config, error) {
@@ -42,6 +43,7 @@ func LoadFromLookup(lookup func(string) (string, bool)) (Config, error) {
 		R2Bucket:            valueOrDefault(lookup, "R2_BUCKET", ""),
 		R2AccessKeyID:       valueOrDefault(lookup, "R2_ACCESS_KEY_ID", ""),
 		R2SecretAccessKey:   valueOrDefault(lookup, "R2_SECRET_ACCESS_KEY", ""),
+		CloudflareAPIToken:  valueOrDefault(lookup, "CLOUDFLARE_API_TOKEN", ""),
 	}
 
 	if cfg.AppEnv == "local" {

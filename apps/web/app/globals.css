@@ -553,6 +553,232 @@ textarea {
   font-weight: 700;
 }
 
+.domains-workspace {
+  display: grid;
+  gap: 18px;
+}
+
+.domains-header {
+  align-items: flex-start;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+}
+
+.domains-stats {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.domains-layout {
+  align-items: start;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(240px, 0.7fr) minmax(0, 2fr);
+}
+
+.domains-list,
+.domain-detail,
+.domain-dns-table-wrap {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.domains-list {
+  display: grid;
+  gap: 12px;
+}
+
+.domains-list-header,
+.domain-detail-header,
+.domain-dns-header {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.domains-list-header h2,
+.domain-detail h2,
+.domain-dns-header h2,
+.domain-nameservers h3 {
+  margin: 0;
+}
+
+.domains-list-items,
+.domains-detail-stack {
+  display: grid;
+  gap: 12px;
+}
+
+.domain-row {
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--foreground);
+  cursor: pointer;
+  display: grid;
+  gap: 5px;
+  min-height: 64px;
+  padding: 10px 12px;
+  text-align: left;
+}
+
+.domain-row:hover,
+.domain-row-active {
+  border-color: #8cc8c1;
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.08);
+}
+
+.domain-row span {
+  font-weight: 700;
+}
+
+.domain-row small,
+.domains-empty,
+.domain-detail-header p,
+.domain-readonly-note {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.domain-badge {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 4px 9px;
+  text-transform: uppercase;
+}
+
+.domain-badge-neutral {
+  background: #f8fafc;
+  color: #475569;
+}
+
+.domain-badge-success {
+  background: #ecfdf5;
+  border-color: #bbf7d0;
+  color: #047857;
+}
+
+.domain-badge-warning {
+  background: #fff7ed;
+  border-color: #fed7aa;
+  color: #9a3412;
+}
+
+.domain-badge-danger {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #991b1b;
+}
+
+.domain-meta-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 16px 0;
+}
+
+.domain-meta-grid div {
+  background: #fbfcfe;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.domain-meta-grid dt {
+  color: #354057;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.domain-meta-grid dd {
+  color: var(--foreground);
+  margin: 6px 0 0;
+  overflow-wrap: anywhere;
+}
+
+.domain-nameservers {
+  display: grid;
+  gap: 10px;
+}
+
+.domain-nameservers ul {
+  display: grid;
+  gap: 6px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.domain-nameservers li {
+  background: #f8fafc;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: #354057;
+  display: inline-flex;
+  font-size: 13px;
+  padding: 5px 10px;
+  width: fit-content;
+}
+
+.domain-readonly-note {
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-radius: 8px;
+  margin-top: 16px;
+  padding: 10px 12px;
+}
+
+.domain-dns-table-wrap {
+  overflow-x: auto;
+}
+
+.domain-dns-header span {
+  color: var(--primary-strong);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.domain-dns-table {
+  border-collapse: collapse;
+  margin-top: 12px;
+  min-width: 820px;
+  width: 100%;
+}
+
+.domain-dns-table th,
+.domain-dns-table td {
+  border-bottom: 1px solid var(--line);
+  font-size: 14px;
+  padding: 12px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.domain-dns-table th {
+  color: #354057;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.domain-dns-table td span {
+  color: var(--muted);
+  display: block;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
 .ui-button:disabled {
   cursor: not-allowed;
   opacity: 0.55;
@@ -825,13 +1051,21 @@ textarea {
   .blog-stats,
   .blog-layout,
   .blog-editor-grid,
-  .blog-cover-panel,
-  .storage-stats,
-  .storage-layout,
-  .devtools-stats,
-  .devtools-layout,
-  .tool-grid {
+    .blog-cover-panel,
+    .storage-stats,
+    .storage-layout,
+    .domains-header,
+    .domains-stats,
+    .domains-layout,
+    .domain-meta-grid,
+    .devtools-stats,
+    .devtools-layout,
+    .tool-grid {
     grid-template-columns: 1fr;
+  }
+
+  .domains-header {
+    display: grid;
   }
 
   .devtools-sidebar {

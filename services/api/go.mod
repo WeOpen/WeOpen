@@ -6,7 +6,10 @@ require (
 	github.com/WeOpen/WeOpen/internal/core v0.0.0
 	github.com/WeOpen/WeOpen/internal/plugins/blog v0.0.0
 	github.com/WeOpen/WeOpen/internal/plugins/devtools v0.0.0
+	github.com/WeOpen/WeOpen/internal/plugins/domains v0.0.0
 	github.com/WeOpen/WeOpen/internal/plugins/storage_r2 v0.0.0
+	github.com/WeOpen/WeOpen/internal/providers/cloudflare v0.0.0
+	github.com/WeOpen/WeOpen/internal/providers/domains v0.0.0
 	github.com/WeOpen/WeOpen/internal/providers/r2 v0.0.0
 )
 
@@ -19,3 +22,9 @@ replace github.com/WeOpen/WeOpen/internal/plugins/storage_r2 => ../../internal/p
 replace github.com/WeOpen/WeOpen/internal/providers/r2 => ../../internal/providers/r2
 
 replace github.com/WeOpen/WeOpen/internal/plugins/devtools => ../../internal/plugins/devtools
+
+replace github.com/WeOpen/WeOpen/internal/plugins/domains => ../../internal/plugins/domains
+
+replace github.com/WeOpen/WeOpen/internal/providers/cloudflare => ../../internal/providers/cloudflare
+
+replace github.com/WeOpen/WeOpen/internal/providers/domains => ../../internal/providers/domains
