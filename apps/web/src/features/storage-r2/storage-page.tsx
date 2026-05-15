@@ -9,6 +9,7 @@ import {
   setStorageVisibility,
   uploadStorageFile
 } from "@/shared/api/storage-r2";
+import { formatBytes, slugifyFilename } from "@/shared/format";
 import { ObjectTable } from "./object-table";
 import { UploadPanel } from "./upload-panel";
 
@@ -137,20 +138,3 @@ export function StoragePage() {
   );
 }
 
-function slugifyFilename(name: string) {
-  return name
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9.\-_]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
-
-function formatBytes(bytes: number) {
-  if (bytes < 1024) {
-    return `${bytes} B`;
-  }
-  if (bytes < 1024 * 1024) {
-    return `${(bytes / 1024).toFixed(1)} KB`;
-  }
-  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
-}

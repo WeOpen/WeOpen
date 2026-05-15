@@ -12,6 +12,7 @@ import {
 } from "@/shared/api/blog";
 import type { StorageObject } from "@/shared/api/storage-r2";
 import { listStorageObjects, uploadStorageFile } from "@/shared/api/storage-r2";
+import { slugifyFilename } from "@/shared/format";
 import { BlogPostEditor, emptyBlogDraft } from "./post-editor";
 import { BlogPostPreview } from "./post-preview";
 
@@ -263,14 +264,6 @@ function toInput(post: BlogPost): BlogPostInput {
       type: term.type
     }))
   };
-}
-
-function slugifyFilename(name: string) {
-  return name
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9.\-_]+/g, "-")
-    .replace(/^-+|-+$/g, "");
 }
 
 function statusLabel(status: BlogPost["status"]) {

@@ -2,6 +2,7 @@
 
 import { Button } from "@weopen/ui";
 import type { StorageObject, StorageVisibility } from "@/shared/api/storage-r2";
+import { formatBytes } from "@/shared/format";
 
 type ObjectTableProps = {
   objects: StorageObject[];
@@ -67,12 +68,3 @@ export function ObjectTable({ objects, onDelete, onVisibilityChange }: ObjectTab
   );
 }
 
-function formatBytes(bytes: number) {
-  if (bytes < 1024) {
-    return `${bytes} B`;
-  }
-  if (bytes < 1024 * 1024) {
-    return `${(bytes / 1024).toFixed(1)} KB`;
-  }
-  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
-}
