@@ -5,15 +5,15 @@ import { Card } from "@weopen/ui";
 
 export default function PluginsPage() {
   return (
-    <AppShell>
+    <AppShell currentPath="/plugins">
       <section className="page-header">
         <div className="page-kicker">Plugins</div>
-        <h1 className="page-title">插件</h1>
+        <h1 className="page-title">Plugin center</h1>
         <p className="page-description">
-          M2 阶段展示编译期内置插件。启停状态以后会从 API manifest 同步。
+          Built-in plugin manifests stay compile-time and serializable. Web and Desktop share the shell, base components and SDK while keeping app-specific route adapters.
         </p>
       </section>
-      <section className="dashboard-grid" aria-label="插件列表">
+      <section className="dashboard-grid" aria-label="Plugin list">
         {pluginManifests.map((manifest) => (
           <Link href={`/plugins/${manifest.id}`} key={manifest.id}>
             <Card description={manifest.description} title={manifest.name}>

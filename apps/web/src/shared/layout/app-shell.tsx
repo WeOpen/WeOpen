@@ -1,37 +1,61 @@
 import Link from "next/link";
+import { AdminShell, createAdminNavigation } from "@weopen/ui";
 import { pluginNavigation } from "@/plugins/registry";
 
-const navItems = [
-  { href: "/dashboard", label: "Dashboard" },
-  ...pluginNavigation.map((item) => ({ href: item.path, label: item.title })),
-  { href: "/plugins", label: "插件" },
-  { href: "/settings", label: "设置" }
-];
+const navItems = createAdminNavigation(
+  pluginNavigation.map((item) => ({
+    description: pluginDescription(item.path),
+    href: item.path,
+    label: item.title,
+    order: item.order
+  }))
+);
 
-/** AppShell composes global navigation from the compile-time plugin registry. */
-export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) {
+/** AppShell composes the shared thesvg-style management shell for Web routes. */
+export function AppShell({
+  children,
+  currentPath
+}: Readonly<{ children: React.ReactNode; currentPath?: string }>) {
   return (
-    <div className="app-shell">
-      <aside className="sidebar">
-        <div className="brand">
-          <div className="brand-title">WeOpen</div>
-          <div className="brand-subtitle">Personal Platform</div>
-        </div>
-        <nav className="nav-list" aria-label="主导航">
-          {navItems.map((item) => (
-            <Link className="nav-link" href={item.href} key={item.href}>
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-      </aside>
-      <div className="main-area">
-        <header className="topbar">
-          <div className="topbar-title">个人管理平台</div>
-          <div className="topbar-status">API: {process.env.NEXT_PUBLIC_API_BASE_URL ?? "未配置"}</div>
-        </header>
-        <main className="page">{children}</main>
-      </div>
-    </div>
+    <AdminShell
+      appMark="W"
+      appName="WeOpen"
+      currentPath={currentPath}
+      navItems={navItems}
+      renderNavItem={(item, className, isActive) => (
+        <Link
+          aria-current={isActive ? "page" : undefined}
+          className={className}
+          href={item.href}
+        >
+          <span>
+            <strong>{item.label}</strong>
+            {item.description ? <small>{item.description}</small> : null}
+          </span>
+          {item.badge ? <em>{item.badge}</em> : null}
+        </Link>
+      )}
+      searchPlaceholder="Search plugins, settings, posts, domains..."
+      statusLabel={`API: ${process.env.NEXT_PUBLIC_API_BASE_URL ?? "not configured"}`}
+      subtitle="Personal Platform"
+    >
+      {children}
+    </AdminShell>
   );
+}
+
+function pluginDescription(path: string): string {
+  if (path === "/blog") {
+    return "Posts, drafts, taxonomy and cover media";
+  }
+  if (path === "/tools") {
+    return "JSON, encoding, time, JWT and regex";
+  }
+  if (path === "/domains") {
+    return "Cloudflare domains and DNS read-only checks";
+  }
+  if (path === "/storage") {
+    return "R2 objects, media and backup files";
+  }
+  return "Built-in management module";
 }

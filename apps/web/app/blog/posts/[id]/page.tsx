@@ -9,7 +9,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const { id } = await params;
 
   return (
-    <AppShell>
+    <AppShell currentPath="/blog">
       <BlogPluginPage initialPostId={id} />
     </AppShell>
   );

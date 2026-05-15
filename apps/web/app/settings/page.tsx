@@ -3,12 +3,12 @@ import { SettingsForm } from "@/features/settings/settings-form";
 
 export default function SettingsPage() {
   return (
-    <AppShell>
+    <AppShell currentPath="/settings">
       <section className="page-header">
         <div className="page-kicker">Settings</div>
-        <h1 className="page-title">设置中心</h1>
+        <h1 className="page-title">Settings center</h1>
         <p className="page-description">
-          配置外部服务密钥。服务端只返回脱敏摘要，原始密钥不会回传到前端。
+          Configure external service secrets. The server returns masked summaries only and never sends raw secret values back to the browser.
         </p>
       </section>
       <SettingsForm />

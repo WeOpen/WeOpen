@@ -1,225 +1,3 @@
-:root {
-  color-scheme: light;
-  --background: #f7f8fb;
-  --foreground: #172033;
-  --muted: #657084;
-  --line: #dce2eb;
-  --panel: #ffffff;
-  --primary: #0f766e;
-  --primary-strong: #115e59;
-}
-
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  background: var(--background);
-  color: var(--foreground);
-  font-family:
-    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    sans-serif;
-}
-
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
-button,
-input,
-select,
-textarea {
-  font: inherit;
-}
-
-.app-shell {
-  display: grid;
-  grid-template-columns: 248px minmax(0, 1fr);
-  min-height: 100vh;
-}
-
-.sidebar {
-  border-right: 1px solid var(--line);
-  background: #ffffff;
-  padding: 24px 18px;
-}
-
-.brand {
-  margin-bottom: 28px;
-}
-
-.brand-title {
-  font-size: 20px;
-  font-weight: 700;
-}
-
-.brand-subtitle {
-  margin-top: 4px;
-  color: var(--muted);
-  font-size: 13px;
-}
-
-.nav-list {
-  display: grid;
-  gap: 6px;
-}
-
-.nav-link {
-  border-radius: 8px;
-  color: #354057;
-  display: block;
-  font-size: 14px;
-  padding: 10px 12px;
-}
-
-.nav-link:hover {
-  background: #edf6f5;
-  color: var(--primary-strong);
-}
-
-.main-area {
-  min-width: 0;
-}
-
-.topbar {
-  align-items: center;
-  background: rgba(247, 248, 251, 0.92);
-  border-bottom: 1px solid var(--line);
-  display: flex;
-  justify-content: space-between;
-  min-height: 64px;
-  padding: 0 28px;
-  position: sticky;
-  top: 0;
-}
-
-.topbar-title {
-  font-size: 16px;
-  font-weight: 650;
-}
-
-.topbar-status {
-  color: var(--muted);
-  font-size: 13px;
-}
-
-.page {
-  padding: 28px;
-}
-
-.page-header {
-  margin-bottom: 24px;
-}
-
-.page-kicker {
-  color: var(--primary);
-  font-size: 13px;
-  font-weight: 700;
-  text-transform: uppercase;
-}
-
-.page-title {
-  font-size: 32px;
-  line-height: 1.15;
-  margin: 8px 0;
-}
-
-.page-description {
-  color: var(--muted);
-  line-height: 1.6;
-  max-width: 760px;
-}
-
-.dashboard-grid {
-  display: grid;
-  gap: 16px;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-}
-
-.ui-card {
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 18px;
-}
-
-.ui-card-title {
-  font-size: 15px;
-  font-weight: 700;
-  margin: 0 0 8px;
-}
-
-.ui-card-description {
-  color: var(--muted);
-  font-size: 14px;
-  line-height: 1.55;
-  margin: 0;
-}
-
-.ui-button {
-  align-items: center;
-  border: 1px solid transparent;
-  border-radius: 8px;
-  cursor: pointer;
-  display: inline-flex;
-  font-weight: 700;
-  justify-content: center;
-  min-height: 40px;
-  padding: 0 14px;
-}
-
-.ui-button-primary {
-  background: var(--primary);
-  color: #ffffff;
-}
-
-.ui-button-primary:hover {
-  background: var(--primary-strong);
-}
-
-.ui-button-secondary {
-  background: #ffffff;
-  border-color: var(--line);
-  color: var(--foreground);
-}
-
-.ui-button-ghost {
-  background: transparent;
-  color: var(--primary-strong);
-}
-
-.ui-input-field {
-  display: grid;
-  gap: 6px;
-}
-
-.ui-input-label {
-  color: #354057;
-  font-size: 13px;
-  font-weight: 650;
-}
-
-.ui-input {
-  background: #ffffff;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  color: var(--foreground);
-  min-height: 40px;
-  padding: 0 12px;
-}
-
-.ui-textarea {
-  background: #ffffff;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  color: var(--foreground);
-  line-height: 1.55;
-  padding: 10px 12px;
-  resize: vertical;
-}
-
 .auth-form,
 .settings-form {
   background: var(--panel);
@@ -265,7 +43,7 @@ textarea {
 }
 
 .plugin-meta dt {
-  color: #354057;
+  color: oklch(0.8 0 0);
   font-size: 13px;
   font-weight: 700;
 }
@@ -328,7 +106,7 @@ textarea {
 }
 
 .blog-post-row {
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.045);
   border: 1px solid var(--line);
   border-radius: 8px;
   color: var(--foreground);
@@ -342,8 +120,8 @@ textarea {
 
 .blog-post-row:hover,
 .blog-post-row-active {
-  border-color: #8cc8c1;
-  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.08);
+  border-color: rgba(249, 115, 22, 0.55);
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.14);
 }
 
 .blog-post-row span {
@@ -374,7 +152,7 @@ textarea {
 }
 
 .blog-preview {
-  color: #22304a;
+  color: var(--foreground);
   min-height: 520px;
 }
 
@@ -422,7 +200,7 @@ textarea {
 
 .blog-cover-upload {
   align-items: center;
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.045);
   border: 1px solid var(--line);
   border-radius: 8px;
   color: var(--primary-strong);
@@ -480,8 +258,8 @@ textarea {
 }
 
 .storage-upload-active {
-  border-color: #8cc8c1;
-  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.08);
+  border-color: rgba(249, 115, 22, 0.55);
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.14);
 }
 
 .storage-upload h2 {
@@ -517,7 +295,7 @@ textarea {
 }
 
 .storage-table th {
-  color: #354057;
+  color: oklch(0.8 0 0);
   font-size: 12px;
   text-transform: uppercase;
 }
@@ -534,7 +312,7 @@ textarea {
 }
 
 .storage-visibility {
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.045);
   border: 1px solid var(--line);
   border-radius: 8px;
   min-height: 34px;
@@ -615,7 +393,7 @@ textarea {
 }
 
 .domain-row {
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.045);
   border: 1px solid var(--line);
   border-radius: 8px;
   color: var(--foreground);
@@ -629,8 +407,8 @@ textarea {
 
 .domain-row:hover,
 .domain-row-active {
-  border-color: #8cc8c1;
-  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.08);
+  border-color: rgba(249, 115, 22, 0.55);
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.14);
 }
 
 .domain-row span {
@@ -658,26 +436,26 @@ textarea {
 }
 
 .domain-badge-neutral {
-  background: #f8fafc;
-  color: #475569;
+  background: rgba(255, 255, 255, 0.045);
+  color: oklch(0.75 0 0);
 }
 
 .domain-badge-success {
-  background: #ecfdf5;
-  border-color: #bbf7d0;
-  color: #047857;
+  background: rgba(34, 197, 94, 0.14);
+  border-color: rgba(34, 197, 94, 0.32);
+  color: #86efac;
 }
 
 .domain-badge-warning {
-  background: #fff7ed;
-  border-color: #fed7aa;
-  color: #9a3412;
+  background: rgba(245, 158, 11, 0.14);
+  border-color: rgba(245, 158, 11, 0.32);
+  color: #fbbf24;
 }
 
 .domain-badge-danger {
-  background: #fef2f2;
-  border-color: #fecaca;
-  color: #991b1b;
+  background: rgba(239, 68, 68, 0.14);
+  border-color: rgba(239, 68, 68, 0.32);
+  color: #fca5a5;
 }
 
 .domain-meta-grid {
@@ -688,14 +466,14 @@ textarea {
 }
 
 .domain-meta-grid div {
-  background: #fbfcfe;
+  background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 12px;
 }
 
 .domain-meta-grid dt {
-  color: #354057;
+  color: oklch(0.8 0 0);
   font-size: 12px;
   font-weight: 800;
   text-transform: uppercase;
@@ -721,10 +499,10 @@ textarea {
 }
 
 .domain-nameservers li {
-  background: #f8fafc;
+  background: rgba(255, 255, 255, 0.045);
   border: 1px solid var(--line);
   border-radius: 999px;
-  color: #354057;
+  color: oklch(0.8 0 0);
   display: inline-flex;
   font-size: 13px;
   padding: 5px 10px;
@@ -732,8 +510,8 @@ textarea {
 }
 
 .domain-readonly-note {
-  background: #fff7ed;
-  border: 1px solid #fed7aa;
+  background: rgba(245, 158, 11, 0.14);
+  border: 1px solid rgba(245, 158, 11, 0.32);
   border-radius: 8px;
   margin-top: 16px;
   padding: 10px 12px;
@@ -767,7 +545,7 @@ textarea {
 }
 
 .domain-dns-table th {
-  color: #354057;
+  color: oklch(0.8 0 0);
   font-size: 12px;
   text-transform: uppercase;
 }
@@ -823,10 +601,10 @@ textarea {
 }
 
 .devtools-tab {
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.045);
   border: 1px solid var(--line);
   border-radius: 10px;
-  color: #354057;
+  color: oklch(0.8 0 0);
   cursor: pointer;
   font-weight: 700;
   min-height: 40px;
@@ -836,8 +614,8 @@ textarea {
 
 .devtools-tab:hover,
 .devtools-tab-active {
-  background: #e9f7f5;
-  border-color: #8cc8c1;
+  background: var(--primary-soft);
+  border-color: rgba(249, 115, 22, 0.55);
   color: var(--primary-strong);
 }
 
@@ -867,13 +645,13 @@ textarea {
 }
 
 .tool-list li span:first-child {
-  color: #354057;
+  color: oklch(0.8 0 0);
   font-size: 13px;
 }
 
 .tool-badge {
-  background: #e9f7f5;
-  border: 1px solid #b9ddd8;
+  background: var(--primary-soft);
+  border: 1px solid rgba(249, 115, 22, 0.32);
   border-radius: 999px;
   color: var(--primary-strong);
   display: inline-flex;
@@ -884,9 +662,9 @@ textarea {
 }
 
 .tool-badge-warning {
-  background: #fff7ed;
-  border-color: #fed7aa;
-  color: #9a3412;
+  background: rgba(245, 158, 11, 0.14);
+  border-color: rgba(245, 158, 11, 0.32);
+  color: #fbbf24;
 }
 
 .tool-panel {
@@ -932,14 +710,14 @@ textarea {
 }
 
 .tool-card {
-  background: #fbfcfe;
+  background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--line);
   border-radius: 10px;
   padding: 14px;
 }
 
 .tool-field span {
-  color: #354057;
+  color: oklch(0.8 0 0);
   font-size: 13px;
   font-weight: 750;
 }
@@ -953,10 +731,10 @@ textarea {
 }
 
 .tool-error {
-  background: #fef2f2;
-  border: 1px solid #fecaca;
+  background: rgba(239, 68, 68, 0.14);
+  border: 1px solid rgba(239, 68, 68, 0.32);
   border-radius: 10px;
-  color: #991b1b;
+  color: #fca5a5;
   font-size: 14px;
   line-height: 1.5;
   margin: 0;
@@ -965,7 +743,7 @@ textarea {
 
 .tool-result-row {
   align-items: center;
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.045);
   border: 1px solid var(--line);
   border-radius: 10px;
   display: flex;
@@ -978,13 +756,13 @@ textarea {
 .tool-output-block,
 .tool-big-token,
 .tool-match code {
-  color: #0f172a;
+  color: var(--foreground);
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   overflow-wrap: anywhere;
 }
 
 .tool-output-block {
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.045);
   border: 1px solid var(--line);
   border-radius: 10px;
   display: block;
@@ -995,9 +773,9 @@ textarea {
 
 .tool-big-token {
   background:
-    linear-gradient(135deg, rgba(15, 118, 110, 0.08), rgba(56, 189, 248, 0.08)),
-    #ffffff;
-  border: 1px solid #b9ddd8;
+    linear-gradient(135deg, rgba(249, 115, 22, 0.14), rgba(255, 255, 255, 0.06)),
+    rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(249, 115, 22, 0.32);
   border-radius: 16px;
   font-size: clamp(18px, 2.4vw, 30px);
   font-weight: 800;
@@ -1013,7 +791,7 @@ textarea {
 
 .tool-match {
   align-items: center;
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.045);
   border: 1px solid var(--line);
   border-radius: 10px;
   display: grid;
@@ -1027,40 +805,57 @@ textarea {
   font-size: 13px;
 }
 
+/* thesvg-inspired admin migration: make legacy feature panels match the shared dark glass shell. */
+.auth-form,
+.settings-form,
+.plugin-meta,
+.blog-post-list,
+.blog-editor,
+.blog-preview,
+.storage-upload,
+.storage-table-wrap,
+.domains-list,
+.domain-detail,
+.domain-dns-table-wrap,
+.devtools-sidebar,
+.tool-panel,
+.tool-card {
+  border-radius: 20px;
+  box-shadow: 0 18px 60px -44px rgba(0, 0, 0, 0.9);
+}
+
+.blog-post-row,
+.domain-row,
+.tool-result-row,
+.tool-output-block,
+.tool-match,
+.domain-meta-grid div,
+.domain-nameservers li {
+  background: rgba(255, 255, 255, 0.045);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.storage-table th,
+.storage-table td,
+.domain-dns-table th,
+.domain-dns-table td {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
 @media (max-width: 760px) {
-  .app-shell {
-    grid-template-columns: 1fr;
-  }
-
-  .sidebar {
-    border-bottom: 1px solid var(--line);
-    border-right: 0;
-  }
-
-  .nav-list {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .topbar {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 6px;
-    justify-content: center;
-  }
-
   .blog-stats,
   .blog-layout,
   .blog-editor-grid,
-    .blog-cover-panel,
-    .storage-stats,
-    .storage-layout,
-    .domains-header,
-    .domains-stats,
-    .domains-layout,
-    .domain-meta-grid,
-    .devtools-stats,
-    .devtools-layout,
-    .tool-grid {
+  .blog-cover-panel,
+  .storage-stats,
+  .storage-layout,
+  .domains-header,
+  .domains-stats,
+  .domains-layout,
+  .domain-meta-grid,
+  .devtools-stats,
+  .devtools-layout,
+  .tool-grid {
     grid-template-columns: 1fr;
   }
 
@@ -1077,4 +872,22 @@ textarea {
     align-items: stretch;
     flex-direction: column;
   }
+}
+
+.auth-page {
+  align-items: center;
+  display: grid;
+  min-height: 100vh;
+  padding: 24px;
+}
+
+.auth-card {
+  margin: 0 auto;
+  max-width: 560px;
+  width: 100%;
+}
+
+.auth-card .auth-form {
+  margin-top: 22px;
+  max-width: none;
 }

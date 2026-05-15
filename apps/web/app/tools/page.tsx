@@ -3,7 +3,7 @@ import { DevtoolsPluginPage } from "@/plugins/devtools";
 
 export default function ToolsPage() {
   return (
-    <AppShell>
+    <AppShell currentPath="/tools">
       <DevtoolsPluginPage />
     </AppShell>
   );

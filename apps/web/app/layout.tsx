@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
+import "@weopen/ui/admin.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "WeOpen",
-  description: "Personal management platform for developers"
+  title: "WeOpen Admin",
+  description: "Personal management platform admin console"
 };
 
 export default function RootLayout({

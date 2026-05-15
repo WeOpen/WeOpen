@@ -17,5 +17,9 @@ export default async function PluginDetailPage({ params }: PluginDetailPageProps
   }
 
   const Component = plugin.component;
-  return <AppShell>{Component ? <Component manifest={plugin.manifest} /> : null}</AppShell>;
+  return (
+    <AppShell currentPath={plugin.manifest.nav?.[0]?.path ?? "/plugins"}>
+      {Component ? <Component manifest={plugin.manifest} /> : null}
+    </AppShell>
+  );
 }

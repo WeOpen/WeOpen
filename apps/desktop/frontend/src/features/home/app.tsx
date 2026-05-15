@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button } from "@weopen/ui";
+import { AdminShell, Button, type AdminNavigationItem } from "@weopen/ui";
 import { DesktopDashboard } from "@/features/dashboard/DesktopDashboard";
 import { DesktopTools } from "@/features/devtools/DesktopTools";
 import { RemoteApiSettings } from "@/features/settings/RemoteApiSettings";
@@ -7,25 +7,27 @@ import {
   loadRemoteApiSettings,
   type RemoteApiSettings as RemoteApiSettingsValue
 } from "@/lib/apiClient";
+import "@weopen/ui/admin.css";
 import "./style.css";
 
 type DesktopTab = "dashboard" | "settings" | "tools";
 
-const tabs: Array<{ id: DesktopTab; label: string; description: string }> = [
+const navItems: AdminNavigationItem[] = [
   {
-    description: "查看远程平台健康状态与插件概览",
-    id: "dashboard",
-    label: "仪表盘"
+    description: "Remote platform status and plugins",
+    href: "#dashboard",
+    label: "Dashboard",
+    tone: "primary"
   },
   {
-    description: "保存 API 地址与本机 session token",
-    id: "settings",
-    label: "远程 API"
+    description: "API base URL and local session token",
+    href: "#settings",
+    label: "Remote API"
   },
   {
-    description: "在桌面端使用本地开发者工具",
-    id: "tools",
-    label: "工具箱"
+    description: "Shared Web devtools core",
+    href: "#tools",
+    label: "Tools"
   }
 ];
 
@@ -39,34 +41,41 @@ export function App() {
   }
 
   return (
-    <main className="desktop-shell">
-      <section className="desktop-header">
-        <div>
-          <p className="desktop-kicker">WeOpen Desktop · M7</p>
-          <h1>个人管理平台桌面端</h1>
-          <p>
-            连接远程 WeOpen API、展示平台状态，并把 Web 端开发者工具复用到 Wails 桌面壳中。
-          </p>
-        </div>
+    <AdminShell
+      actionSlot={
         <Button onClick={() => window.location.reload()} variant="secondary">
-          刷新桌面壳
+          Reload shell
         </Button>
+      }
+      appMark="W"
+      appName="WeOpen Desktop"
+      brandHref="#dashboard"
+      currentPath={`#${activeTab}`}
+      navItems={navItems}
+      renderNavItem={(item, className, isActive) => (
+        <button
+          aria-current={isActive ? "page" : undefined}
+          className={className}
+          onClick={() => setActiveTab(item.href.replace("#", "") as DesktopTab)}
+          type="button"
+        >
+          <span>
+            <strong>{item.label}</strong>
+            {item.description ? <small>{item.description}</small> : null}
+          </span>
+        </button>
+      )}
+      searchPlaceholder="Search desktop tools, remote API, plugin status..."
+      statusLabel={settings.baseUrl ? "Remote API configured" : "Local mode"}
+      subtitle="Shared Admin Shell"
+    >
+      <section className="page-header">
+        <div className="page-kicker">WeOpen Desktop - M7</div>
+        <h1 className="page-title">Desktop management console</h1>
+        <p className="page-description">
+          Desktop reuses the Web thesvg-style admin shell, design tokens, base components and SDK while keeping Wails-local settings separate.
+        </p>
       </section>
-
-      <nav aria-label="Desktop sections" className="desktop-tabs">
-        {tabs.map((tab) => (
-          <button
-            aria-current={activeTab === tab.id ? "page" : undefined}
-            className={activeTab === tab.id ? "desktop-tab active" : "desktop-tab"}
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            type="button"
-          >
-            <strong>{tab.label}</strong>
-            <span>{tab.description}</span>
-          </button>
-        ))}
-      </nav>
 
       {activeTab === "dashboard" ? (
         <DesktopDashboard onOpenSettings={() => setActiveTab("settings")} settings={settings} />
@@ -75,6 +84,6 @@ export function App() {
         <RemoteApiSettings onSaved={handleSettingsSaved} settings={settings} />
       ) : null}
       {activeTab === "tools" ? <DesktopTools /> : null}
-    </main>
+    </AdminShell>
   );
 }
