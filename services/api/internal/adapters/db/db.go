@@ -4,6 +4,8 @@ package db
 import (
 	"database/sql"
 	"errors"
+
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 // Open validates database connection inputs before delegating to database/sql.

@@ -45,6 +45,7 @@ func NewServer(options ...ServerOptions) http.Handler {
 		opts = options[0]
 	}
 	mux := http.NewServeMux()
+	var pluginByIDHandler http.Handler
 	mux.HandleFunc("/healthz", healthHandler)
 	if opts.Auth != nil {
 		authHandlers := authHandlers{service: opts.Auth, secureCookies: opts.SecureCookies}
@@ -69,6 +70,7 @@ func NewServer(options ...ServerOptions) http.Handler {
 		pluginHandlers := pluginHandlers{auth: opts.Auth, registry: opts.Plugins, states: states}
 		mux.HandleFunc("/api/plugins", pluginHandlers.plugins)
 		mux.HandleFunc("/api/plugins/", pluginHandlers.pluginByID)
+		pluginByIDHandler = http.HandlerFunc(pluginHandlers.pluginByID)
 	}
 	if opts.Auth != nil {
 		for _, route := range opts.PluginRoutes {
@@ -83,7 +85,9 @@ func NewServer(options ...ServerOptions) http.Handler {
 				permissions:     route.Permissions,
 				permissionRules: route.PermissionRules,
 			}
-			mux.Handle(prefix, handler)
+			if pluginByIDHandler != nil {
+				mux.Handle(prefix, pluginByIDHandler)
+			}
 			mux.Handle(prefix+"/", handler)
 		}
 	}

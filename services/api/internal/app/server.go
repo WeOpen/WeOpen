@@ -2,8 +2,10 @@ package app
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -12,6 +14,7 @@ import (
 	storage "github.com/WeOpen/WeOpen/internal/plugins/storage_r2"
 	cloudflareprovider "github.com/WeOpen/WeOpen/internal/providers/cloudflare"
 	r2provider "github.com/WeOpen/WeOpen/internal/providers/r2"
+	dbadapter "github.com/WeOpen/WeOpen/services/api/internal/adapters/db"
 	apihttp "github.com/WeOpen/WeOpen/services/api/internal/adapters/http"
 	"github.com/WeOpen/WeOpen/services/api/internal/adapters/secrets"
 	"github.com/WeOpen/WeOpen/services/api/internal/config"
@@ -19,11 +22,18 @@ import (
 	"github.com/WeOpen/WeOpen/services/api/internal/domain/auth"
 )
 
+// databaseConnector opens a configured SQL database and returns its placeholder dialect plus a close hook.
+type databaseConnector func(context.Context, config.Config) (*sql.DB, dbadapter.SQLDialect, func() error, error)
+
 // NewHTTPServer wires the API application services and returns the configured HTTP server.
 func NewHTTPServer(cfg config.Config) (*http.Server, error) {
-	authStore, err := auth.NewMemoryStore(cfg.AdminEmail, cfg.AdminPassword)
+	return newHTTPServerWithDatabaseConnector(cfg, connectConfiguredDatabase)
+}
+
+func newHTTPServerWithDatabaseConnector(cfg config.Config, connectDatabase databaseConnector) (*http.Server, error) {
+	authStore, closeAuthDatabase, err := newAuthStore(context.Background(), cfg, connectDatabase)
 	if err != nil {
-		return nil, fmt.Errorf("initialize auth store: %w", err)
+		return nil, err
 	}
 	authService := auth.NewService(authStore)
 	secretService := secrets.NewService(secrets.NewMemoryStore(), secrets.NewCrypto(cfg.SecretEncryptionKey))
@@ -36,6 +46,7 @@ func NewHTTPServer(cfg config.Config) (*http.Server, error) {
 		SecretAccessKey: cfg.R2SecretAccessKey,
 	})
 	if err != nil {
+		closeAuthDatabaseIfNeeded(closeAuthDatabase)
 		return nil, fmt.Errorf("initialize r2 provider: %w", err)
 	}
 	storageService := storage.NewService(storage.NewMemoryRepository(), r2Client, storageAuditRecorder{audit: auditService})
@@ -45,6 +56,7 @@ func NewHTTPServer(cfg config.Config) (*http.Server, error) {
 		fallback: cfg.CloudflareAPIToken,
 	})
 	if err != nil {
+		closeAuthDatabaseIfNeeded(closeAuthDatabase)
 		return nil, fmt.Errorf("initialize cloudflare provider: %w", err)
 	}
 	domainService := domainplugin.NewService(
@@ -55,7 +67,7 @@ func NewHTTPServer(cfg config.Config) (*http.Server, error) {
 	)
 	pluginRegistry := newBuiltinPluginRegistry(blogService, storageService, domainService)
 
-	return &http.Server{
+	server := &http.Server{
 		Addr: cfg.Addr,
 		Handler: apihttp.NewServer(apihttp.ServerOptions{
 			WebOrigin:     cfg.WebOrigin,
@@ -67,7 +79,69 @@ func NewHTTPServer(cfg config.Config) (*http.Server, error) {
 			SecureCookies: cfg.IsProductionLike(),
 		}),
 		ReadHeaderTimeout: 5 * time.Second,
-	}, nil
+	}
+	if closeAuthDatabase != nil {
+		server.RegisterOnShutdown(func() { _ = closeAuthDatabase() })
+	}
+	return server, nil
+}
+
+func closeAuthDatabaseIfNeeded(closeAuthDatabase func() error) {
+	if closeAuthDatabase != nil {
+		_ = closeAuthDatabase()
+	}
+}
+
+func newAuthStore(ctx context.Context, cfg config.Config, connectDatabase databaseConnector) (auth.Store, func() error, error) {
+	if strings.TrimSpace(cfg.DatabaseURL) == "" {
+		authStore, err := auth.NewMemoryStore(cfg.AdminEmail, cfg.AdminPassword)
+		if err != nil {
+			return nil, nil, fmt.Errorf("initialize memory auth store: %w", err)
+		}
+		return authStore, nil, nil
+	}
+
+	database, dialect, closeDatabase, err := connectDatabase(ctx, cfg)
+	if err != nil {
+		return nil, nil, fmt.Errorf("connect auth database: %w", err)
+	}
+	if err := applyConfiguredMigrations(ctx, database, cfg.MigrationsDir); err != nil {
+		_ = closeDatabase()
+		return nil, nil, err
+	}
+	authStore := dbadapter.NewSQLAuthStore(database, dbadapter.WithSQLDialect(dialect))
+	if err := authStore.EnsureAdmin(ctx, cfg.AdminEmail, cfg.AdminPassword); err != nil {
+		_ = closeDatabase()
+		return nil, nil, fmt.Errorf("seed sql auth admin: %w", err)
+	}
+	return authStore, closeDatabase, nil
+}
+
+func connectConfiguredDatabase(ctx context.Context, cfg config.Config) (*sql.DB, dbadapter.SQLDialect, func() error, error) {
+	driverName, dialect, err := dbadapter.DriverForURL(cfg.DatabaseURL)
+	if err != nil {
+		return nil, "", nil, err
+	}
+	database, err := dbadapter.Open(driverName, cfg.DatabaseURL)
+	if err != nil {
+		return nil, "", nil, err
+	}
+	if err := database.PingContext(ctx); err != nil {
+		_ = database.Close()
+		return nil, "", nil, fmt.Errorf("ping database: %w", err)
+	}
+	return database, dialect, database.Close, nil
+}
+
+func applyConfiguredMigrations(ctx context.Context, database *sql.DB, migrationsDir string) error {
+	migrations, err := dbadapter.LoadMigrations(os.DirFS(migrationsDir), "up")
+	if err != nil {
+		return fmt.Errorf("load migrations from %s: %w", migrationsDir, err)
+	}
+	if err := dbadapter.ApplyMigrations(ctx, database, migrations); err != nil {
+		return fmt.Errorf("apply migrations: %w", err)
+	}
+	return nil
 }
 
 type cloudflareTokenSource struct {

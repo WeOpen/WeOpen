@@ -313,7 +313,8 @@ go test ./services/api/... ./internal/core/... ./internal/plugins/blog/... ./int
 | `APP_URL` | API 对外地址 | `http://localhost:8080` |
 | `WEB_ORIGIN` | CORS 允许的 Web origin | `http://localhost:3000` |
 | `NEXT_PUBLIC_API_BASE_URL` | Web 访问 API 的地址 | `http://localhost:8080` |
-| `DATABASE_URL` | PostgreSQL 兼容数据库连接 | 完整持久化时配置 |
+| `DATABASE_URL` | PostgreSQL 兼容数据库连接；配置后 API auth/session/RBAC 使用 SQL store | 完整持久化时配置 |
+| `MIGRATIONS_DIR` | API 启动时加载 SQL migrations 的目录 | `db/migrations` |
 | `SESSION_SECRET` | Session 签名/派生密钥 | 生产必须替换 |
 | `SECRET_ENCRYPTION_KEY` | 外部服务密钥加密 key | 生产必须替换 |
 | `ADMIN_EMAIL` | 本地单用户账号 | `admin@example.com` |

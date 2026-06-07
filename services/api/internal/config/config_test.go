@@ -62,6 +62,7 @@ func TestLoadFromLookupReadsExplicitValues(t *testing.T) {
 		"APP_URL":               "https://api.example.com",
 		"WEB_ORIGIN":            "https://app.example.com",
 		"DATABASE_URL":          "postgres://example",
+		"MIGRATIONS_DIR":        "custom/migrations",
 		"SESSION_SECRET":        "session-secret",
 		"SECRET_ENCRYPTION_KEY": "encryption-secret",
 		"ADMIN_EMAIL":           "owner@example.com",
@@ -89,6 +90,9 @@ func TestLoadFromLookupReadsExplicitValues(t *testing.T) {
 	}
 	if cfg.AdminEmail != "owner@example.com" {
 		t.Fatalf("expected admin email, got %q", cfg.AdminEmail)
+	}
+	if cfg.MigrationsDir != "custom/migrations" {
+		t.Fatalf("expected migrations dir, got %q", cfg.MigrationsDir)
 	}
 	if cfg.R2Bucket != "bucket" {
 		t.Fatalf("expected R2 bucket, got %q", cfg.R2Bucket)

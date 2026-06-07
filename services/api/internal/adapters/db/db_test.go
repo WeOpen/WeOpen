@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"database/sql"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -13,9 +14,9 @@ type recordingExecer struct {
 	statements []string
 }
 
-func (r *recordingExecer) ExecContext(_ context.Context, query string, _ ...any) error {
+func (r *recordingExecer) ExecContext(_ context.Context, query string, _ ...any) (sql.Result, error) {
 	r.statements = append(r.statements, query)
-	return nil
+	return nil, nil
 }
 
 func TestLoadMigrationsReadsCoreMigration(t *testing.T) {

@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"io/fs"
 	"sort"
@@ -10,7 +11,7 @@ import (
 
 // Execer is the minimal transaction or database surface needed to apply migrations.
 type Execer interface {
-	ExecContext(ctx context.Context, query string, args ...any) error
+	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
 }
 
 // Migration contains one up or down SQL migration loaded from an embedded filesystem.
@@ -63,7 +64,7 @@ func ApplyMigrations(ctx context.Context, execer Execer, migrations []Migration)
 	for _, migration := range migrations {
 		statements := SplitSQLStatements(migration.SQL)
 		for _, statement := range statements {
-			if err := execer.ExecContext(ctx, statement); err != nil {
+			if _, err := execer.ExecContext(ctx, statement); err != nil {
 				return fmt.Errorf("apply migration %s: %w", migration.Name, err)
 			}
 		}
