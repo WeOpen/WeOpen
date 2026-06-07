@@ -27,7 +27,7 @@ const samplePosts = [
   { title: "R2 Storage Plugin Deep Dive", date: "2025-05-08 11:03", status: "DRAFT" },
   { title: "DevTools for Everyone", date: "2025-05-03 16:45", status: "PUBLISHED" },
   { title: "Managing Domains at Scale", date: "2025-04-28 10:17", status: "PUBLISHED" },
-  { title: "WeOpen v1.2.0 Release Notes", date: "2025-04-20 13:50", status: "PUBLISHED" },
+  { title: "WeOpen Release Notes", date: "2025-04-20 13:50", status: "PUBLISHED" },
   { title: "TLS Automation Made Simple", date: "2025-04-12 08:11", status: "DRAFT" }
 ];
 

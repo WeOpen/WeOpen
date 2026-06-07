@@ -1,9 +1,12 @@
 import { LoginForm } from "@/features/auth/login-form";
+import { builtinPluginManifests } from "@/plugins";
 import { safeNextPath } from "@/shared/auth/routes";
 
 type LoginPageProps = {
   searchParams?: Promise<{ next?: string | string[] }>;
 };
+
+const platformVersion = builtinPluginManifests[0]?.version ?? "unknown";
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const params = await searchParams;
@@ -17,7 +20,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         <span>CONTROL. MANAGE. OPERATE.</span>
         <dl className="auth-system-list">
           <div><dt>System</dt><dd>WeOpen Control</dd></div>
-          <div><dt>Version</dt><dd>v1.2.0</dd></div>
+          <div><dt>Version</dt><dd>v{platformVersion}</dd></div>
           <div><dt>Environment</dt><dd>Production</dd></div>
           <div><dt>Region</dt><dd>Global</dd></div>
           <div><dt>Time (UTC)</dt><dd>2025-05-20 14:37:11</dd></div>

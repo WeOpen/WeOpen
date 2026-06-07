@@ -5,7 +5,7 @@ import { Card, Button } from "@weopen/ui";
 const inspector = {
   id: "blog",
   name: "Blog",
-  version: "1.3.0",
+  version: pluginManifests.find((manifest) => manifest.id === "blog")?.version ?? "unknown",
   description: "Blog engine with posts, categories, tags.",
   entry: "github.com/weopen/plugins/blog",
   type: "plugin",
@@ -45,7 +45,7 @@ export default function PluginsPage() {
                   </Card.Header>
                   <Card.Content>
                     <dl className="plugin-card-specs">
-                      <div><dt>Version</dt><dd>{versionForPlugin(manifest.id, manifest.version)}</dd></div>
+                      <div><dt>Version</dt><dd>{manifest.version}</dd></div>
                       <div><dt>Route Prefix</dt><dd>{manifest.nav?.[0]?.path ?? "/plugins"}</dd></div>
                       <div><dt>Widgets</dt><dd>{manifest.widgets?.length ?? 0}</dd></div>
                       <div><dt>Order</dt><dd>{String(index + 1).padStart(2, "0")}</dd></div>
@@ -123,14 +123,4 @@ function iconForPlugin(pluginId: string) {
   if (pluginId === "storage-r2") return "◉";
   if (pluginId === "domains") return "◎";
   return "</>";
-}
-
-function versionForPlugin(pluginId: string, fallback: string) {
-  const versions: Record<string, string> = {
-    blog: "1.3.0",
-    devtools: "0.9.5",
-    domains: "1.0.0",
-    "storage-r2": "1.1.2"
-  };
-  return versions[pluginId] ?? fallback;
 }

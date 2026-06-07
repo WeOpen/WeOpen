@@ -634,7 +634,43 @@ go test ./apps/desktop/...
 - Go provider 调用必须设置超时。
 - R2 上传优先直传，不通过 API 转发大文件。
 
-## 18. AI / Agent 开发规范
+## 18. 变更日志与版本管理
+
+### 18.1 CHANGELOG 规则
+
+- 仓库根目录必须维护 `CHANGELOG.md`。
+- `CHANGELOG.md` 遵循 [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/)：
+  - 顶部保留 `## [Unreleased]`。
+  - 版本按时间倒序排列，最新版本在前。
+  - 只使用 `Added`、`Changed`、`Deprecated`、`Removed`、`Fixed`、`Security` 六类变更分组。
+  - 每个发布版本必须包含 `YYYY-MM-DD` 发布日期。
+  - 内容面向人类读者，记录“用户、运维、插件作者或未来维护者需要知道什么”，不要复制 git log。
+- 每次提交产品行为、公开 API、权限/安全边界、配置、数据库 schema、插件 contract、UI 或发布文档变更时，都必须同步更新 `[Unreleased]`。
+- 纯格式、错别字、注释或不会影响用户/系统边界的内部改动，若确实不需要 changelog，提交信息必须说明 `Not-tested:` 或正文中写明 “No changelog entry required” 及原因。
+- 提交前运行：
+
+```bash
+pnpm changelog:check
+pnpm changelog:staged
+```
+
+### 18.2 统一版本源
+
+- 仓库统一版本号只写在根目录 `VERSION`。
+- 当前受管版本字段包括：
+  - 根目录和 workspace package 的 `package.json#version`。
+  - `apps/desktop/main.go` 的 `appVersion`。
+  - `internal/plugins/*/plugin.go` 的后端插件 `Version()`。
+  - `apps/web/src/plugins/index.ts` 的前端插件 manifest `version`。
+- 版本号必须遵循 [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html)。
+- 版本变更流程：
+  1. 修改根目录 `VERSION`。
+  2. 运行 `pnpm version:sync` 同步受管版本字段。
+  3. 把 `CHANGELOG.md` 中 `[Unreleased]` 的内容移动到 `## [x.y.z] - YYYY-MM-DD`，并保留新的空 `[Unreleased]`。
+  4. 运行 `pnpm version:check`、`pnpm changelog:check` 和匹配变更范围的测试。
+  5. 发布后打 `vX.Y.Z` tag。
+
+## 19. AI / Agent 开发规范
 
 使用 AI 或代理开发时必须：
 
@@ -648,7 +684,7 @@ go test ./apps/desktop/...
 
 AI 生成代码必须接受和人工代码一样的测试、审查和提交要求。
 
-## 19. 每次交付清单
+## 20. 每次交付清单
 
 提交或交付前检查：
 
@@ -658,11 +694,13 @@ AI 生成代码必须接受和人工代码一样的测试、审查和提交要�
 - [ ] 没有密钥、缓存、机器本地文件。
 - [ ] 错误处理和空状态可理解。
 - [ ] 高风险操作有确认和审计。
+- [ ] 若变更影响产品、API、权限、配置、schema、插件 contract、UI 或发布文档，`CHANGELOG.md` 已更新。
+- [ ] `pnpm changelog:check` 和 `pnpm version:check` 已通过。
 - [ ] 运行了匹配变更范围的验证命令。
 - [ ] 最终说明包含变更、验证、风险。
 - [ ] 提交信息符合 Lore Commit Protocol。
 
-## 20. 当前项目默认命令
+## 21. 当前项目默认命令
 
 ```bash
 pnpm install
@@ -673,12 +711,15 @@ pnpm lint
 pnpm typecheck
 pnpm test
 pnpm build
+pnpm changelog:check
+pnpm version:check
 pnpm test:go
 go test ./apps/desktop/...
 ```
 
-## 21. 参考链接
+## 22. 参考链接
 
+- Keep a Changelog 1.1.0: https://keepachangelog.com/en/1.1.0/
 - Google Engineering Practices - Code Review: https://google.github.io/eng-practices/review/
 - Conventional Commits 1.0.0: https://www.conventionalcommits.org/en/v1.0.0/
 - Semantic Versioning 2.0.0: https://semver.org/

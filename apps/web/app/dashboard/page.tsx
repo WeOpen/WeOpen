@@ -10,13 +10,18 @@ const activityRows = [
   { icon: "◉", isCodeIcon: false, label: "STORAGE R2 I/O", value: 71 }
 ] as const;
 
+const manifestVersionById = Object.fromEntries(
+  pluginManifests.map((manifest) => [manifest.id, manifest.version])
+);
+const platformVersion = manifestVersionById.blog ?? "unknown";
+
 const modules = [
-  ["Blog Plugin", "PLUGIN", "ACTIVE", "1.3.0", "2025-05-20 14:36:21", "/blog"],
-  ["R2 Storage", "PLUGIN", "ACTIVE", "1.1.2", "2025-05-20 14:35:48", "/storage"],
-  ["Go API", "SERVICE", "RUNNING", "1.2.0", "2025-05-20 14:37:02", "/api"],
-  ["Domains Monitor", "MODULE", "READ ONLY", "1.0.0", "2025-05-20 14:20:11", "/domains"],
-  ["DevTools", "TOOL", "ACTIVE", "0.9.5", "2025-05-20 14:36:05", "/tools"],
-  ["Plugin Registry", "SERVICE", "ONLINE", "0.0.1", "2025-05-20 14:33:19", "/plugins"]
+  ["Blog Plugin", "PLUGIN", "ACTIVE", manifestVersionById.blog ?? platformVersion, "2025-05-20 14:36:21", "/blog"],
+  ["R2 Storage", "PLUGIN", "ACTIVE", manifestVersionById["storage-r2"] ?? platformVersion, "2025-05-20 14:35:48", "/storage"],
+  ["Go API", "SERVICE", "RUNNING", platformVersion, "2025-05-20 14:37:02", "/api"],
+  ["Domains Monitor", "MODULE", "READ ONLY", manifestVersionById.domains ?? platformVersion, "2025-05-20 14:20:11", "/domains"],
+  ["DevTools", "TOOL", "ACTIVE", manifestVersionById.devtools ?? platformVersion, "2025-05-20 14:36:05", "/tools"],
+  ["Plugin Registry", "SERVICE", "ONLINE", platformVersion, "2025-05-20 14:33:19", "/plugins"]
 ] as const;
 
 export default function DashboardPage() {

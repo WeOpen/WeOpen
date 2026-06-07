@@ -13,6 +13,7 @@ WeOpen 是一个面向个人开发者的低成本、插件化个人管理平台�
 - [内置插件](#内置插件)
 - [本地开发流程](#本地开发流程)
 - [常用命令](#常用命令)
+- [变更日志与版本管理](#变更日志与版本管理)
 - [环境变量](#环境变量)
 - [开发约定](#开发约定)
 - [相关文档](#相关文档)
@@ -152,7 +153,9 @@ sequenceDiagram
 │  ├─ migrations/          # 数据库迁移
 │  └─ seed/                # 种子数据预留
 ├─ docs/                   # PRD、设计、开发规范、计划文档
+├─ CHANGELOG.md            # Keep a Changelog 格式的人工维护变更日志
 ├─ PLAN.md                 # 里程碑实施计划
+├─ VERSION                 # 仓库统一版本号
 ├─ pnpm-workspace.yaml
 └─ go.work
 ```
@@ -300,8 +303,21 @@ go test ./services/api/... ./internal/core/... ./internal/plugins/blog/... ./int
 | `pnpm typecheck` | 运行所有已声明 TypeScript typecheck |
 | `pnpm test` | 运行所有已声明前端/包测试 |
 | `pnpm build` | 运行所有已声明构建 |
+| `pnpm changelog:check` | 校验 `CHANGELOG.md` 是否符合仓库 Keep a Changelog 结构 |
+| `pnpm changelog:staged` | 校验当前 staged commit 是否包含 `CHANGELOG.md` |
+| `pnpm version:check` | 校验 package、Desktop、插件 manifest 版本是否与 `VERSION` 一致 |
+| `pnpm version:sync` | 将受管版本字段同步为 `VERSION` |
+| `pnpm release:check` | 运行 changelog、版本、lint、typecheck、test、build 的发布前检查 |
 | `pnpm --filter @weopen/web build` | 构建 Web 应用 |
 | `go test ./services/api/...` | 测试 API module |
+
+## 变更日志与版本管理
+
+- 变更日志位于 [`CHANGELOG.md`](CHANGELOG.md)，格式遵循 [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/)。
+- 每次提交产品行为、公开 API、权限/安全边界、配置、数据库 schema、插件 contract、UI 或发布文档变更时，都要同步更新 `[Unreleased]`。
+- 仓库统一版本号位于 [`VERSION`](VERSION)，当前 package、Desktop appVersion、后端插件版本和前端插件 manifest 版本都必须与它一致。
+- 版本变更时先修改 `VERSION`，再运行 `pnpm version:sync`，最后运行 `pnpm version:check` 验证没有版本漂移。
+- 发布时把 `[Unreleased]` 内容移动到 `## [x.y.z] - YYYY-MM-DD`，保留新的空 `[Unreleased]`，并在发布后打 `vX.Y.Z` tag。
 
 ## 环境变量
 
@@ -331,6 +347,7 @@ go test ./services/api/... ./internal/core/... ./internal/plugins/blog/... ./int
 - Secret 不得进入前端 bundle；不要把密钥放入 `NEXT_PUBLIC_*`。
 - 高风险操作（删除对象、删除文章、替换 secret、未来 DNS 写操作）必须有确认和审计路径。
 - 提交信息遵循仓库 Lore Commit Protocol：第一行写“为什么”，正文写约束、取舍和验证证据。
+- 提交前运行 `pnpm changelog:staged` 和 `pnpm version:check`，确保变更记录和版本源保持一致。
 - 每个可回归行为都应有测试或可重复验证命令。
 
 ## 相关文档
