@@ -50,12 +50,12 @@ export function formatCertificateSummary(asset: DomainAsset): string {
 
 export function certificateStatusLabel(status: CertificateRiskStatus): string {
   const labels: Record<CertificateRiskStatus, string> = {
-    unchecked: "未检查",
-    valid: "正常",
-    under_30_days: "30 天内到期",
-    under_7_days: "7 天内到期",
-    expired: "已过期",
-    check_failed: "检查失败"
+    unchecked: "UNCHECKED",
+    valid: "VALID",
+    under_30_days: "EXPIRING SOON",
+    under_7_days: "EXPIRING SOON",
+    expired: "EXPIRED",
+    check_failed: "CHECK FAILED"
   };
   return labels[status];
 }

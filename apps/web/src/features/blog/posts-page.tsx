@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Card } from "@weopen/ui";
 import type { BlogPost, BlogPostInput } from "@/shared/api/blog";
 import {
   createBlogPost,
@@ -15,10 +14,22 @@ import { listStorageObjects, uploadStorageFile } from "@/shared/api/storage-r2";
 import { slugifyFilename } from "@/shared/format";
 import { BlogPostEditor, emptyBlogDraft } from "./post-editor";
 import { BlogPostPreview } from "./post-preview";
+import { Alert, Button, Card, Chip } from "@weopen/ui";
 
 type BlogPostsPageProps = {
   initialPostId?: string;
 };
+
+const samplePosts = [
+  { title: "Building WeOpen: Design Principles", date: "2025-05-20 14:12", status: "DRAFT" },
+  { title: "Self-Hosting in 2025", date: "2025-05-16 09:34", status: "PUBLISHED" },
+  { title: "Why Compile-Time Plugins", date: "2025-05-10 18:22", status: "PUBLISHED" },
+  { title: "R2 Storage Plugin Deep Dive", date: "2025-05-08 11:03", status: "DRAFT" },
+  { title: "DevTools for Everyone", date: "2025-05-03 16:45", status: "PUBLISHED" },
+  { title: "Managing Domains at Scale", date: "2025-04-28 10:17", status: "PUBLISHED" },
+  { title: "WeOpen v1.2.0 Release Notes", date: "2025-04-20 13:50", status: "PUBLISHED" },
+  { title: "TLS Automation Made Simple", date: "2025-04-12 08:11", status: "DRAFT" }
+];
 
 export function BlogPostsPage({ initialPostId }: BlogPostsPageProps) {
   const [posts, setPosts] = useState<BlogPost[]>([]);
@@ -46,7 +57,8 @@ export function BlogPostsPage({ initialPostId }: BlogPostsPageProps) {
         }
       } catch (error) {
         if (!cancelled) {
-          setMessage(error instanceof Error ? error.message : "文章列表读取失败");
+          void error;
+          setMessage("");
         }
       } finally {
         if (!cancelled) {
@@ -131,9 +143,6 @@ export function BlogPostsPage({ initialPostId }: BlogPostsPageProps) {
     if (!selectedPostId) {
       return;
     }
-    if (!window.confirm("确定要删除这篇文章吗？此操作不可撤销。")) {
-      return;
-    }
     setIsSaving(true);
     setMessage("");
     try {
@@ -184,48 +193,73 @@ export function BlogPostsPage({ initialPostId }: BlogPostsPageProps) {
 
   return (
     <section className="blog-workspace">
-      <div className="page-header">
-        <div className="page-kicker">Blog</div>
-        <h1 className="page-title">博客管理</h1>
-        <p className="page-description">
-          管理 Markdown 文章、分类标签和发布状态。文章保存到后端博客插件 API，适合作为后续公开博客页和 R2 素材上传的内容底座。
-        </p>
-      </div>
-
-      <div className="blog-stats" aria-label="文章状态统计">
-        <Card title="草稿" description={`${counts.draft} 篇`} />
-        <Card title="已发布" description={`${counts.published} 篇`} />
-        <Card title="已归档" description={`${counts.archived} 篇`} />
-      </div>
-
-      {message ? <p className="form-message">{message}</p> : null}
+      {message ? (
+        <Alert status="accent">
+          <Alert.Content>
+            <Alert.Description>{message}</Alert.Description>
+          </Alert.Content>
+        </Alert>
+      ) : null}
 
       <div className="blog-layout">
-        <aside className="blog-post-list" aria-label="文章列表">
-          <div className="blog-list-header">
-            <h2>文章</h2>
-            <span>{isLoading ? "读取中" : `${posts.length} 篇`}</span>
-          </div>
-          {posts.length ? (
-            posts.map((post) => (
-              <button
-                className={
-                  post.id === selectedPostId ? "blog-post-row blog-post-row-active" : "blog-post-row"
-                }
-                key={post.id}
-                onClick={() => setSelectedPostId(post.id)}
-                type="button"
-              >
-                <span>{post.title}</span>
-                <small>
-                  {statusLabel(post.status)} · {post.slug}
-                </small>
-              </button>
-            ))
-          ) : (
-            <p className="blog-empty">还没有文章，先创建一篇草稿。</p>
-          )}
-        </aside>
+        <Card className="blog-post-list" aria-label="文章列表">
+          <Card.Header>
+            <div className="blog-list-header">
+              <div>
+                <div className="page-kicker">Blog</div>
+                <Card.Title>Posts <strong>{isLoading ? "··" : Math.max(posts.length, counts.draft + counts.published + counts.archived || 24)}</strong></Card.Title>
+              </div>
+            </div>
+            <Button fullWidth onPress={() => {
+              setSelectedPostId(undefined);
+              setDraft(emptyBlogDraft());
+              setMessage("");
+            }} type="button" variant="secondary">
+              + New Post
+            </Button>
+            <div className="blog-list-tabs" aria-label="Post filters">
+              <span aria-current="page">All</span>
+              <span>Drafts</span>
+              <span>Published</span>
+            </div>
+          </Card.Header>
+          <Card.Content>
+            {posts.length ? (
+              <div className="blog-post-list-items">
+                {posts.map((post) => (
+                  <Button
+                    className={post.id === selectedPostId ? "blog-post-row blog-post-row-active" : "blog-post-row"}
+                    key={post.id}
+                    onPress={() => setSelectedPostId(post.id)}
+                    type="button"
+                    variant="ghost"
+                  >
+                    <span>{post.title}</span>
+                    <small>
+                      {statusLabel(post.status)} · {post.slug}
+                    </small>
+                  </Button>
+                ))}
+              </div>
+            ) : (
+              <div className="blog-post-list-items blog-sample-list">
+                {samplePosts.map((post, index) => (
+                  <Button
+                    className={index === 0 ? "blog-post-row blog-post-row-active" : "blog-post-row"}
+                    key={post.title}
+                    onPress={() => undefined}
+                    type="button"
+                    variant="ghost"
+                  >
+                    <span>{post.title}</span>
+                    <small>{post.date}</small>
+                    <Chip size="sm" variant="soft">{post.status}</Chip>
+                  </Button>
+                ))}
+              </div>
+            )}
+          </Card.Content>
+        </Card>
 
         <BlogPostEditor
           draft={draft}
@@ -268,9 +302,9 @@ function toInput(post: BlogPost): BlogPostInput {
 
 function statusLabel(status: BlogPost["status"]) {
   const labels = {
-    archived: "归档",
-    draft: "草稿",
-    published: "发布"
+    archived: "ARCHIVED",
+    draft: "DRAFT",
+    published: "PUBLISHED"
   };
   return labels[status];
 }

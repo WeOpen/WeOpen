@@ -395,7 +395,7 @@ adapters/http -> validation -> domain services -> repository/provider adapters
 
 Go 验证命令：
 
-```powershell
+```bash
 pnpm test:go
 go test ./apps/desktop/...
 ```
@@ -560,7 +560,7 @@ apps/web/src/shared/layout/
 
 普通代码变更至少运行相关子集：
 
-```powershell
+```bash
 pnpm lint
 pnpm typecheck
 pnpm test
@@ -569,20 +569,20 @@ pnpm test:go
 
 涉及 Web 构建：
 
-```powershell
+```bash
 pnpm --filter @weopen/web build
 ```
 
 涉及桌面端：
 
-```powershell
+```bash
 pnpm --filter @weopen/desktop build
 go test ./apps/desktop/...
 ```
 
 涉及全局交付：
 
-```powershell
+```bash
 pnpm lint
 pnpm typecheck
 pnpm test
@@ -664,7 +664,7 @@ AI 生成代码必须接受和人工代码一样的测试、审查和提交要�
 
 ## 20. 当前项目默认命令
 
-```powershell
+```bash
 pnpm install
 pnpm dev:web
 pnpm dev:api

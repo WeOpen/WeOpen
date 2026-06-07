@@ -1,20 +1,48 @@
-import type { InputHTMLAttributes } from "react";
+import type { InputHTMLAttributes, ReactNode } from "react";
 import { cn } from "./utils";
 
-/** InputProps keeps the optional label text colocated with native input props. */
-export type InputProps = InputHTMLAttributes<HTMLInputElement> & {
-  label?: string;
+export type InputProps = Omit<InputHTMLAttributes<HTMLInputElement>, "disabled"> & {
+  disabled?: boolean;
+  errorMessage?: ReactNode;
+  fullWidth?: boolean;
+  isDisabled?: boolean;
+  isInvalid?: boolean;
+  label?: ReactNode;
 };
 
-/** Input wraps the control in a label and derives htmlFor from id or name. */
-export function Input({ className, id, label, ...props }: InputProps) {
-  const inputId = id ?? props.name;
-  const classes = cn("ui-input", className);
+export function Input({
+  className,
+  disabled,
+  errorMessage,
+  fullWidth = true,
+  id,
+  isDisabled,
+  isInvalid,
+  label,
+  name,
+  ...props
+}: InputProps) {
+  const inputId = id ?? name;
+  const input = (
+    <input
+      aria-invalid={isInvalid || Boolean(errorMessage) || undefined}
+      className={cn("input", className)}
+      disabled={isDisabled || disabled}
+      id={inputId}
+      name={name}
+      {...props}
+    />
+  );
+
+  if (!label && !errorMessage) {
+    return input;
+  }
 
   return (
-    <label className="ui-input-field" htmlFor={inputId}>
-      {label ? <span className="ui-input-label">{label}</span> : null}
-      <input className={classes} id={inputId} {...props} />
+    <label className={cn("field", { "field--full": fullWidth })}>
+      {label ? <span className="field__label">{label}</span> : null}
+      {input}
+      {errorMessage ? <span className="field__error">{errorMessage}</span> : null}
     </label>
   );
 }

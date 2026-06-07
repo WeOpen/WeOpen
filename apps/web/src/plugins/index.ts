@@ -4,11 +4,11 @@ import type { PluginManifest } from "@weopen/plugin-sdk";
 export const builtinPluginManifests: PluginManifest[] = [
   {
     id: "blog",
-    name: "博客管理",
+    name: "Blog",
     description: "管理 Markdown 文章、草稿、标签、分类和发布状态。",
     version: "0.1.0",
     permissions: ["blog:read", "blog:write"],
-    nav: [{ title: "博客", path: "/blog", icon: "file-text", order: 10 }],
+    nav: [{ title: "Blog", path: "/blog", icon: "file-text", order: 10 }],
     widgets: [
       {
         id: "blog-posts",
@@ -39,11 +39,11 @@ export const builtinPluginManifests: PluginManifest[] = [
   },
   {
     id: "domains",
-    name: "域名管理",
+    name: "Domains",
     description: "只读同步 Cloudflare 域名、DNS、证书状态和到期提醒；v1 禁用 DNS 写入。",
     version: "0.1.0",
     permissions: ["domain:read"],
-    nav: [{ title: "域名", path: "/domains", icon: "globe", order: 30 }],
+    nav: [{ title: "Domains", path: "/domains", icon: "globe", order: 30 }],
     widgets: [
       {
         id: "domains-watch",
@@ -56,11 +56,11 @@ export const builtinPluginManifests: PluginManifest[] = [
   },
   {
     id: "storage-r2",
-    name: "云存储",
+    name: "Storage R2",
     description: "管理 R2 对象、博客素材和备份文件。",
     version: "0.1.0",
     permissions: ["storage:read", "storage:write"],
-    nav: [{ title: "云存储", path: "/storage", icon: "hard-drive", order: 40 }],
+    nav: [{ title: "Storage R2", path: "/storage", icon: "hard-drive", order: 40 }],
     widgets: [
       {
         id: "storage-objects",

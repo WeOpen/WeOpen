@@ -15,28 +15,47 @@ const coreStart: AdminNavigationItem[] = [
     label: "Dashboard",
     source: "core",
     tone: "primary"
-  }
-];
-
-const coreEnd: AdminNavigationItem[] = [
+  },
+  {
+    description: "Go API health, auth boundary and plugin route status",
+    href: "/api",
+    label: "API",
+    source: "core"
+  },
   {
     description: "内置插件、权限与入口",
     href: "/plugins",
     label: "Plugins",
     source: "core"
-  },
+  }
+];
+
+const coreEnd: AdminNavigationItem[] = [
   {
     description: "密钥、环境与平台偏好",
     href: "/settings",
     label: "Settings",
     source: "core"
+  },
+  {
+    description: "Custom React primitives and Nothing tokens",
+    href: "/custom-ui",
+    label: "Custom UI",
+    source: "core"
   }
 ];
+
+const preferredPluginOrder: Record<string, number> = {
+  "/blog": 10,
+  "/storage": 20,
+  "/domains": 30,
+  "/tools": 40
+};
 
 export function createAdminNavigation(pluginItems: AdminNavigationItem[] = []): AdminNavigationItem[] {
   const seen = new Set<string>();
   const normalizedPlugins = [...pluginItems]
-    .sort((left, right) => (left.order ?? 0) - (right.order ?? 0) || left.label.localeCompare(right.label))
+    .sort((left, right) => sortWeight(left) - sortWeight(right) || left.label.localeCompare(right.label))
     .map((item) => ({
       ...item,
       source: item.source ?? "plugin" as const
@@ -50,6 +69,10 @@ export function createAdminNavigation(pluginItems: AdminNavigationItem[] = []): 
     seen.add(href);
     return true;
   });
+}
+
+function sortWeight(item: AdminNavigationItem): number {
+  return preferredPluginOrder[normalizeHref(item.href)] ?? item.order ?? 0;
 }
 
 function normalizeHref(href: string): string {

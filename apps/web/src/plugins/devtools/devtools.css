@@ -1,0 +1,238 @@
+.devtools-workspace {
+  display: grid;
+  gap: 18px;
+}
+
+.devtools-stats {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.devtools-layout,
+.devtools-tabs-shell {
+  min-width: 0;
+}
+
+.devtools-tabs-shell {
+  align-items: start;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 270px minmax(0, 1fr);
+}
+
+.devtools-sidebar,
+.tool-panel {
+  background: var(--surface);
+  border: 1px solid var(--weopen-line);
+  border-radius: 18px;
+  padding: 16px;
+}
+
+.devtools-sidebar {
+  display: grid;
+  gap: 18px;
+  position: sticky;
+  top: 24px;
+}
+
+.devtools-tabs {
+  display: grid;
+  gap: 8px;
+}
+
+.devtools-tabs [role="tab"] {
+  justify-content: flex-start;
+  min-height: 42px;
+  width: 100%;
+}
+
+.tool-catalog h2,
+.tool-panel h2,
+.tool-card h3 {
+  margin: 0;
+}
+
+.tool-catalog h2 {
+  font-size: 14px;
+}
+
+.tool-list {
+  display: grid;
+  gap: 8px;
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+}
+
+.tool-list li {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+}
+
+.tool-list li span:first-child {
+  color: var(--weopen-muted);
+  font-size: 13px;
+}
+
+.tool-panel {
+  display: grid;
+  gap: 16px;
+  min-height: 520px;
+}
+
+.tool-panel-header,
+.tool-card-header {
+  align-items: flex-start;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.tool-panel-header p,
+.tool-note {
+  color: var(--weopen-muted);
+  font-size: 14px;
+  line-height: 1.55;
+  margin: 6px 0 0;
+}
+
+.tool-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.tool-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.tool-card {
+  background: var(--weopen-panel-muted);
+  border: 1px solid var(--weopen-line);
+  border-radius: 14px;
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+}
+
+.tool-textarea {
+  min-height: 260px;
+}
+
+.tool-textarea-short {
+  min-height: 150px;
+}
+
+.tool-error {
+  background: var(--danger-soft);
+  border: 1px solid color-mix(in oklab, var(--danger) 42%, transparent);
+  border-radius: 10px;
+  color: var(--danger-soft-foreground);
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 0;
+  padding: 10px 12px;
+}
+
+.tool-result-row {
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--weopen-line);
+  border-radius: 12px;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  padding: 10px;
+}
+
+.tool-result-row code,
+.tool-output-block,
+.tool-big-token,
+.tool-match code {
+  color: var(--foreground);
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  overflow-wrap: anywhere;
+}
+
+.tool-output-block {
+  background: var(--surface);
+  border: 1px solid var(--weopen-line);
+  border-radius: 12px;
+  display: block;
+  min-height: 76px;
+  padding: 12px;
+  white-space: pre-wrap;
+}
+
+.tool-big-token {
+  background: var(--surface);
+  border: 1px solid color-mix(in oklab, var(--accent) 34%, transparent);
+  border-radius: 18px;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: 0;
+  padding: 28px;
+  text-align: center;
+}
+
+@media (max-width: 760px) {
+  .tool-big-token {
+    font-size: 22px;
+  }
+}
+
+.tool-results-list {
+  display: grid;
+  gap: 10px;
+}
+
+.tool-match {
+  align-items: center;
+  background: var(--weopen-panel-muted);
+  border: 1px solid var(--weopen-line);
+  border-radius: 12px;
+  display: grid;
+  gap: 4px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  padding: 12px;
+}
+
+.tool-match span {
+  color: var(--weopen-muted);
+  font-size: 13px;
+}
+
+@media (max-width: 1180px) {
+  .devtools-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .devtools-stats,
+  .devtools-tabs-shell,
+  .tool-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .devtools-sidebar {
+    position: static;
+  }
+
+  .tool-panel-header,
+  .tool-card-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .tool-actions {
+    justify-content: flex-start;
+  }
+}

@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Card } from "@weopen/ui";
 import type { PluginManifest } from "@weopen/plugin-sdk";
 import { CronTool } from "./cron-tool";
 import { EncodingTool } from "./encoding-tool";
@@ -12,6 +11,7 @@ import { RegexTool } from "./regex-tool";
 import { TimeTool } from "./time-tool";
 import { developerTools } from "./tools";
 import { UuidTool } from "./uuid-tool";
+import { MetricCard, StatusChip, Tabs } from "@weopen/ui";
 
 const tabs = [
   { id: "json", label: "JSON", component: <JsonTool /> },
@@ -27,8 +27,8 @@ const tabs = [
 type ToolTab = (typeof tabs)[number]["id"];
 
 export function ToolsPage({ manifest }: { manifest?: PluginManifest }) {
+  void manifest;
   const [activeTab, setActiveTab] = useState<ToolTab>("json");
-  const active = tabs.find((tab) => tab.id === activeTab) ?? tabs[0];
   const { availableCount, deferredCount, categories } = useMemo(() => {
     const available = developerTools.filter((tool) => tool.status === "available");
     const deferred = developerTools.filter((tool) => tool.status === "deferred");
@@ -41,57 +41,55 @@ export function ToolsPage({ manifest }: { manifest?: PluginManifest }) {
 
   return (
     <section className="devtools-workspace">
-      <div className="page-header">
-        <div className="page-kicker">Devtools</div>
-        <h1 className="page-title">{manifest?.name ?? "Developer tools"}</h1>
-        <p className="page-description">
-          A local-first programmer toolbox for JSON, encoding, time, UUID, JWT, hash/HMAC, and regex tasks. Client-safe
-          tools run in the browser and avoid backend round-trips.
-        </p>
-      </div>
-
       <div className="devtools-stats">
-        <Card title="Available tools" description={`${availableCount} client-safe tools`} />
-        <Card title="Runtime boundary" description="client-only for v1 sensitive inputs" />
-        <Card title="Deferred" description={`${deferredCount} parser awaiting dependency approval`} />
-        <Card title="Categories" description={`${categories} focused tool groups`} />
+        <MetricCard icon={<span>RUN</span>} label="Available Tools" value={availableCount} description="All run in your browser" />
+        <MetricCard icon={<span>●</span>} label="Local Runtime" value="ACTIVE" description="V8 (Chrome) · isolated context" trend="active" trendDirection="up" />
+        <MetricCard icon={<span>DEF</span>} label="Deferred Tools" value={deferredCount} description="Require server context" />
+        <MetricCard icon={<span>CAT</span>} label="Categories" value={categories} description="Filter & discover" />
       </div>
 
       <div className="devtools-layout">
-        <aside className="devtools-sidebar" aria-label="Developer tool categories">
-          <div className="devtools-tabs" role="tablist">
+        <Tabs
+          className="devtools-tabs-shell"
+          orientation="vertical"
+          selectedKey={activeTab}
+          onSelectionChange={(key) => setActiveTab(String(key) as ToolTab)}
+        >
+          <aside className="devtools-sidebar" aria-label="Developer tool categories">
+            <Tabs.ListContainer>
+              <Tabs.List aria-label="Developer tool categories" className="devtools-tabs">
+                {tabs.map((tab) => (
+                  <Tabs.Tab id={tab.id} key={tab.id}>
+                    {tab.label}
+                    <Tabs.Indicator />
+                  </Tabs.Tab>
+                ))}
+              </Tabs.List>
+            </Tabs.ListContainer>
+
+            <div className="tool-catalog">
+              <h2>Runtime Map</h2>
+              <ul className="tool-list">
+                {developerTools.map((tool) => (
+                  <li key={tool.id}>
+                    <span>{tool.name}</span>
+                    <StatusChip tone={tool.status === "available" ? "success" : "warning"}>
+                      {tool.status === "available" ? tool.runtime : "deferred"}
+                    </StatusChip>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </aside>
+
+          <div className="devtools-active">
             {tabs.map((tab) => (
-              <button
-                aria-selected={activeTab === tab.id}
-                className={activeTab === tab.id ? "devtools-tab devtools-tab-active" : "devtools-tab"}
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                role="tab"
-                type="button"
-              >
-                {tab.label}
-              </button>
+              <Tabs.Panel id={tab.id} key={tab.id}>
+                {tab.component}
+              </Tabs.Panel>
             ))}
           </div>
-
-          <div className="tool-catalog">
-            <h2>Runtime map</h2>
-            <ul className="tool-list">
-              {developerTools.map((tool) => (
-                <li key={tool.id}>
-                  <span>{tool.name}</span>
-                  <span className={tool.status === "available" ? "tool-badge" : "tool-badge tool-badge-warning"}>
-                    {tool.status === "available" ? tool.runtime : "deferred"}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </aside>
-
-        <div className="devtools-active" role="tabpanel">
-          {active.component}
-        </div>
+        </Tabs>
       </div>
     </section>
   );

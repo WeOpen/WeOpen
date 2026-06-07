@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { Card } from "@weopen/ui";
 import type { BlogPostInput } from "@/shared/api/blog";
 
 type BlogPostPreviewProps = {
@@ -10,7 +11,9 @@ export function BlogPostPreview({ coverUrl, post }: BlogPostPreviewProps) {
   const blocks = markdownBlocks(post.contentMarkdown);
 
   return (
-    <article className="blog-preview" aria-label="文章预览">
+    <Card className="blog-preview" aria-label="文章预览">
+      <Card.Content>
+        <article>
       <div className="blog-preview-status">{statusLabel(post.status)}</div>
       {coverUrl ? (
         <Image
@@ -28,10 +31,12 @@ export function BlogPostPreview({ coverUrl, post }: BlogPostPreviewProps) {
         {blocks.length ? (
           blocks.map((block, index) => renderBlock(block, index))
         ) : (
-          <p className="blog-preview-empty">开始输入 Markdown 后，这里会实时显示预览。</p>
+          <p className="blog-preview-empty">Markdown preview will appear here.</p>
         )}
       </div>
-    </article>
+        </article>
+      </Card.Content>
+    </Card>
   );
 }
 
@@ -66,9 +71,9 @@ function renderBlock(block: string, index: number) {
 
 function statusLabel(status: BlogPostInput["status"]) {
   const labels = {
-    draft: "草稿",
-    published: "已发布",
-    archived: "已归档"
+    draft: "DRAFT",
+    published: "PUBLISHED",
+    archived: "ARCHIVED"
   };
   return labels[status];
 }

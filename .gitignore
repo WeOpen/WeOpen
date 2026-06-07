@@ -45,9 +45,17 @@ go.work.sum
 # Editor/IDE
 # .idea/
 # .vscode/
+.DS_Store
+test-results/
+tmp/
+skills-lock.json
 
 
 .omx/
 .claude/
 .thesvg/
 thesvg/
+.spec-workflow/
+.playwright-mcp/
+.agents/
+.codex-artifacts/

@@ -1,9 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Button } from "@weopen/ui";
 import { decodeBase64, decodeUrl, encodeBase64, encodeUrl } from "./tools";
 import { CopyButton } from "./copy-button";
+import { Alert, Button, Textarea } from "@weopen/ui";
 
 type EncodingMode = "base64-encode" | "base64-decode" | "url-encode" | "url-decode";
 
@@ -42,7 +42,7 @@ export function EncodingTool() {
             <Button
               aria-pressed={mode === nextMode}
               key={nextMode}
-              onClick={() => setMode(nextMode)}
+              onPress={() => setMode(nextMode)}
               variant={mode === nextMode ? "primary" : "secondary"}
             >
               {modeLabels[nextMode]}
@@ -53,29 +53,11 @@ export function EncodingTool() {
       </div>
 
       <div className="tool-grid">
-        <label className="tool-field">
-          <span>Input</span>
-          <textarea
-            className="ui-textarea tool-textarea"
-            onChange={(event) => setInput(event.target.value)}
-            spellCheck={false}
-            value={input}
-          />
-        </label>
-        <label className="tool-field">
-          <span>Output</span>
-          <textarea
-            className="ui-textarea tool-textarea"
-            readOnly
-            spellCheck={false}
-            value={result.ok ? result.output : ""}
-          />
-        </label>
+        <Textarea className="tool-textarea" label="Input" onChange={(event) => setInput(event.target.value)} spellCheck={false} value={input} />
+        <Textarea className="tool-textarea" label="Output" readOnly spellCheck={false} value={result.ok ? result.output : ""} />
       </div>
       {!result.ok ? (
-        <p className="tool-error" role="alert">
-          {result.error}
-        </p>
+        <Alert status="danger"><Alert.Content><Alert.Description>{result.error}</Alert.Description></Alert.Content></Alert>
       ) : null}
     </section>
   );

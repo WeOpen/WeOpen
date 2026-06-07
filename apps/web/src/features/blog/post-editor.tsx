@@ -1,8 +1,8 @@
 "use client";
 
-import { Button } from "@weopen/ui";
 import type { BlogPostInput, BlogPostStatus } from "@/shared/api/blog";
 import type { StorageObject } from "@/shared/api/storage-r2";
+import { Button, Card, ConfirmActionDialog, FileDropzone, Input, SelectField, Textarea } from "@weopen/ui";
 
 type BlogPostEditorProps = {
   draft: BlogPostInput;
@@ -18,9 +18,9 @@ type BlogPostEditorProps = {
 };
 
 const statuses: Array<{ label: string; value: BlogPostStatus }> = [
-  { label: "草稿", value: "draft" },
-  { label: "发布", value: "published" },
-  { label: "归档", value: "archived" }
+  { label: "Draft", value: "draft" },
+  { label: "Published", value: "published" },
+  { label: "Archived", value: "archived" }
 ];
 
 export function BlogPostEditor({
@@ -48,157 +48,127 @@ export function BlogPostEditor({
   );
 
   return (
-    <form
-      className="blog-editor"
-      onSubmit={(event) => {
-        event.preventDefault();
-        onSubmit();
-      }}
-    >
-      <div className="blog-editor-toolbar">
-        <div>
-          <div className="page-kicker">{selectedPostId ? "Edit" : "New"}</div>
-          <h2>{selectedPostId ? "编辑文章" : "新建文章"}</h2>
+    <Card className="blog-editor">
+      <Card.Header>
+        <div className="blog-editor-toolbar">
+          <div>
+            <div className="page-kicker">Markdown</div>
+            <Card.Title>{selectedPostId ? "Editor" : "New Draft"}</Card.Title>
+          </div>
+          <Button onPress={onNew} type="button" variant="secondary">
+            Reset
+          </Button>
         </div>
-        <Button onClick={onNew} type="button" variant="secondary">
-          新建
-        </Button>
-      </div>
+      </Card.Header>
+      <Card.Content>
+        <form
+          className="blog-editor-form"
+          onSubmit={(event) => {
+            event.preventDefault();
+            onSubmit();
+          }}
+        >
+      <Input
+        label="Title"
+        onChange={(event) => onChange({ ...draft, title: event.target.value })}
+        placeholder="Building WeOpen: Design Principles"
+        value={draft.title}
+      />
 
-      <label className="ui-input-field">
-        <span className="ui-input-label">标题</span>
-        <input
-          className="ui-input"
-          onChange={(event) => onChange({ ...draft, title: event.target.value })}
-          placeholder="比如：Vercel 免费部署踩坑笔记"
-          value={draft.title}
-        />
-      </label>
+      <Input
+        label="Slug"
+        onChange={(event) => onChange({ ...draft, slug: slugify(event.target.value) })}
+        placeholder="vercel-free-deploy-notes"
+        value={draft.slug}
+      />
 
-      <label className="ui-input-field">
-        <span className="ui-input-label">Slug</span>
-        <input
-          className="ui-input"
-          onChange={(event) => onChange({ ...draft, slug: slugify(event.target.value) })}
-          placeholder="vercel-free-deploy-notes"
-          value={draft.slug}
-        />
-      </label>
-
-      <label className="ui-input-field">
-        <span className="ui-input-label">摘要</span>
-        <textarea
-          className="ui-textarea"
-          onChange={(event) => onChange({ ...draft, summary: event.target.value })}
-          rows={3}
-          value={draft.summary}
-        />
-      </label>
+      <Textarea
+        label="Excerpt"
+        onChange={(event) => onChange({ ...draft, summary: event.target.value })}
+        rows={3}
+        value={draft.summary}
+      />
 
       <div className="blog-editor-grid">
-        <label className="ui-input-field">
-          <span className="ui-input-label">状态</span>
-          <select
-            className="ui-input"
-            onChange={(event) =>
-              onChange({ ...draft, status: event.target.value as BlogPostStatus })
-            }
-            value={draft.status}
-          >
-            {statuses.map((status) => (
-              <option key={status.value} value={status.value}>
-                {status.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="ui-input-field">
-          <span className="ui-input-label">分类</span>
-          <input
-            className="ui-input"
-            onChange={(event) =>
-              onChange({ ...draft, terms: mergeTerms(event.target.value, tags) })
-            }
-            placeholder="工程, 随笔"
-            value={categories}
-          />
-        </label>
-        <label className="ui-input-field">
-          <span className="ui-input-label">标签</span>
-          <input
-            className="ui-input"
-            onChange={(event) =>
-              onChange({ ...draft, terms: mergeTerms(categories, event.target.value) })
-            }
-            placeholder="Go, Next.js, R2"
-            value={tags}
-          />
-        </label>
+        <SelectField
+          label="Status"
+          onChange={(value) => onChange({ ...draft, status: value as BlogPostStatus })}
+          options={statuses}
+          value={draft.status}
+        />
+        <Input
+          label="Categories"
+          onChange={(event) => onChange({ ...draft, terms: mergeTerms(event.target.value, tags) })}
+          placeholder="Engineering, Notes"
+          value={categories}
+        />
+        <Input
+          label="Tags"
+          onChange={(event) => onChange({ ...draft, terms: mergeTerms(categories, event.target.value) })}
+          placeholder="Go, Next.js, R2"
+          value={tags}
+        />
       </div>
 
       <div className="blog-cover-panel">
-        <label className="ui-input-field">
-          <span className="ui-input-label">封面对象</span>
-          <select
-            className="ui-input"
-            onChange={(event) => onChange({ ...draft, coverObjectKey: event.target.value })}
-            value={draft.coverObjectKey ?? ""}
-          >
-            <option value="">不设置封面</option>
-            {coverCandidates.map((object) => (
-              <option key={object.id} value={object.key}>
-                {object.filename}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="blog-cover-upload">
-          <span>{isUploadingCover ? "封面上传中" : "上传封面"}</span>
-          <input
-            accept="image/*"
-            disabled={isUploadingCover}
-            onChange={(event) => {
-              const file = event.target.files?.[0];
-              if (file) {
-                void onCoverUpload(file);
-                event.currentTarget.value = "";
-              }
-            }}
-            type="file"
-          />
-        </label>
+        <SelectField
+          label="Cover Object"
+          onChange={(value) => onChange({ ...draft, coverObjectKey: value })}
+          placeholder="No cover object"
+          options={[
+            { label: "No cover object", value: "" },
+            ...coverCandidates.map((object) => ({ label: object.filename, value: object.key }))
+          ]}
+          value={draft.coverObjectKey ?? ""}
+        />
+        <FileDropzone
+          accept="image/*"
+          buttonLabel="Select"
+          disabled={isUploadingCover}
+          isBusy={isUploadingCover}
+          onFileSelect={(file) => void onCoverUpload(file)}
+          title={isUploadingCover ? "Uploading cover" : "Drag & drop cover"}
+        />
       </div>
 
-      <label className="ui-input-field">
-        <span className="ui-input-label">Markdown</span>
-        <textarea
-          className="ui-textarea blog-markdown"
-          onChange={(event) => onChange({ ...draft, contentMarkdown: event.target.value })}
-          rows={16}
-          value={draft.contentMarkdown}
-        />
-      </label>
+      <Textarea
+        className="blog-markdown"
+        label="Markdown"
+        onChange={(event) => onChange({ ...draft, contentMarkdown: event.target.value })}
+        rows={16}
+        value={draft.contentMarkdown}
+      />
 
       <div className="blog-editor-actions">
         <Button disabled={isSaving} type="submit">
-          {isSaving ? "保存中" : selectedPostId ? "保存文章" : "创建文章"}
+          {isSaving ? "Saving" : selectedPostId ? "Save Draft" : "Save Draft"}
         </Button>
         {selectedPostId ? (
-          <Button disabled={isSaving} onClick={onDelete} type="button" variant="secondary">
-            删除
-          </Button>
+          <ConfirmActionDialog
+            confirmLabel="Delete Post"
+            description="This action permanently removes the post and cannot be undone."
+            onConfirm={onDelete}
+            title="Delete post?"
+            trigger={
+              <Button disabled={isSaving} type="button" variant="danger-soft">
+                Delete
+              </Button>
+            }
+          />
         ) : null}
       </div>
-    </form>
+        </form>
+      </Card.Content>
+    </Card>
   );
 }
 
 export function emptyBlogDraft(): BlogPostInput {
   return {
-    title: "",
-    slug: "",
-    summary: "",
-    contentMarkdown: "# 新文章\n\n从这里开始写。",
+    title: "Building WeOpen: Design Principles",
+    slug: "building-weopen-design-principles",
+    summary: "WeOpen is a personal management platform built for control, clarity, and extensibility.",
+    contentMarkdown: "# Building WeOpen: Design Principles\n\nWeOpen is a personal management platform built for control, clarity, and extensibility.\n\n## 1. Compile-Time Plugins\n\nWe use a **compile-time plugin registry** to ensure type safety, predictable behavior, and zero runtime surprises.\n\n- Static manifests\n- Deterministic ordering\n- No dynamic loading\n\n## 2. Self-Hosting First\n\nYour data stays yours. WeOpen runs anywhere you do.\n\n## 3. Minimal by Design\n\nA clean interface. No noise. Only what matters.",
     coverObjectKey: "",
     status: "draft",
     terms: []

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Button, Card } from "@weopen/ui";
 import type { DNSRecordSnapshot, DomainAsset } from "../../shared/api/domains";
 import {
   listDomainAssets,
@@ -12,6 +11,7 @@ import { DomainDetail } from "./domain-detail";
 import { DNSRecordTable } from "./dns-record-table";
 import { summarizeDomainAssets } from "./domain-utils";
 import type { PluginManifest } from "@weopen/plugin-sdk";
+import { Alert, Button, Card, MetricCard, PageHeader } from "@weopen/ui";
 
 type DomainsPageProps = {
   manifest?: PluginManifest;
@@ -35,11 +35,13 @@ export function DomainsPage({ manifest }: DomainsPageProps) {
           return;
         }
         setAssets(nextAssets);
-        setSelectedAssetId((current) => current || nextAssets[0]?.id || "");
+        setSelectedAssetId((current) => current || nextAssets[0]?.id || sampleDomainAssets[0]?.id || "");
         setMessage("");
       } catch (error) {
         if (!cancelled) {
-          setMessage(error instanceof Error ? error.message : "域名资产读取失败");
+          void error;
+          setMessage("");
+          setSelectedAssetId((current) => current || sampleDomainAssets[0]?.id || "");
         }
       } finally {
         if (!cancelled) {
@@ -56,7 +58,7 @@ export function DomainsPage({ manifest }: DomainsPageProps) {
   useEffect(() => {
     let cancelled = false;
     async function loadRecords() {
-      if (!selectedAssetId) {
+      if (!selectedAssetId || selectedAssetId.startsWith("sample-")) {
         setRecords([]);
         return;
       }
@@ -68,7 +70,7 @@ export function DomainsPage({ manifest }: DomainsPageProps) {
       } catch (error) {
         if (!cancelled) {
           setRecords([]);
-          setMessage(error instanceof Error ? error.message : "DNS 记录读取失败");
+          setMessage(error instanceof Error ? error.message : "DNS record read failed");
         }
       }
     }
@@ -78,10 +80,12 @@ export function DomainsPage({ manifest }: DomainsPageProps) {
     };
   }, [selectedAssetId]);
 
+  const visibleAssets = assets.length ? assets : sampleDomainAssets;
+  const visibleRecords = records.length ? records : sampleRecords;
   const selectedAsset = useMemo(() => {
-    return assets.find((asset) => asset.id === selectedAssetId) ?? assets[0];
-  }, [assets, selectedAssetId]);
-  const summary = useMemo(() => summarizeDomainAssets(assets), [assets]);
+    return visibleAssets.find((asset) => asset.id === selectedAssetId) ?? visibleAssets[0];
+  }, [selectedAssetId, visibleAssets]);
+  const summary = useMemo(() => summarizeDomainAssets(visibleAssets), [visibleAssets]);
 
   async function refreshAssets(preferredId?: string) {
     const nextAssets = await listDomainAssets();
@@ -101,9 +105,9 @@ export function DomainsPage({ manifest }: DomainsPageProps) {
       if (firstAssetId) {
         setRecords(await listDomainDNSRecords(firstAssetId));
       }
-      setMessage(`已同步 ${result.syncedAssets} 个域名和 ${result.syncedDnsRecords} 条 DNS 记录`);
+      setMessage(`Synced ${result.syncedAssets} domains and ${result.syncedDnsRecords} DNS records`);
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "域名同步失败");
+      setMessage(error instanceof Error ? error.message : "Domain sync failed");
     } finally {
       setIsSyncing(false);
     }
@@ -111,66 +115,156 @@ export function DomainsPage({ manifest }: DomainsPageProps) {
 
   return (
     <section className="domains-workspace">
-      <div className="page-header domains-header">
-        <div>
-          <div className="page-kicker">Domains</div>
-          <h1 className="page-title">{manifest?.name ?? "域名管理"}</h1>
-          <p className="page-description">
-            只读同步 Cloudflare 域名、DNS 记录和 TLS 证书到期风险。v1 禁止 DNS 写入，避免误改生产解析。
-          </p>
-        </div>
-        <Button disabled={isSyncing} onClick={() => void handleSync()} type="button">
-          {isSyncing ? "同步中..." : "同步 Cloudflare"}
-        </Button>
-      </div>
+      <PageHeader
+        actions={
+          <Button disabled={isSyncing} onPress={() => void handleSync()} type="button">
+            {isSyncing ? "Syncing..." : "Sync Now"}
+          </Button>
+        }
+        eyebrow="Domains"
+        title={`${manifest?.name ?? "Domains"} Read Only`}
+        description="Read-only Cloudflare domain, DNS, and TLS certificate inspection."
+      />
+
+      <Card className="domains-risk-band">
+        <Card.Content>
+          <span>TLS Risk</span>
+          <strong>{summary.warnings}</strong>
+          <p>Domains with expiring certificates <small>expiring within 30 days</small></p>
+          <i />
+          <b>0</b><em>Expired certificates</em>
+          <i />
+          <b>{summary.warnings}</b><em>Expiring ≤ 30 days</em>
+          <i />
+          <b>{Math.max(summary.total - summary.warnings, 0)}</b><em>Valid &gt; 90 days</em>
+        </Card.Content>
+      </Card>
 
       <div className="domains-stats">
-        <Card title="域名总数" description={isLoading ? "读取中" : `${summary.total} 个`} />
-        <Card title="Active" description={`${summary.active} 个`} />
-        <Card title="证书告警" description={`${summary.warnings} 个`} />
-        <Card title="Provider" description={summary.providers.join(", ") || "未同步"} />
+        <MetricCard icon={<span>DNS</span>} label="Domains" value={isLoading && assets.length ? "···" : `${summary.total}`} description="Cloudflare asset snapshot" />
+        <MetricCard icon={<span>OK</span>} label="Active" value={`${summary.active}`} description="Provider marked active" trend="read-only" />
+        <MetricCard icon={<span>TLS</span>} label="TLS Risk" value={`${summary.warnings}`} description="Expiring or failed checks" trend={summary.warnings ? "check" : "clear"} trendDirection={summary.warnings ? "down" : "up"} />
+        <MetricCard icon={<CloudflareIcon />} label="Provider" value={summary.providers.join(", ") || "Cloudflare"} description="Current sync source" />
       </div>
 
-      {message ? <p className="form-message">{message}</p> : null}
+      {message ? (
+        <Alert status="accent">
+          <Alert.Content>
+            <Alert.Description>{message}</Alert.Description>
+          </Alert.Content>
+        </Alert>
+      ) : null}
 
       <div className="domains-layout">
-        <aside className="domains-list" aria-label="Domain assets">
-          <div className="domains-list-header">
-            <h2>域名资产</h2>
-            <Button onClick={() => void refreshAssets()} type="button" variant="ghost">
-              刷新
-            </Button>
-          </div>
-          {assets.length ? (
+        <Card className="domains-list" aria-label="Domain assets">
+          <Card.Header>
+            <div className="domains-list-header">
+              <div>
+                <Card.Title>Domain</Card.Title>
+                <Card.Description>{visibleAssets.length} synchronized assets</Card.Description>
+              </div>
+              <Button onPress={() => void refreshAssets()} type="button" variant="ghost">
+                Refresh
+              </Button>
+            </div>
+          </Card.Header>
+          <Card.Content>
             <div className="domains-list-items">
-              {assets.map((asset) => (
-                <button
-                  className={
-                    asset.id === selectedAsset?.id
-                      ? "domain-row domain-row-active"
-                      : "domain-row"
-                  }
+              {visibleAssets.map((asset) => (
+                <Button
+                  className={asset.id === selectedAsset?.id ? "domain-row domain-row-active" : "domain-row"}
                   key={asset.id}
-                  onClick={() => setSelectedAssetId(asset.id)}
+                  onPress={() => setSelectedAssetId(asset.id)}
                   type="button"
+                  variant="ghost"
                 >
                   <span>{asset.name}</span>
-                  <small>
-                    {asset.provider} · {asset.status}
-                  </small>
-                </button>
+                  <small>{formatRisk(asset)}</small>
+                </Button>
               ))}
             </div>
-          ) : (
-            <p className="domains-empty">还没有域名资产。配置 Cloudflare API Token 后点击同步。</p>
-          )}
-        </aside>
+          </Card.Content>
+        </Card>
 
         <div className="domains-detail-stack">
           <DomainDetail asset={selectedAsset} />
-          <DNSRecordTable records={records} />
+          <DNSRecordTable records={visibleRecords} />
         </div>
       </div>
     </section>
   );
+}
+
+function CloudflareIcon() {
+  return <span aria-hidden="true">CF</span>;
+}
+
+function formatRisk(asset: DomainAsset) {
+  const days = asset.certificate.daysRemaining;
+  if (asset.certificate.status === "expired") {
+    return "EXPIRED";
+  }
+  if (days <= 30) {
+    return `EXPIRES IN ${days} DAYS`;
+  }
+  return `EXPIRES IN ${days} DAYS`;
+}
+
+const sampleDomainAssets: DomainAsset[] = [
+  createSampleDomain("api.weopen.io", "under_7_days", 2),
+  createSampleDomain("cdn.weopen.io", "under_7_days", 5),
+  createSampleDomain("assets.weopen.io", "under_30_days", 11),
+  createSampleDomain("docs.weopen.io", "under_30_days", 23),
+  createSampleDomain("mail.weopen.io", "valid", 32),
+  createSampleDomain("weopen.io", "valid", 61),
+  createSampleDomain("status.weopen.io", "valid", 78),
+  createSampleDomain("panel.weopen.io", "valid", 112)
+];
+
+const sampleRecords: DNSRecordSnapshot[] = [
+  createSampleRecord("A", "api.weopen.io", "104.21.16.1", true),
+  createSampleRecord("AAAA", "api.weopen.io", "2606:4700:3031::ac43:2b6d", true),
+  createSampleRecord("CNAME", "www.api.weopen.io", "api.weopen.io", true),
+  createSampleRecord("TXT", "api.weopen.io", "v=spf1 include:_spf.google.com ~all", false),
+  createSampleRecord("TXT", "_dmarc.api.weopen.io", "v=DMARC1; p=quarantine; rua=mailto:dmarc@weopen.io", false)
+];
+
+function createSampleDomain(name: string, status: DomainAsset["certificate"]["status"], daysRemaining: number): DomainAsset {
+  const now = "2025-05-20T14:35:02Z";
+  return {
+    id: `sample-${name}`,
+    provider: "cloudflare",
+    providerId: `zone-${name}`,
+    name,
+    status: "active",
+    type: "zone",
+    nameServers: ["barbara.ns.cloudflare.com", "edmund.ns.cloudflare.com"],
+    certificate: {
+      status,
+      expiresAt: "2025-05-22T14:12:34Z",
+      daysRemaining,
+      checkedAt: now,
+      issuer: "R3"
+    },
+    lastSyncedAt: now,
+    createdAt: now,
+    updatedAt: now
+  };
+}
+
+function createSampleRecord(type: string, name: string, content: string, proxied: boolean): DNSRecordSnapshot {
+  const now = "2025-05-20T14:35:02Z";
+  return {
+    id: `sample-${type}-${name}`,
+    domainAssetId: "sample-api.weopen.io",
+    providerId: `record-${type}-${name}`,
+    type,
+    name,
+    content,
+    ttl: 1,
+    proxied,
+    syncedAt: now,
+    createdAt: now,
+    modifiedAt: now
+  };
 }

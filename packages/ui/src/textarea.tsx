@@ -1,23 +1,48 @@
-import type { TextareaHTMLAttributes } from "react";
+import type { ReactNode, TextareaHTMLAttributes } from "react";
 import { cn } from "./utils";
 
-export type TextareaProps = TextareaHTMLAttributes<HTMLTextAreaElement> & {
-  label?: string;
+export type TextareaProps = Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, "disabled"> & {
+  disabled?: boolean;
+  errorMessage?: ReactNode;
+  fullWidth?: boolean;
+  isDisabled?: boolean;
+  isInvalid?: boolean;
+  label?: ReactNode;
 };
 
-/** Textarea shares thesvg's rounded input treatment with optional colocated label text. */
-export function Textarea({ className, id, label, ...props }: TextareaProps) {
-  const textareaId = id ?? props.name;
-  const textarea = <textarea className={cn("ui-textarea", className)} id={textareaId} {...props} />;
+export function Textarea({
+  className,
+  disabled,
+  errorMessage,
+  fullWidth = true,
+  id,
+  isDisabled,
+  isInvalid,
+  label,
+  name,
+  ...props
+}: TextareaProps) {
+  const inputId = id ?? name;
+  const textarea = (
+    <textarea
+      aria-invalid={isInvalid || Boolean(errorMessage) || undefined}
+      className={cn("textarea", className)}
+      disabled={isDisabled || disabled}
+      id={inputId}
+      name={name}
+      {...props}
+    />
+  );
 
-  if (!label) {
+  if (!label && !errorMessage) {
     return textarea;
   }
 
   return (
-    <label className="ui-input-field" htmlFor={textareaId}>
-      <span className="ui-input-label">{label}</span>
+    <label className={cn("field", { "field--full": fullWidth })}>
+      {label ? <span className="field__label">{label}</span> : null}
       {textarea}
+      {errorMessage ? <span className="field__error">{errorMessage}</span> : null}
     </label>
   );
 }

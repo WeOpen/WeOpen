@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Input } from "@weopen/ui";
 import { login } from "@/shared/api/auth";
+import { Alert, Button, Input } from "@weopen/ui";
 
 export function LoginForm() {
   const [email, setEmail] = useState("admin@example.com");
@@ -16,9 +16,9 @@ export function LoginForm() {
     setMessage("");
     try {
       await login({ email, password });
-      setMessage("登录成功，可以进入 Dashboard。");
+      setMessage("Signed in. You can enter the command center.");
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "登录失败");
+      setMessage(error instanceof Error ? error.message : "Sign in failed");
     } finally {
       setIsSubmitting(false);
     }
@@ -28,7 +28,7 @@ export function LoginForm() {
     <form className="auth-form" onSubmit={onSubmit}>
       <Input
         autoComplete="email"
-        label="邮箱"
+        label="Email"
         name="email"
         onChange={(event) => setEmail(event.target.value)}
         type="email"
@@ -36,16 +36,23 @@ export function LoginForm() {
       />
       <Input
         autoComplete="current-password"
-        label="密码"
+        label="Password"
         name="password"
         onChange={(event) => setPassword(event.target.value)}
+        placeholder="Enter your password"
         type="password"
         value={password}
       />
-      <Button disabled={isSubmitting} type="submit">
-        {isSubmitting ? "登录中" : "登录"}
+      <Button fullWidth isPending={isSubmitting} type="submit" variant="secondary">
+        {isSubmitting ? "Signing In" : "Sign In"}
       </Button>
-      {message ? <p className="form-message">{message}</p> : null}
+      {message ? (
+        <Alert status={message.includes("Signed") ? "success" : "danger"}>
+          <Alert.Content>
+            <Alert.Description>{message}</Alert.Description>
+          </Alert.Content>
+        </Alert>
+      ) : null}
     </form>
   );
 }

@@ -22,7 +22,7 @@ export function CopyButton({
   }
 
   return (
-    <Button disabled={disabled || !value} onClick={copy} variant="secondary">
+    <Button disabled={disabled || !value} onPress={copy} variant="secondary">
       {label}
     </Button>
   );

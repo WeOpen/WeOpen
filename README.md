@@ -180,7 +180,7 @@ sequenceDiagram
 
 ### 2. 安装依赖
 
-```powershell
+```bash
 pnpm install
 ```
 
@@ -188,15 +188,15 @@ pnpm install
 
 复制示例文件：
 
-```powershell
-Copy-Item .env.example .env
+```bash
+cp .env.example .env
 ```
 
 本地开发默认 `APP_ENV=local` 时，API 会为部分必填项提供本地默认值。需要连接真实 R2、Cloudflare 或托管数据库时，再补齐 `.env` 中对应变量。
 
 ### 4. 启动 API
 
-```powershell
+```bash
 pnpm dev:api
 ```
 
@@ -208,8 +208,8 @@ http://localhost:8080
 
 健康检查：
 
-```powershell
-Invoke-RestMethod http://localhost:8080/healthz
+```bash
+curl http://localhost:8080/healthz
 ```
 
 预期返回：
@@ -225,7 +225,7 @@ Invoke-RestMethod http://localhost:8080/healthz
 
 另开一个终端：
 
-```powershell
+```bash
 pnpm dev:web
 ```
 
@@ -248,13 +248,13 @@ http://localhost:3000
 
 确保已安装 Wails v3 CLI 后运行：
 
-```powershell
+```bash
 pnpm dev:desktop
 ```
 
 也可以只检查桌面前端类型：
 
-```powershell
+```bash
 pnpm --dir apps/desktop/frontend typecheck
 ```
 
@@ -273,7 +273,7 @@ flowchart LR
 
 推荐命令顺序：
 
-```powershell
+```bash
 git status --short
 pnpm --filter @weopen/web test
 pnpm --filter @weopen/web typecheck
@@ -284,7 +284,7 @@ go test ./services/api/...
 
 Go workspace 根目录不是单一 Go module，因此不要把 `go test ./...` 当成根目录全量验证命令。需要覆盖内部模块时显式列出模块路径，例如：
 
-```powershell
+```bash
 go test ./services/api/... ./internal/core/... ./internal/plugins/blog/... ./internal/plugins/devtools/... ./internal/plugins/storage_r2/... ./internal/providers/r2/...
 ```
 

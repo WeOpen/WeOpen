@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { Input, Textarea } from "@weopen/ui";
 import { testRegex } from "./tools";
 import { CopyButton } from "./copy-button";
 
@@ -22,34 +23,10 @@ export function RegexTool() {
 
       <div className="tool-grid">
         <div className="tool-card">
-          <label className="tool-field">
-            <span>Pattern</span>
-            <input
-              className="ui-input"
-              onChange={(event) => setPattern(event.target.value)}
-              spellCheck={false}
-              value={pattern}
-            />
-          </label>
-          <label className="tool-field">
-            <span>Flags</span>
-            <input
-              className="ui-input"
-              onChange={(event) => setFlags(event.target.value)}
-              spellCheck={false}
-              value={flags}
-            />
-          </label>
+          <Input label="Pattern" onChange={(event) => setPattern(event.target.value)} spellCheck={false} value={pattern} />
+          <Input label="Flags" onChange={(event) => setFlags(event.target.value)} spellCheck={false} value={flags} />
         </div>
-        <label className="tool-field">
-          <span>Sample text</span>
-          <textarea
-            className="ui-textarea tool-textarea"
-            onChange={(event) => setInput(event.target.value)}
-            spellCheck={false}
-            value={input}
-          />
-        </label>
+        <Textarea className="tool-textarea" label="Sample text" onChange={(event) => setInput(event.target.value)} spellCheck={false} value={input} />
       </div>
 
       <div className="tool-results-list">

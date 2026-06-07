@@ -1,28 +1,121 @@
+import Link from "next/link";
 import { AppShell } from "@/shared/layout/app-shell";
-import { pluginDashboardWidgets } from "@/plugins/registry";
-import { Card } from "@weopen/ui";
+import { pluginManifests } from "@/plugins/registry";
+import { Card, HorizontalScrollArea, MetricCard } from "@weopen/ui";
+
+const activityRows = [
+  { icon: "▤", isCodeIcon: false, label: "BLOG ACTIVITY", value: 68 },
+  { icon: "</>", isCodeIcon: true, label: "DEVTOOLS USAGE", value: 54 },
+  { icon: "◎", isCodeIcon: false, label: "DOMAINS CHECKS", value: 32 },
+  { icon: "◉", isCodeIcon: false, label: "STORAGE R2 I/O", value: 71 }
+] as const;
+
+const modules = [
+  ["Blog Plugin", "PLUGIN", "ACTIVE", "1.3.0", "2025-05-20 14:36:21", "/blog"],
+  ["R2 Storage", "PLUGIN", "ACTIVE", "1.1.2", "2025-05-20 14:35:48", "/storage"],
+  ["Go API", "SERVICE", "RUNNING", "1.2.0", "2025-05-20 14:37:02", "/api"],
+  ["Domains Monitor", "MODULE", "READ ONLY", "1.0.0", "2025-05-20 14:20:11", "/domains"],
+  ["DevTools", "TOOL", "ACTIVE", "0.9.5", "2025-05-20 14:36:05", "/tools"],
+  ["Plugin Registry", "SERVICE", "ONLINE", "0.0.1", "2025-05-20 14:33:19", "/plugins"]
+] as const;
 
 export default function DashboardPage() {
-  const widgets = pluginDashboardWidgets();
-
   return (
     <AppShell currentPath="/dashboard">
-      <section className="page-header">
-        <div className="page-kicker">Dashboard</div>
-        <h1 className="page-title">Workspace</h1>
-        <p className="page-description">
-          The management console now follows the thesvg glass header, rounded sidebar and compact dark information layout while keeping plugin-driven entries.
-        </p>
+      <section className="dashboard-metrics" aria-label="Platform status">
+        <MetricCard icon={<span>●</span>} label="API Status" value="ONLINE" description="UPTIME 7D 14H 22M" />
+        <MetricCard icon={<span>✣</span>} label="Plugins Installed" value={pluginManifests.length + 2} description="ACTIVE 10 · DISABLED 2" />
+        <MetricCard icon={<span>⌁</span>} label="System Health" value="98.6%" description="LAST 24 HOURS" />
+        <MetricCard icon={<span>◉</span>} label="Storage R2 Usage" value="42.7%" description="215.4 GB / 504.0 GB" />
       </section>
-      <section className="dashboard-grid" aria-label="Plugin dashboard cards">
-        {widgets.map((widget) => (
-          <Card
-            description={`${widget.pluginName} - ${widget.description ?? ""}`}
-            key={`${widget.pluginId}:${widget.id}`}
-            title={widget.title}
-          />
-        ))}
+
+      <section className="dashboard-panels" aria-label="System overview">
+        <Card className="dashboard-panel dashboard-system-overview">
+          <Card.Header><Card.Title>System Overview</Card.Title></Card.Header>
+          <Card.Content>
+            <div className="dashboard-request-copy">
+              <span>REQUESTS / MIN</span>
+              <strong>1,308</strong>
+              <small>TOTAL 1,342,940</small>
+            </div>
+            <svg className="dashboard-line-chart" viewBox="0 0 700 210" role="img" aria-label="Request trend">
+              <g className="dashboard-grid-lines">
+                <line x1="0" x2="700" y1="40" y2="40" />
+                <line x1="0" x2="700" y1="96" y2="96" />
+                <line x1="0" x2="700" y1="152" y2="152" />
+              </g>
+              <polyline className="dashboard-line-primary" points="0,140 42,125 84,132 126,120 168,138 210,115 252,126 294,58 336,130 378,91 420,57 462,112 504,84 546,104 588,58 630,88 672,94" />
+            </svg>
+            <div className="dashboard-live-feed"><span /> LIVE FEED</div>
+          </Card.Content>
+        </Card>
+
+        <Card className="dashboard-panel dashboard-activity-overview">
+          <Card.Header><Card.Title>Activity Overview</Card.Title></Card.Header>
+          <Card.Content>
+            {activityRows.map(({ icon, isCodeIcon, label, value }) => (
+              <div className="dashboard-activity-row" key={label}>
+                <span className={isCodeIcon ? "dashboard-activity-icon dashboard-activity-icon-code" : "dashboard-activity-icon"}>{icon}</span>
+                <strong>{label}</strong>
+                <i aria-hidden="true"><b style={{ width: `${value}%` }} /></i>
+                <em>{value}%</em>
+              </div>
+            ))}
+            <small>LAST 24 HOURS</small>
+          </Card.Content>
+        </Card>
       </section>
+
+      <Card className="dashboard-directory" aria-label="Modules">
+        <Card.Header><Card.Title>Modules</Card.Title></Card.Header>
+        <Card.Content>
+          <HorizontalScrollArea
+            className="dashboard-module-scroll"
+            viewportClassName="dashboard-module-table"
+            role="table"
+            aria-label="WeOpen modules"
+          >
+            <div className="dashboard-module-table-head" role="row">
+              <span role="columnheader">Name</span>
+              <span role="columnheader">Type</span>
+              <span role="columnheader">Status</span>
+              <span role="columnheader">Version</span>
+              <span role="columnheader">Author</span>
+              <span role="columnheader">Last Activity</span>
+              <span role="columnheader">Actions</span>
+            </div>
+            {modules.map(([name, type, status, version, lastActivity, href]) => (
+              <div className="dashboard-module-row" role="row" key={name}>
+                <Link className="dashboard-module-member" href={href} role="cell">
+                  <span className={iconClassForName(name)}>{iconForName(name)}</span>
+                  <strong>{name}</strong>
+                </Link>
+                <span role="cell">{type}</span>
+                <span className="dashboard-module-status" role="cell"><i /> {status}</span>
+                <span role="cell">{version}</span>
+                <span role="cell">WeOpen Team</span>
+                <span role="cell">{lastActivity}</span>
+                <span role="cell">···</span>
+              </div>
+            ))}
+          </HorizontalScrollArea>
+        </Card.Content>
+      </Card>
     </AppShell>
   );
+}
+
+function iconForName(name: string) {
+  if (name.includes("Blog")) return "▤";
+  if (name.includes("R2")) return "◉";
+  if (name.includes("API")) return ">_";
+  if (name.includes("Domains")) return "◎";
+  if (name.includes("Dev")) return "</>";
+  return "✣";
+}
+
+function iconClassForName(name: string) {
+  return name.includes("API") || name.includes("Dev")
+    ? "dashboard-module-icon dashboard-module-icon-code"
+    : "dashboard-module-icon";
 }

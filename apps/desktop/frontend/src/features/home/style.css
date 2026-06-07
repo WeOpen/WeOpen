@@ -1,6 +1,6 @@
-/* Desktop-only adapters. The management shell, tokens and base controls come from @weopen/ui/admin.css. */
+/* Desktop-only adapters layered on the shared custom Nothing shell. */
 .desktop-panel {
-  box-shadow: 0 18px 60px -44px rgba(0, 0, 0, 0.92);
+  border: 1px solid var(--border-visible);
 }
 
 .dashboard-grid,

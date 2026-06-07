@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@weopen/ui";
+import { Button, Input, SelectField, Textarea } from "@weopen/ui";
 import type { ToolResult } from "./types";
 import { hashAlgorithms, hashText, hmacText, type HashAlgorithm } from "./tools";
 import { CopyButton } from "./copy-button";
@@ -44,39 +44,15 @@ export function HashTool() {
       </div>
 
       <div className="tool-grid">
-        <label className="tool-field">
-          <span>Input text</span>
-          <textarea
-            className="ui-textarea tool-textarea tool-textarea-short"
-            onChange={(event) => setInput(event.target.value)}
-            spellCheck={false}
-            value={input}
-          />
-        </label>
+        <Textarea className="tool-textarea tool-textarea-short" label="Input text" onChange={(event) => setInput(event.target.value)} spellCheck={false} value={input} />
         <div className="tool-card">
-          <label className="tool-field">
-            <span>Algorithm</span>
-            <select
-              className="ui-input"
-              onChange={(event) => setAlgorithm(event.target.value as HashAlgorithm)}
-              value={algorithm}
-            >
-              {hashAlgorithms.map((nextAlgorithm) => (
-                <option key={nextAlgorithm} value={nextAlgorithm}>
-                  {nextAlgorithm}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="tool-field">
-            <span>HMAC secret</span>
-            <input
-              className="ui-input"
-              onChange={(event) => setSecret(event.target.value)}
-              type="password"
-              value={secret}
-            />
-          </label>
+          <SelectField
+            label="Algorithm"
+            onChange={(value) => setAlgorithm(value as HashAlgorithm)}
+            options={hashAlgorithms.map((nextAlgorithm) => ({ label: nextAlgorithm, value: nextAlgorithm }))}
+            value={algorithm}
+          />
+          <Input label="HMAC secret" onChange={(event) => setSecret(event.target.value)} type="password" value={secret} />
         </div>
       </div>
 
@@ -85,7 +61,7 @@ export function HashTool() {
           <div className="tool-card-header">
             <strong>Digest</strong>
             <div className="tool-actions">
-              <Button disabled={isRunning} onClick={runHash}>
+              <Button disabled={isRunning} onPress={runHash}>
                 Hash
               </Button>
               <CopyButton disabled={!hashResult.ok} value={hashResult.output} />
@@ -99,7 +75,7 @@ export function HashTool() {
           <div className="tool-card-header">
             <strong>HMAC</strong>
             <div className="tool-actions">
-              <Button disabled={isRunning} onClick={runHmac}>
+              <Button disabled={isRunning} onPress={runHmac}>
                 Sign
               </Button>
               <CopyButton disabled={!hmacResult.ok} value={hmacResult.output} />

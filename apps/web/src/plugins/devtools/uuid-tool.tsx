@@ -16,7 +16,7 @@ export function UuidTool() {
           <p>Generate RFC 4122 version 4 IDs with browser crypto, with a local fallback for older runtimes.</p>
         </div>
         <div className="tool-actions">
-          <Button onClick={() => setUuid(generateUuid())}>Generate</Button>
+          <Button onPress={() => setUuid(generateUuid())}>Generate</Button>
           <CopyButton value={uuid} />
         </div>
       </div>

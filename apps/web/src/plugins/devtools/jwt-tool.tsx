@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { decodeJwt } from "./tools";
 import { CopyButton } from "./copy-button";
+import { Alert, Textarea } from "@weopen/ui";
 
 const sampleJwt = "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiIxMjMiLCJyb2xlcyI6WyJhZG1pbiJdfQ.";
 
@@ -21,30 +22,12 @@ export function JwtTool() {
       </div>
 
       <div className="tool-grid">
-        <label className="tool-field">
-          <span>JWT</span>
-          <textarea
-            className="ui-textarea tool-textarea"
-            onChange={(event) => setToken(event.target.value)}
-            spellCheck={false}
-            value={token}
-          />
-        </label>
-        <label className="tool-field">
-          <span>Decoded JSON</span>
-          <textarea
-            className="ui-textarea tool-textarea"
-            readOnly
-            spellCheck={false}
-            value={result.ok ? result.output : ""}
-          />
-        </label>
+        <Textarea className="tool-textarea" label="JWT" onChange={(event) => setToken(event.target.value)} spellCheck={false} value={token} />
+        <Textarea className="tool-textarea" label="Decoded JSON" readOnly spellCheck={false} value={result.ok ? result.output : ""} />
       </div>
       <p className="tool-note">Decode-only: signature verification is intentionally out of scope for this client-side tool.</p>
       {!result.ok ? (
-        <p className="tool-error" role="alert">
-          {result.error}
-        </p>
+        <Alert status="danger"><Alert.Content><Alert.Description>{result.error}</Alert.Description></Alert.Content></Alert>
       ) : null}
     </section>
   );

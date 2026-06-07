@@ -160,7 +160,7 @@ Create this layout incrementally:
 4. Add env example with Web/API/R2/database variables.
 5. Run:
 
-```powershell
+```bash
 pnpm install
 pnpm lint
 pnpm typecheck
@@ -197,7 +197,7 @@ pnpm typecheck
 4. Write a handler test for `/healthz`.
 5. Run:
 
-```powershell
+```bash
 go test ./...
 go run ./services/api/cmd/api
 ```
@@ -227,7 +227,7 @@ go run ./services/api/cmd/api
 4. Add an API health check helper.
 5. Run:
 
-```powershell
+```bash
 pnpm --filter web lint
 pnpm --filter web typecheck
 pnpm --filter web build
@@ -255,7 +255,7 @@ pnpm --filter web build
 3. Replace local Web buttons/cards with shared UI components.
 4. Run:
 
-```powershell
+```bash
 pnpm --filter ui typecheck
 pnpm --filter web typecheck
 ```
@@ -283,7 +283,7 @@ pnpm --filter web typecheck
 3. Add a Go binding for app version or health info.
 4. Run:
 
-```powershell
+```bash
 go test ./...
 pnpm --dir apps/desktop/frontend typecheck
 ```
@@ -318,7 +318,7 @@ pnpm --dir apps/desktop/frontend typecheck
 3. Add tests for missing required values.
 4. Run:
 
-```powershell
+```bash
 go test ./services/api/internal/config ./services/api/cmd/api
 ```
 
@@ -351,7 +351,7 @@ go test ./services/api/internal/config ./services/api/cmd/api
 3. Add test that migration SQL can be parsed/applied in the chosen test database strategy.
 4. Run:
 
-```powershell
+```bash
 go test ./services/api/internal/db
 ```
 
@@ -377,7 +377,7 @@ go test ./services/api/internal/db
 5. Test error response shape.
 6. Run:
 
-```powershell
+```bash
 go test ./services/api/internal/http
 ```
 
@@ -410,7 +410,7 @@ go test ./services/api/internal/http
 7. Add authenticated dashboard guard.
 8. Run:
 
-```powershell
+```bash
 go test ./services/api/internal/auth ./services/api/internal/http
 pnpm --filter web typecheck
 pnpm --filter web build
@@ -442,7 +442,7 @@ pnpm --filter web build
 5. Add settings UI for R2 and Cloudflare token placeholders.
 6. Run:
 
-```powershell
+```bash
 go test ./services/api/internal/secrets ./services/api/internal/audit ./services/api/internal/http
 pnpm --filter web typecheck
 ```
@@ -471,7 +471,7 @@ pnpm --filter web typecheck
 3. Add tests for registration, duplicate rejection, and enabled lookup.
 4. Run:
 
-```powershell
+```bash
 go test ./internal/core/plugin
 ```
 
@@ -496,7 +496,7 @@ go test ./internal/core/plugin
 3. Test duplicate ID rejection and nav sorting.
 4. Run:
 
-```powershell
+```bash
 pnpm --filter plugin-sdk test
 pnpm --filter plugin-sdk typecheck
 ```
@@ -522,7 +522,7 @@ pnpm --filter plugin-sdk typecheck
 4. Return manifest, permissions, nav, and version.
 5. Run:
 
-```powershell
+```bash
 go test ./services/api/internal/http ./internal/core/plugin
 ```
 
@@ -549,7 +549,7 @@ go test ./services/api/internal/http ./internal/core/plugin
 4. Render dashboard widgets from plugin registry.
 5. Run:
 
-```powershell
+```bash
 pnpm --filter web typecheck
 pnpm --filter web build
 ```
@@ -579,7 +579,7 @@ pnpm --filter web build
 3. Test slug uniqueness and status transitions.
 4. Run:
 
-```powershell
+```bash
 go test ./internal/plugins/blog
 ```
 
@@ -611,7 +611,7 @@ go test ./internal/plugins/blog
 4. Record audit logs for create/update/delete.
 5. Run:
 
-```powershell
+```bash
 go test ./internal/plugins/blog ./services/api/internal/http
 ```
 
@@ -640,7 +640,7 @@ go test ./internal/plugins/blog ./services/api/internal/http
 5. Add taxonomy controls.
 6. Run:
 
-```powershell
+```bash
 pnpm --filter web typecheck
 pnpm --filter web build
 ```
@@ -671,7 +671,7 @@ pnpm --filter web build
 5. Mock external calls in tests.
 6. Run:
 
-```powershell
+```bash
 go test ./internal/providers/r2
 ```
 
@@ -701,7 +701,7 @@ go test ./internal/providers/r2
 6. Record audit logs for delete and visibility changes.
 7. Run:
 
-```powershell
+```bash
 go test ./internal/plugins/storage_r2 ./internal/providers/r2
 ```
 
@@ -729,7 +729,7 @@ go test ./internal/plugins/storage_r2 ./internal/providers/r2
 5. Add public/private visibility indicator.
 6. Run:
 
-```powershell
+```bash
 pnpm --filter web typecheck
 pnpm --filter web build
 ```
@@ -755,7 +755,7 @@ pnpm --filter web build
 4. Validate object ownership/index before saving.
 5. Run:
 
-```powershell
+```bash
 go test ./internal/plugins/blog ./internal/plugins/storage_r2
 pnpm --filter web typecheck
 pnpm --filter web build
@@ -790,7 +790,7 @@ pnpm --filter web build
 3. Add tests for pure functions.
 4. Run:
 
-```powershell
+```bash
 pnpm --filter web test
 pnpm --filter web typecheck
 go test ./internal/plugins/devtools
@@ -821,7 +821,7 @@ go test ./internal/plugins/devtools
 4. Ensure invalid JSON shows readable error.
 5. Run:
 
-```powershell
+```bash
 pnpm --filter web test
 pnpm --filter web typecheck
 pnpm --filter web build
@@ -849,7 +849,7 @@ pnpm --filter web build
 4. Add Cron parser if a dependency is approved; otherwise defer to P2.
 5. Run:
 
-```powershell
+```bash
 pnpm --filter web test
 pnpm --filter web typecheck
 ```
@@ -880,7 +880,7 @@ pnpm --filter web typecheck
 4. Mock Cloudflare HTTP responses.
 5. Run:
 
-```powershell
+```bash
 go test ./internal/providers/domains ./internal/providers/cloudflare
 ```
 
@@ -910,7 +910,7 @@ go test ./internal/providers/domains ./internal/providers/cloudflare
 6. Keep DNS write operations disabled in v1.
 7. Run:
 
-```powershell
+```bash
 go test ./internal/plugins/domains ./internal/providers/cloudflare
 ```
 
@@ -937,7 +937,7 @@ go test ./internal/plugins/domains ./internal/providers/cloudflare
    - under 30 days
 4. Run:
 
-```powershell
+```bash
 go test ./internal/plugins/domains
 ```
 
@@ -965,7 +965,7 @@ go test ./internal/plugins/domains
 5. Add clear messaging that v1 DNS writes are disabled.
 6. Run:
 
-```powershell
+```bash
 pnpm --filter web typecheck
 pnpm --filter web build
 ```
@@ -996,7 +996,7 @@ pnpm --filter web build
 4. Add connection test to `/healthz`.
 5. Run:
 
-```powershell
+```bash
 go test ./apps/desktop/...
 pnpm --dir apps/desktop/frontend typecheck
 ```
@@ -1021,7 +1021,7 @@ pnpm --dir apps/desktop/frontend typecheck
 3. Add desktop-specific file helpers only if needed.
 4. Run:
 
-```powershell
+```bash
 pnpm --filter web test
 pnpm --dir apps/desktop/frontend typecheck
 go test ./apps/desktop/...
@@ -1047,7 +1047,7 @@ go test ./apps/desktop/...
 3. Show graceful empty state if remote API is missing.
 4. Run:
 
-```powershell
+```bash
 pnpm --dir apps/desktop/frontend typecheck
 go test ./apps/desktop/...
 ```
@@ -1067,7 +1067,7 @@ go test ./apps/desktop/...
 - Create: `services/api/openapi.yaml`
 - Create: `packages/sdk/package.json`
 - Create: `packages/sdk/src/client.ts`
-- Create: `scripts/generate-sdk.ps1`
+- Create: `scripts/generate-sdk.sh`
 - Modify: `package.json`
 
 **Steps:**
@@ -1077,7 +1077,7 @@ go test ./apps/desktop/...
 3. Replace ad hoc fetch helpers with SDK where practical.
 4. Run:
 
-```powershell
+```bash
 pnpm generate:sdk
 pnpm --filter sdk typecheck
 pnpm --filter web typecheck
@@ -1106,7 +1106,7 @@ pnpm --filter web typecheck
 2. Cache pnpm and Go modules.
 3. Run commands locally before pushing:
 
-```powershell
+```bash
 pnpm lint
 pnpm typecheck
 pnpm test
@@ -1161,7 +1161,7 @@ pnpm build
 4. Add domains read-only screen smoke test.
 5. Run:
 
-```powershell
+```bash
 pnpm --filter web e2e
 ```
 
@@ -1189,7 +1189,7 @@ pnpm --filter web e2e
 6. Verify destructive operations require confirmation.
 7. Run:
 
-```powershell
+```bash
 go test ./...
 pnpm lint
 pnpm typecheck
@@ -1279,7 +1279,7 @@ Require explicit confirmation for:
 
 Expected commands after scaffold:
 
-```powershell
+```bash
 pnpm install
 pnpm dev:web
 pnpm dev:api
@@ -1368,13 +1368,13 @@ Start with **Task M0.1: Initialize Node Workspace**.
 
 Before editing code:
 
-```powershell
+```bash
 git status --short
 ```
 
 After completing the task:
 
-```powershell
+```bash
 pnpm install
 pnpm lint
 pnpm typecheck

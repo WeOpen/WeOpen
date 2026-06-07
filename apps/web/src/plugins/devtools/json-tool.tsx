@@ -1,9 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Button } from "@weopen/ui";
 import { compressJson, formatJson } from "./tools";
 import { CopyButton } from "./copy-button";
+import { Alert, Button, Textarea } from "@weopen/ui";
 
 type JsonMode = "format" | "compress";
 
@@ -25,14 +25,14 @@ export function JsonTool() {
         <div className="tool-actions">
           <Button
             aria-pressed={mode === "format"}
-            onClick={() => setMode("format")}
+            onPress={() => setMode("format")}
             variant={mode === "format" ? "primary" : "secondary"}
           >
             Format
           </Button>
           <Button
             aria-pressed={mode === "compress"}
-            onClick={() => setMode("compress")}
+            onPress={() => setMode("compress")}
             variant={mode === "compress" ? "primary" : "secondary"}
           >
             Compress
@@ -42,29 +42,11 @@ export function JsonTool() {
       </div>
 
       <div className="tool-grid">
-        <label className="tool-field">
-          <span>Input</span>
-          <textarea
-            className="ui-textarea tool-textarea"
-            onChange={(event) => setInput(event.target.value)}
-            spellCheck={false}
-            value={input}
-          />
-        </label>
-        <label className="tool-field">
-          <span>Output</span>
-          <textarea
-            className="ui-textarea tool-textarea"
-            readOnly
-            spellCheck={false}
-            value={result.ok ? result.output : ""}
-          />
-        </label>
+        <Textarea className="tool-textarea" label="Input" onChange={(event) => setInput(event.target.value)} spellCheck={false} value={input} />
+        <Textarea className="tool-textarea" label="Output" readOnly spellCheck={false} value={result.ok ? result.output : ""} />
       </div>
       {!result.ok ? (
-        <p className="tool-error" role="alert">
-          {result.error}
-        </p>
+        <Alert status="danger"><Alert.Content><Alert.Description>{result.error}</Alert.Description></Alert.Content></Alert>
       ) : null}
     </section>
   );

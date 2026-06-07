@@ -49,7 +49,7 @@ export function DesktopDashboard({ onOpenSettings, settings }: DesktopDashboardP
       >
         <div className="status-row">
           <span className="status-pill">{statusLabel}</span>
-          <Button disabled={isLoading} onClick={refresh} variant="secondary">
+          <Button disabled={isLoading} onPress={refresh} variant="secondary">
             {isLoading ? "刷新中..." : "刷新"}
           </Button>
         </div>
@@ -71,7 +71,7 @@ export function DesktopDashboard({ onOpenSettings, settings }: DesktopDashboardP
           </dl>
         ) : null}
         {summary.status === "unconfigured" ? (
-          <Button onClick={onOpenSettings}>去配置远程 API</Button>
+          <Button onPress={onOpenSettings}>去配置远程 API</Button>
         ) : null}
       </Card>
 

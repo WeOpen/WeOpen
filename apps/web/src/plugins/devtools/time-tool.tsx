@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { Input } from "@weopen/ui";
 import { convertDateToTimestamp, convertTimestampToDate } from "./tools";
 import { CopyButton } from "./copy-button";
 
@@ -22,14 +23,7 @@ export function TimeTool() {
 
       <div className="tool-grid">
         <div className="tool-card">
-          <label className="tool-field">
-            <span>Unix timestamp</span>
-            <input
-              className="ui-input"
-              onChange={(event) => setTimestamp(event.target.value)}
-              value={timestamp}
-            />
-          </label>
+          <Input label="Unix timestamp" onChange={(event) => setTimestamp(event.target.value)} value={timestamp} />
           <div className="tool-result-row">
             <code>{timestampResult.ok ? timestampResult.output : "Invalid timestamp"}</code>
             <CopyButton disabled={!timestampResult.ok} value={timestampResult.output} />
@@ -42,14 +36,7 @@ export function TimeTool() {
         </div>
 
         <div className="tool-card">
-          <label className="tool-field">
-            <span>Date or ISO string</span>
-            <input
-              className="ui-input"
-              onChange={(event) => setDate(event.target.value)}
-              value={date}
-            />
-          </label>
+          <Input label="Date or ISO string" onChange={(event) => setDate(event.target.value)} value={date} />
           <div className="tool-result-row">
             <code>{dateResult.ok ? dateResult.output : "Invalid date"}</code>
             <CopyButton disabled={!dateResult.ok} value={dateResult.output} />

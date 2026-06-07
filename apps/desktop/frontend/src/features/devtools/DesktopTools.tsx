@@ -50,8 +50,8 @@ export function DesktopTools() {
           value={jsonInput}
         />
         <div className="button-row">
-          <Button onClick={() => setJsonOutput(formatJson(jsonInput))}>格式化</Button>
-          <Button onClick={() => setJsonOutput(compressJson(jsonInput))} variant="secondary">
+          <Button onPress={() => setJsonOutput(formatJson(jsonInput))}>格式化</Button>
+          <Button onPress={() => setJsonOutput(compressJson(jsonInput))} variant="secondary">
             压缩
           </Button>
         </div>
@@ -65,8 +65,8 @@ export function DesktopTools() {
           value={textInput}
         />
         <div className="button-row">
-          <Button onClick={() => setTextOutput(encodeBase64(textInput))}>编码</Button>
-          <Button onClick={() => setTextOutput(decodeBase64(textInput))} variant="secondary">
+          <Button onPress={() => setTextOutput(encodeBase64(textInput))}>编码</Button>
+          <Button onPress={() => setTextOutput(decodeBase64(textInput))} variant="secondary">
             解码
           </Button>
         </div>
@@ -80,8 +80,8 @@ export function DesktopTools() {
           value={timeInput}
         />
         <div className="button-row">
-          <Button onClick={() => setTimeOutput(convertTimestampToDate(timeInput))}>时间戳转日期</Button>
-          <Button onClick={() => setTimeOutput(convertDateToTimestamp(timeInput))} variant="secondary">
+          <Button onPress={() => setTimeOutput(convertTimestampToDate(timeInput))}>时间戳转日期</Button>
+          <Button onPress={() => setTimeOutput(convertDateToTimestamp(timeInput))} variant="secondary">
             日期转时间戳
           </Button>
         </div>
@@ -91,7 +91,7 @@ export function DesktopTools() {
       <Card className="desktop-panel" title="UUID 与正则">
         <div className="uuid-row">
           <code>{uuid}</code>
-          <Button onClick={() => setUuid(generateUuid())} variant="secondary">
+          <Button onPress={() => setUuid(generateUuid())} variant="secondary">
             重新生成
           </Button>
         </div>
@@ -107,7 +107,7 @@ export function DesktopTools() {
           value={regexText}
         />
         <Button
-          onClick={() => {
+          onPress={() => {
             const result = testRegex(regexPattern, "g", regexText);
             setRegexOutput(result.ok ? result.output : (result.error ?? "Regex failed"));
           }}

@@ -5,6 +5,7 @@ import { builtinPluginManifests } from "./index";
 import { DevtoolsPluginPage } from "./devtools";
 import { DomainsPluginPage } from "./domains";
 import { StorageR2PluginPage } from "@/features/storage-r2";
+import { Card, PageHeader, StatusChip } from "@weopen/ui";
 
 export type WebPluginComponent = (props: { manifest: PluginManifest }) => React.ReactNode;
 
@@ -43,19 +44,25 @@ export function pluginDashboardWidgets() {
 export function PlaceholderPluginPage({ manifest }: { manifest: PluginManifest }) {
   return (
     <section className="plugin-placeholder">
-      <div className="page-kicker">{manifest.id}</div>
-      <h1 className="page-title">{manifest.name}</h1>
-      <p className="page-description">{manifest.description}</p>
-      <dl className="plugin-meta">
-        <div>
-          <dt>版本</dt>
-          <dd>{manifest.version}</dd>
-        </div>
-        <div>
-          <dt>权限</dt>
-          <dd>{manifest.permissions.length ? manifest.permissions.join(", ") : "无特殊权限"}</dd>
-        </div>
-      </dl>
+      <PageHeader eyebrow={manifest.id} title={manifest.name} description={manifest.description} />
+      <Card className="plugin-meta">
+        <Card.Content>
+          <dl>
+            <div>
+              <dt>版本</dt>
+              <dd>{manifest.version}</dd>
+            </div>
+            <div>
+              <dt>权限</dt>
+              <dd>
+                <StatusChip tone={manifest.permissions.length ? "accent" : "neutral"}>
+                  {manifest.permissions.length ? manifest.permissions.join(", ") : "无特殊权限"}
+                </StatusChip>
+              </dd>
+            </div>
+          </dl>
+        </Card.Content>
+      </Card>
     </section>
   );
 }

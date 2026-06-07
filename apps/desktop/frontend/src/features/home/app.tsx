@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AdminShell, Button, type AdminNavigationItem } from "@weopen/ui";
 import { DesktopDashboard } from "@/features/dashboard/DesktopDashboard";
 import { DesktopTools } from "@/features/devtools/DesktopTools";
@@ -7,7 +7,7 @@ import {
   loadRemoteApiSettings,
   type RemoteApiSettings as RemoteApiSettingsValue
 } from "@/lib/apiClient";
-import "@weopen/ui/admin.css";
+import "@weopen/ui/styles.css";
 import "./style.css";
 
 type DesktopTab = "dashboard" | "settings" | "tools";
@@ -32,18 +32,35 @@ const navItems: AdminNavigationItem[] = [
 ];
 
 export function App() {
-  const [activeTab, setActiveTab] = useState<DesktopTab>("dashboard");
+  const [activeTab, setActiveTab] = useState<DesktopTab>(() => tabFromHash(window.location.hash));
   const [settings, setSettings] = useState<RemoteApiSettingsValue>(() => loadRemoteApiSettings());
+
+  useEffect(() => {
+    function syncTabFromHash() {
+      setActiveTab(tabFromHash(window.location.hash));
+    }
+
+    window.addEventListener("hashchange", syncTabFromHash);
+    return () => window.removeEventListener("hashchange", syncTabFromHash);
+  }, []);
+
+  function selectTab(tab: DesktopTab) {
+    setActiveTab(tab);
+    const nextHash = `#${tab}`;
+    if (window.location.hash !== nextHash) {
+      window.location.hash = nextHash;
+    }
+  }
 
   function handleSettingsSaved(nextSettings: RemoteApiSettingsValue) {
     setSettings(nextSettings);
-    setActiveTab("dashboard");
+    selectTab("dashboard");
   }
 
   return (
     <AdminShell
       actionSlot={
-        <Button onClick={() => window.location.reload()} variant="secondary">
+        <Button onPress={() => window.location.reload()} variant="secondary">
           Reload shell
         </Button>
       }
@@ -52,19 +69,7 @@ export function App() {
       brandHref="#dashboard"
       currentPath={`#${activeTab}`}
       navItems={navItems}
-      renderNavItem={(item, className, isActive) => (
-        <button
-          aria-current={isActive ? "page" : undefined}
-          className={className}
-          onClick={() => setActiveTab(item.href.replace("#", "") as DesktopTab)}
-          type="button"
-        >
-          <span>
-            <strong>{item.label}</strong>
-            {item.description ? <small>{item.description}</small> : null}
-          </span>
-        </button>
-      )}
+      onNavItemSelect={(item) => selectTab(item.href.replace("#", "") as DesktopTab)}
       searchPlaceholder="Search desktop tools, remote API, plugin status..."
       statusLabel={settings.baseUrl ? "Remote API configured" : "Local mode"}
       subtitle="Shared Admin Shell"
@@ -73,12 +78,12 @@ export function App() {
         <div className="page-kicker">WeOpen Desktop - M7</div>
         <h1 className="page-title">Desktop management console</h1>
         <p className="page-description">
-          Desktop reuses the Web thesvg-style admin shell, design tokens, base components and SDK while keeping Wails-local settings separate.
+          Desktop reuses the custom Nothing-style admin shell, shared components and SDK while keeping Wails-local settings separate.
         </p>
       </section>
 
       {activeTab === "dashboard" ? (
-        <DesktopDashboard onOpenSettings={() => setActiveTab("settings")} settings={settings} />
+        <DesktopDashboard onOpenSettings={() => selectTab("settings")} settings={settings} />
       ) : null}
       {activeTab === "settings" ? (
         <RemoteApiSettings onSaved={handleSettingsSaved} settings={settings} />
@@ -86,4 +91,14 @@ export function App() {
       {activeTab === "tools" ? <DesktopTools /> : null}
     </AdminShell>
   );
+}
+
+function tabFromHash(hash: string): DesktopTab {
+  if (hash === "#settings") {
+    return "settings";
+  }
+  if (hash === "#tools") {
+    return "tools";
+  }
+  return "dashboard";
 }

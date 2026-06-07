@@ -67,8 +67,8 @@ export function RemoteApiSettings({ onSaved, settings }: RemoteApiSettingsProps)
           value={sessionToken}
         />
         <div className="button-row">
-          <Button onClick={handleSave}>保存设置</Button>
-          <Button disabled={isTesting} onClick={handleTestConnection} variant="secondary">
+          <Button onPress={handleSave}>保存设置</Button>
+          <Button disabled={isTesting} onPress={handleTestConnection} variant="secondary">
             {isTesting ? "测试中..." : "测试 /healthz"}
           </Button>
         </div>
