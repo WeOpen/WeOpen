@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/WeOpen/WeOpen/internal/core/plugin"
 	"github.com/WeOpen/WeOpen/services/api/internal/domain/auth"
@@ -69,6 +70,43 @@ func TestPluginHandlersListAndUpdatePluginState(t *testing.T) {
 	}
 	if secondListBody.Plugins[0].Enabled {
 		t.Fatal("expected plugin disabled state to come from the shared state store")
+	}
+}
+
+func TestPluginHandlersRequireManagePermissionForUpdates(t *testing.T) {
+	t.Parallel()
+
+	session, token, err := auth.NewSession("usr_reader", time.Now(), time.Hour)
+	if err != nil {
+		t.Fatalf("expected session: %v", err)
+	}
+	authService := auth.NewService(&permissionTestStore{
+		user: auth.User{
+			ID:          "usr_reader",
+			Email:       "reader@example.com",
+			DisplayName: "Reader",
+			Status:      auth.UserStatusActive,
+			Permissions: []plugin.Permission{plugin.PermissionBlogRead},
+		},
+		session: session,
+	})
+	registry := plugin.NewRegistry()
+	registry.MustRegister(plugin.NewStaticPlugin(plugin.Manifest{
+		ID:      "blog",
+		Name:    "Blog",
+		Version: "0.1.0",
+	}))
+	server := NewServer(ServerOptions{Auth: authService, Plugins: registry, PluginStates: pluginstate.NewMemoryStore()})
+
+	req := httptest.NewRequest(stdhttp.MethodPatch, "/api/plugins/blog", strings.NewReader(`{"enabled":false}`))
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+
+	server.ServeHTTP(rec, req)
+
+	if rec.Code != stdhttp.StatusForbidden {
+		t.Fatalf("expected forbidden plugin update, got %d body=%s", rec.Code, rec.Body.String())
 	}
 }
 

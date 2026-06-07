@@ -1,6 +1,14 @@
 import { LoginForm } from "@/features/auth/login-form";
+import { safeNextPath } from "@/shared/auth/routes";
 
-export default function LoginPage() {
+type LoginPageProps = {
+  searchParams?: Promise<{ next?: string | string[] }>;
+};
+
+export default async function LoginPage({ searchParams }: LoginPageProps) {
+  const params = await searchParams;
+  const rawNext = Array.isArray(params?.next) ? params?.next[0] : params?.next;
+  const nextPath = safeNextPath(rawNext);
   return (
     <main className="auth-page">
       <section className="auth-brand-panel" aria-label="WeOpen system identity">
@@ -24,7 +32,7 @@ export default function LoginPage() {
             <h2>Admin Access</h2>
             <p>Authorized personnel only</p>
           </div>
-          <LoginForm />
+          <LoginForm nextPath={nextPath} />
           <div className="auth-session-strip">
             <div><i /> <strong>API Ready</strong><span>Connected</span></div>
             <div><strong>◌ Local Mode</strong><span>Active</span></div>

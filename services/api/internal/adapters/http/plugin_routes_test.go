@@ -95,6 +95,58 @@ func TestPluginRoutesDenyMissingPermissions(t *testing.T) {
 	}
 }
 
+func TestPluginRoutesApplyMethodPermissionRules(t *testing.T) {
+	t.Parallel()
+
+	session, token, err := auth.NewSession("usr_blog_reader", time.Now(), time.Hour)
+	if err != nil {
+		t.Fatalf("expected session: %v", err)
+	}
+	authService := auth.NewService(&permissionTestStore{
+		user: auth.User{
+			ID:          "usr_blog_reader",
+			Email:       "reader@example.com",
+			DisplayName: "Reader",
+			Status:      auth.UserStatusActive,
+			Permissions: []plugin.Permission{plugin.PermissionBlogRead},
+		},
+		session: session,
+	})
+	pluginHandler := stdhttp.HandlerFunc(func(w stdhttp.ResponseWriter, r *stdhttp.Request) {
+		w.WriteHeader(stdhttp.StatusNoContent)
+	})
+	server := NewServer(ServerOptions{
+		Auth: authService,
+		PluginRoutes: []PluginRoute{
+			{
+				Prefix:      "/api/plugins/blog",
+				Handler:     pluginHandler,
+				Permissions: []plugin.Permission{plugin.PermissionBlogRead},
+				PermissionRules: []PermissionRule{
+					{Method: stdhttp.MethodGet, Path: "/posts", Permissions: []plugin.Permission{plugin.PermissionBlogRead}},
+					{Method: stdhttp.MethodPost, Path: "/posts", Permissions: []plugin.Permission{plugin.PermissionBlogWrite}},
+				},
+			},
+		},
+	})
+
+	readReq := httptest.NewRequest(stdhttp.MethodGet, "/api/plugins/blog/posts", nil)
+	readReq.Header.Set("Authorization", "Bearer "+token)
+	readRec := httptest.NewRecorder()
+	server.ServeHTTP(readRec, readReq)
+	if readRec.Code != stdhttp.StatusNoContent {
+		t.Fatalf("expected read to pass, got %d body=%s", readRec.Code, readRec.Body.String())
+	}
+
+	writeReq := httptest.NewRequest(stdhttp.MethodPost, "/api/plugins/blog/posts", nil)
+	writeReq.Header.Set("Authorization", "Bearer "+token)
+	writeRec := httptest.NewRecorder()
+	server.ServeHTTP(writeRec, writeReq)
+	if writeRec.Code != stdhttp.StatusForbidden {
+		t.Fatalf("expected write to be forbidden, got %d body=%s", writeRec.Code, writeRec.Body.String())
+	}
+}
+
 type permissionTestStore struct {
 	user    auth.User
 	session auth.Session
@@ -121,4 +173,8 @@ func (s *permissionTestStore) SessionByTokenHash(_ context.Context, tokenHash st
 		return auth.Session{}, auth.ErrSessionNotFound
 	}
 	return s.session, nil
+}
+
+func (s *permissionTestStore) TouchLastLogin(context.Context, string, time.Time) error {
+	return nil
 }

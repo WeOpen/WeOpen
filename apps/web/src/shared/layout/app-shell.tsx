@@ -1,4 +1,7 @@
+"use client";
+
 import { AdminShell, createAdminNavigation } from "@weopen/ui";
+import { SessionControl } from "@/features/auth/session-control";
 import { pluginNavigation } from "@/plugins/registry";
 
 const navItems = createAdminNavigation(
@@ -21,8 +24,9 @@ export function AppShell({
       appName="WeOpen"
       currentPath={currentPath}
       navItems={navItems}
-      statusLabel="READ ONLY"
+      statusLabel="AUTH ON"
       subtitle="Personal Management Platform"
+      actionSlot={<SessionControl />}
     >
       {children}
     </AdminShell>

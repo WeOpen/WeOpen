@@ -39,6 +39,7 @@ func (p Plugin) Manifest() plugin.Manifest {
 		Version:     p.Version(),
 		Permissions: []plugin.Permission{
 			plugin.PermissionDomainRead,
+			plugin.PermissionDomainWrite,
 		},
 		Navigation: []plugin.NavItem{{Title: "域名", Path: "/domains", Icon: "globe", Order: 30}},
 	}

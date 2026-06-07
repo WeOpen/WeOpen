@@ -42,7 +42,7 @@ export const builtinPluginManifests: PluginManifest[] = [
     name: "Domains",
     description: "只读同步 Cloudflare 域名、DNS、证书状态和到期提醒；v1 禁用 DNS 写入。",
     version: "0.1.0",
-    permissions: ["domain:read"],
+    permissions: ["domain:read", "domain:write"],
     nav: [{ title: "Domains", path: "/domains", icon: "globe", order: 30 }],
     widgets: [
       {

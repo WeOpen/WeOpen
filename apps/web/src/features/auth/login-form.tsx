@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { login } from "@/shared/api/auth";
 import { Alert, Button, Input } from "@weopen/ui";
 
-export function LoginForm() {
+export function LoginForm({ nextPath = "/dashboard" }: { nextPath?: string }) {
+  const router = useRouter();
   const [email, setEmail] = useState("admin@example.com");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
@@ -16,7 +18,9 @@ export function LoginForm() {
     setMessage("");
     try {
       await login({ email, password });
-      setMessage("Signed in. You can enter the command center.");
+      setMessage("Signed in. Entering the command center.");
+      router.replace(nextPath);
+      router.refresh();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Sign in failed");
     } finally {

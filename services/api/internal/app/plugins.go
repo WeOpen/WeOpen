@@ -18,16 +18,35 @@ func builtinPluginRoutes(blogService *blog.Service, storageService *storage.Serv
 			Prefix:      "/api/plugins/blog",
 			Handler:     blog.NewHTTPHandler(blogService),
 			Permissions: []plugin.Permission{plugin.PermissionBlogRead},
+			PermissionRules: []apihttp.PermissionRule{
+				{Method: "GET", Path: "/posts", Permissions: []plugin.Permission{plugin.PermissionBlogRead}},
+				{Method: "GET", Path: "/posts/*", Permissions: []plugin.Permission{plugin.PermissionBlogRead}},
+				{Method: "POST", Path: "/posts", Permissions: []plugin.Permission{plugin.PermissionBlogWrite}},
+				{Method: "PATCH", Path: "/posts/*", Permissions: []plugin.Permission{plugin.PermissionBlogWrite}},
+				{Method: "DELETE", Path: "/posts/*", Permissions: []plugin.Permission{plugin.PermissionBlogWrite}},
+			},
 		},
 		{
 			Prefix:      "/api/plugins/storage-r2",
 			Handler:     storage.NewHTTPHandler(storageService),
 			Permissions: []plugin.Permission{plugin.PermissionStorageRead},
+			PermissionRules: []apihttp.PermissionRule{
+				{Method: "GET", Path: "/objects", Permissions: []plugin.Permission{plugin.PermissionStorageRead}},
+				{Method: "POST", Path: "/upload-url", Permissions: []plugin.Permission{plugin.PermissionStorageWrite}},
+				{Method: "POST", Path: "/objects/complete", Permissions: []plugin.Permission{plugin.PermissionStorageWrite}},
+				{Method: "PATCH", Path: "/objects/*", Permissions: []plugin.Permission{plugin.PermissionStorageWrite}},
+				{Method: "DELETE", Path: "/objects/*", Permissions: []plugin.Permission{plugin.PermissionStorageWrite}},
+			},
 		},
 		{
 			Prefix:      "/api/plugins/domains",
 			Handler:     domainplugin.NewHTTPHandler(domainService),
 			Permissions: []plugin.Permission{plugin.PermissionDomainRead},
+			PermissionRules: []apihttp.PermissionRule{
+				{Method: "GET", Path: "/assets", Permissions: []plugin.Permission{plugin.PermissionDomainRead}},
+				{Method: "GET", Path: "/assets/*", Permissions: []plugin.Permission{plugin.PermissionDomainRead}},
+				{Method: "POST", Path: "/sync", Permissions: []plugin.Permission{plugin.PermissionDomainWrite}},
+			},
 		},
 	}
 }

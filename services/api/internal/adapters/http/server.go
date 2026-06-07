@@ -25,8 +25,16 @@ type ServerOptions struct {
 
 // PluginRoute mounts a plugin-owned handler behind API authentication.
 type PluginRoute struct {
-	Prefix      string
-	Handler     http.Handler
+	Prefix          string
+	Handler         http.Handler
+	Permissions     []plugin.Permission
+	PermissionRules []PermissionRule
+}
+
+// PermissionRule narrows plugin-route permissions by HTTP method and plugin-local path.
+type PermissionRule struct {
+	Method      string
+	Path        string
 	Permissions []plugin.Permission
 }
 
@@ -69,10 +77,11 @@ func NewServer(options ...ServerOptions) http.Handler {
 				continue
 			}
 			handler := authenticatedPluginRoute{
-				auth:        opts.Auth,
-				prefix:      prefix,
-				handler:     route.Handler,
-				permissions: route.Permissions,
+				auth:            opts.Auth,
+				prefix:          prefix,
+				handler:         route.Handler,
+				permissions:     route.Permissions,
+				permissionRules: route.PermissionRules,
 			}
 			mux.Handle(prefix, handler)
 			mux.Handle(prefix+"/", handler)
@@ -82,19 +91,21 @@ func NewServer(options ...ServerOptions) http.Handler {
 }
 
 type authenticatedPluginRoute struct {
-	auth        *auth.Service
-	prefix      string
-	handler     http.Handler
-	permissions []plugin.Permission
+	auth            *auth.Service
+	prefix          string
+	handler         http.Handler
+	permissions     []plugin.Permission
+	permissionRules []PermissionRule
 }
 
 func (h authenticatedPluginRoute) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	user, err := h.auth.UserForToken(r.Context(), bearerOrCookieToken(r))
 	if err != nil {
-		WriteError(w, r, NewAppError(http.StatusUnauthorized, "AUTH_SESSION_EXPIRED", "请重新登录"))
+		writeAuthSessionError(w, r, err)
 		return
 	}
-	if !hasPermissions(user, h.permissions) {
+	requiredPermissions := h.requiredPermissions(r)
+	if !hasPermissions(user, requiredPermissions) {
 		WriteError(w, r, NewAppError(http.StatusForbidden, ErrorCodeForbidden, "权限不足"))
 		return
 	}
@@ -102,6 +113,35 @@ func (h authenticatedPluginRoute) ServeHTTP(w http.ResponseWriter, r *http.Reque
 	request.Header = r.Header.Clone()
 	request.Header.Set("X-WeOpen-Actor-ID", user.ID)
 	http.StripPrefix(h.prefix, h.handler).ServeHTTP(w, request)
+}
+
+func (h authenticatedPluginRoute) requiredPermissions(r *http.Request) []plugin.Permission {
+	pluginPath := strings.TrimPrefix(r.URL.Path, h.prefix)
+	if pluginPath == "" {
+		pluginPath = "/"
+	}
+	for _, rule := range h.permissionRules {
+		if rule.Method != "" && !strings.EqualFold(rule.Method, r.Method) {
+			continue
+		}
+		if matchPermissionPath(rule.Path, pluginPath) {
+			return rule.Permissions
+		}
+	}
+	return h.permissions
+}
+
+func matchPermissionPath(pattern string, path string) bool {
+	if pattern == "" || pattern == "*" {
+		return true
+	}
+	pattern = "/" + strings.TrimPrefix(pattern, "/")
+	path = "/" + strings.TrimPrefix(path, "/")
+	if strings.HasSuffix(pattern, "/*") {
+		prefix := strings.TrimSuffix(pattern, "/*")
+		return path == prefix || strings.HasPrefix(path, prefix+"/")
+	}
+	return path == pattern
 }
 
 func hasPermissions(user auth.User, required []plugin.Permission) bool {

@@ -49,6 +49,10 @@ func (h authHandlers) login(w stdhttp.ResponseWriter, r *stdhttp.Request) {
 			WriteError(w, r, NewAppError(stdhttp.StatusUnauthorized, "AUTH_INVALID_CREDENTIALS", "邮箱或密码错误"))
 			return
 		}
+		if errors.Is(err, auth.ErrUserDisabled) {
+			WriteError(w, r, NewAppError(stdhttp.StatusForbidden, "AUTH_USER_DISABLED", "账号已停用"))
+			return
+		}
 		WriteError(w, r, err)
 		return
 	}
@@ -82,11 +86,19 @@ func (h authHandlers) me(w stdhttp.ResponseWriter, r *stdhttp.Request) {
 
 	user, err := h.service.UserForToken(r.Context(), bearerOrCookieToken(r))
 	if err != nil {
-		WriteError(w, r, NewAppError(stdhttp.StatusUnauthorized, "AUTH_SESSION_EXPIRED", "请重新登录"))
+		writeAuthSessionError(w, r, err)
 		return
 	}
 
 	WriteJSON(w, stdhttp.StatusOK, meResponse{User: user})
+}
+
+func writeAuthSessionError(w stdhttp.ResponseWriter, r *stdhttp.Request, err error) {
+	if errors.Is(err, auth.ErrUserDisabled) {
+		WriteError(w, r, NewAppError(stdhttp.StatusForbidden, "AUTH_USER_DISABLED", "账号已停用"))
+		return
+	}
+	WriteError(w, r, NewAppError(stdhttp.StatusUnauthorized, "AUTH_SESSION_EXPIRED", "请重新登录"))
 }
 
 func bearerOrCookieToken(r *stdhttp.Request) string {

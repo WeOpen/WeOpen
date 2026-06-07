@@ -35,6 +35,9 @@ func TestLoadMigrationsReadsCoreMigration(t *testing.T) {
 	if !strings.Contains(migrations[0].SQL, "CREATE TABLE IF NOT EXISTS users") {
 		t.Fatal("expected users table in core migration")
 	}
+	if !strings.Contains(migrations[len(migrations)-1].SQL, "CREATE TABLE IF NOT EXISTS roles") {
+		t.Fatal("expected rbac roles table in latest migration")
+	}
 }
 
 func TestApplyMigrationsExecutesStatementsInOrder(t *testing.T) {

@@ -18,6 +18,15 @@ var (
 	ErrSessionExpired = errors.New("session expired")
 	// ErrSessionNotFound indicates that no session exists for a token hash.
 	ErrSessionNotFound = errors.New("session not found")
+	// ErrUserDisabled indicates that credentials are valid but the account cannot create sessions.
+	ErrUserDisabled = errors.New("user disabled")
+)
+
+const (
+	// UserStatusActive allows login and API access.
+	UserStatusActive = "active"
+	// UserStatusDisabled prevents new sessions while keeping the user record for audit history.
+	UserStatusDisabled = "disabled"
 )
 
 // User is the authenticated API principal returned to clients without password hash data.
@@ -25,8 +34,11 @@ type User struct {
 	ID           string              `json:"id"`
 	Email        string              `json:"email"`
 	DisplayName  string              `json:"displayName"`
+	Status       string              `json:"status"`
+	Roles        []string            `json:"roles,omitempty"`
 	Permissions  []plugin.Permission `json:"permissions,omitempty"`
 	PasswordHash string              `json:"-"`
+	LastLoginAt  *time.Time          `json:"lastLoginAt,omitempty"`
 	CreatedAt    time.Time           `json:"createdAt"`
 	UpdatedAt    time.Time           `json:"updatedAt"`
 }
@@ -38,6 +50,7 @@ type Store interface {
 	SaveSession(ctx context.Context, session Session) error
 	DeleteSession(ctx context.Context, tokenHash string) error
 	SessionByTokenHash(ctx context.Context, tokenHash string) (Session, error)
+	TouchLastLogin(ctx context.Context, userID string, at time.Time) error
 }
 
 // Service coordinates credential verification and session lifecycle rules.
@@ -69,6 +82,9 @@ func (s *Service) Login(ctx context.Context, email string, password string) (Log
 	if err != nil {
 		return LoginResult{}, ErrInvalidCredentials
 	}
+	if user.Status != "" && user.Status != UserStatusActive {
+		return LoginResult{}, ErrUserDisabled
+	}
 	if !VerifyPassword(user.PasswordHash, password) {
 		return LoginResult{}, ErrInvalidCredentials
 	}
@@ -80,6 +96,10 @@ func (s *Service) Login(ctx context.Context, email string, password string) (Log
 	if err := s.store.SaveSession(ctx, session); err != nil {
 		return LoginResult{}, err
 	}
+	if err := s.store.TouchLastLogin(ctx, user.ID, session.CreatedAt); err != nil {
+		return LoginResult{}, err
+	}
+	user.LastLoginAt = &session.CreatedAt
 
 	return LoginResult{
 		User:      publicUser(user),
@@ -115,6 +135,10 @@ func (s *Service) UserForToken(ctx context.Context, token string) (User, error) 
 	if err != nil {
 		return User{}, err
 	}
+	if user.Status != "" && user.Status != UserStatusActive {
+		_ = s.store.DeleteSession(ctx, session.TokenHash)
+		return User{}, ErrUserDisabled
+	}
 	return publicUser(user), nil
 }
 
@@ -126,21 +150,12 @@ func NewMemoryStore(adminEmail string, adminPassword string) (*MemoryStore, erro
 		return nil, err
 	}
 	user := User{
-		ID:          "usr_admin",
-		Email:       normalizeEmail(adminEmail),
-		DisplayName: "Admin",
-		Permissions: []plugin.Permission{
-			plugin.PermissionBlogRead,
-			plugin.PermissionBlogWrite,
-			plugin.PermissionStorageRead,
-			plugin.PermissionStorageWrite,
-			plugin.PermissionDomainRead,
-			plugin.PermissionDomainWrite,
-			plugin.PermissionSecretRead,
-			plugin.PermissionSecretWrite,
-			plugin.PermissionAuditRead,
-			plugin.PermissionTaskSchedule,
-		},
+		ID:           "usr_admin",
+		Email:        normalizeEmail(adminEmail),
+		DisplayName:  "Admin",
+		Status:       UserStatusActive,
+		Roles:        []string{"admin"},
+		Permissions:  AdminPermissions(),
 		PasswordHash: passwordHash,
 		CreatedAt:    now,
 		UpdatedAt:    now,
@@ -207,6 +222,38 @@ func (m *MemoryStore) SessionByTokenHash(_ context.Context, tokenHash string) (S
 		return Session{}, ErrSessionNotFound
 	}
 	return session, nil
+}
+
+// TouchLastLogin updates the in-memory user audit timestamp after a successful login.
+func (m *MemoryStore) TouchLastLogin(_ context.Context, userID string, at time.Time) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	user, ok := m.usersByID[userID]
+	if !ok {
+		return ErrInvalidCredentials
+	}
+	user.LastLoginAt = &at
+	user.UpdatedAt = at
+	m.usersByID[userID] = user
+	m.usersByEmail[user.Email] = user
+	return nil
+}
+
+// AdminPermissions returns the complete built-in permission set for the seeded administrator role.
+func AdminPermissions() []plugin.Permission {
+	return []plugin.Permission{
+		plugin.PermissionBlogRead,
+		plugin.PermissionBlogWrite,
+		plugin.PermissionStorageRead,
+		plugin.PermissionStorageWrite,
+		plugin.PermissionDomainRead,
+		plugin.PermissionDomainWrite,
+		plugin.PermissionSecretRead,
+		plugin.PermissionSecretWrite,
+		plugin.PermissionAuditRead,
+		plugin.PermissionPluginManage,
+		plugin.PermissionTaskSchedule,
+	}
 }
 
 func normalizeEmail(email string) string {

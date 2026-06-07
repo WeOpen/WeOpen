@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"testing"
+	"time"
 )
 
 func TestHashPasswordVerifiesOriginalPassword(t *testing.T) {
@@ -40,6 +41,15 @@ func TestServiceLoginCreatesSession(t *testing.T) {
 	if result.User.PasswordHash != "" {
 		t.Fatal("expected password hash to be redacted")
 	}
+	if result.User.Status != UserStatusActive {
+		t.Fatalf("expected active user, got %q", result.User.Status)
+	}
+	if len(result.User.Roles) != 1 || result.User.Roles[0] != "admin" {
+		t.Fatalf("expected admin role, got %+v", result.User.Roles)
+	}
+	if result.User.LastLoginAt == nil {
+		t.Fatal("expected last login timestamp")
+	}
 
 	user, err := service.UserForToken(context.Background(), result.Token)
 	if err != nil {
@@ -62,4 +72,82 @@ func TestServiceRejectsInvalidPassword(t *testing.T) {
 	if _, err := service.Login(context.Background(), "admin@example.com", "wrong"); err != ErrInvalidCredentials {
 		t.Fatalf("expected invalid credentials, got %v", err)
 	}
+}
+
+func TestServiceRejectsDisabledUser(t *testing.T) {
+	t.Parallel()
+
+	hash, err := HashPassword("admin")
+	if err != nil {
+		t.Fatalf("expected hash: %v", err)
+	}
+	store := &disabledStore{
+		user: User{
+			ID:           "usr_disabled",
+			Email:        "disabled@example.com",
+			DisplayName:  "Disabled",
+			Status:       UserStatusDisabled,
+			PasswordHash: hash,
+		},
+	}
+	service := NewService(store)
+
+	if _, err := service.Login(context.Background(), "disabled@example.com", "admin"); err != ErrUserDisabled {
+		t.Fatalf("expected disabled user error, got %v", err)
+	}
+}
+
+func TestServiceRejectsDisabledUserSession(t *testing.T) {
+	t.Parallel()
+
+	session, token, err := NewSession("usr_disabled", time.Now(), time.Hour)
+	if err != nil {
+		t.Fatalf("expected session: %v", err)
+	}
+	store := &disabledStore{
+		user: User{
+			ID:          "usr_disabled",
+			Email:       "disabled@example.com",
+			DisplayName: "Disabled",
+			Status:      UserStatusDisabled,
+		},
+		session: session,
+	}
+	service := NewService(store)
+
+	if _, err := service.UserForToken(context.Background(), token); err != ErrUserDisabled {
+		t.Fatalf("expected disabled user session error, got %v", err)
+	}
+}
+
+type disabledStore struct {
+	user    User
+	session Session
+}
+
+func (s *disabledStore) UserByEmail(context.Context, string) (User, error) {
+	return s.user, nil
+}
+
+func (s *disabledStore) UserByID(context.Context, string) (User, error) {
+	return s.user, nil
+}
+
+func (s *disabledStore) SaveSession(context.Context, Session) error {
+	return nil
+}
+
+func (s *disabledStore) DeleteSession(context.Context, string) error {
+	return nil
+}
+
+func (s *disabledStore) SessionByTokenHash(_ context.Context, tokenHash string) (Session, error) {
+	if s.session.TokenHash == "" || tokenHash != s.session.TokenHash {
+		return Session{}, ErrSessionNotFound
+	}
+	return s.session, nil
+}
+
+func (s *disabledStore) TouchLastLogin(context.Context, string, time.Time) error {
+	return nil
 }

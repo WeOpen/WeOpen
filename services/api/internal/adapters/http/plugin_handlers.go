@@ -49,7 +49,7 @@ func (h pluginHandlers) plugins(w stdhttp.ResponseWriter, r *stdhttp.Request) {
 }
 
 func (h pluginHandlers) pluginByID(w stdhttp.ResponseWriter, r *stdhttp.Request) {
-	if _, ok := h.requireUser(w, r); !ok {
+	if _, ok := h.requirePermissions(w, r, plugin.PermissionPluginManage); !ok {
 		return
 	}
 	if r.Method != stdhttp.MethodPatch {
@@ -144,7 +144,19 @@ func (h pluginHandlers) findRegisteredPlugin(id string) (plugin.RegisteredPlugin
 func (h pluginHandlers) requireUser(w stdhttp.ResponseWriter, r *stdhttp.Request) (auth.User, bool) {
 	user, err := h.auth.UserForToken(r.Context(), bearerOrCookieToken(r))
 	if err != nil {
-		WriteError(w, r, NewAppError(stdhttp.StatusUnauthorized, "AUTH_SESSION_EXPIRED", "请重新登录"))
+		writeAuthSessionError(w, r, err)
+		return auth.User{}, false
+	}
+	return user, true
+}
+
+func (h pluginHandlers) requirePermissions(w stdhttp.ResponseWriter, r *stdhttp.Request, permissions ...plugin.Permission) (auth.User, bool) {
+	user, ok := h.requireUser(w, r)
+	if !ok {
+		return auth.User{}, false
+	}
+	if !hasPermissions(user, permissions) {
+		WriteError(w, r, NewAppError(stdhttp.StatusForbidden, ErrorCodeForbidden, "权限不足"))
 		return auth.User{}, false
 	}
 	return user, true

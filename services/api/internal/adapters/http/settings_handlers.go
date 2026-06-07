@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	stdhttp "net/http"
 
+	"github.com/WeOpen/WeOpen/internal/core/plugin"
 	"github.com/WeOpen/WeOpen/services/api/internal/adapters/secrets"
 	"github.com/WeOpen/WeOpen/services/api/internal/domain/audit"
 	"github.com/WeOpen/WeOpen/services/api/internal/domain/auth"
@@ -27,15 +28,17 @@ type settingsUpdateRequest struct {
 }
 
 func (h settingsHandlers) settings(w stdhttp.ResponseWriter, r *stdhttp.Request) {
-	user, ok := h.requireUser(w, r)
-	if !ok {
-		return
-	}
-
 	switch r.Method {
 	case stdhttp.MethodGet:
+		if _, ok := h.requirePermissions(w, r, plugin.PermissionSecretRead); !ok {
+			return
+		}
 		h.writeSettings(w, r)
 	case stdhttp.MethodPatch:
+		user, ok := h.requirePermissions(w, r, plugin.PermissionSecretWrite)
+		if !ok {
+			return
+		}
 		h.updateSettings(w, r, user)
 	default:
 		w.Header().Set("Allow", "GET, PATCH")
@@ -44,7 +47,7 @@ func (h settingsHandlers) settings(w stdhttp.ResponseWriter, r *stdhttp.Request)
 }
 
 func (h settingsHandlers) auditLogs(w stdhttp.ResponseWriter, r *stdhttp.Request) {
-	if _, ok := h.requireUser(w, r); !ok {
+	if _, ok := h.requirePermissions(w, r, plugin.PermissionAuditRead); !ok {
 		return
 	}
 	if r.Method != stdhttp.MethodGet {
@@ -119,7 +122,19 @@ func (h settingsHandlers) writeSettings(w stdhttp.ResponseWriter, r *stdhttp.Req
 func (h settingsHandlers) requireUser(w stdhttp.ResponseWriter, r *stdhttp.Request) (auth.User, bool) {
 	user, err := h.auth.UserForToken(r.Context(), bearerOrCookieToken(r))
 	if err != nil {
-		WriteError(w, r, NewAppError(stdhttp.StatusUnauthorized, "AUTH_SESSION_EXPIRED", "请重新登录"))
+		writeAuthSessionError(w, r, err)
+		return auth.User{}, false
+	}
+	return user, true
+}
+
+func (h settingsHandlers) requirePermissions(w stdhttp.ResponseWriter, r *stdhttp.Request, permissions ...plugin.Permission) (auth.User, bool) {
+	user, ok := h.requireUser(w, r)
+	if !ok {
+		return auth.User{}, false
+	}
+	if !hasPermissions(user, permissions) {
+		WriteError(w, r, NewAppError(stdhttp.StatusForbidden, ErrorCodeForbidden, "权限不足"))
 		return auth.User{}, false
 	}
 	return user, true

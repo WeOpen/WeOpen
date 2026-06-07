@@ -26,6 +26,8 @@ const (
 	PermissionSecretWrite Permission = "secret:write"
 	// PermissionAuditRead allows reading audit log entries.
 	PermissionAuditRead Permission = "audit:read"
+	// PermissionPluginManage allows enabling and disabling registered plugins.
+	PermissionPluginManage Permission = "plugin:manage"
 	// PermissionTaskSchedule allows scheduling background task execution.
 	PermissionTaskSchedule Permission = "task:schedule"
 )

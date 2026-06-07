@@ -6,7 +6,9 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
+	"github.com/WeOpen/WeOpen/internal/core/plugin"
 	"github.com/WeOpen/WeOpen/services/api/internal/adapters/secrets"
 	"github.com/WeOpen/WeOpen/services/api/internal/domain/audit"
 	"github.com/WeOpen/WeOpen/services/api/internal/domain/auth"
@@ -61,6 +63,41 @@ func TestSettingsHandlerRecordsAuditLog(t *testing.T) {
 	}
 	if !strings.Contains(auditRec.Body.String(), "settings.update") {
 		t.Fatalf("expected settings.update audit entry, got %s", auditRec.Body.String())
+	}
+}
+
+func TestSettingsHandlerRequiresSecretWritePermission(t *testing.T) {
+	t.Parallel()
+
+	session, token, err := auth.NewSession("usr_reader", time.Now(), time.Hour)
+	if err != nil {
+		t.Fatalf("expected session: %v", err)
+	}
+	authService := auth.NewService(&permissionTestStore{
+		user: auth.User{
+			ID:          "usr_reader",
+			Email:       "reader@example.com",
+			DisplayName: "Reader",
+			Status:      auth.UserStatusActive,
+			Permissions: []plugin.Permission{plugin.PermissionSecretRead},
+		},
+		session: session,
+	})
+	server := NewServer(ServerOptions{
+		Auth:    authService,
+		Secrets: secrets.NewService(secrets.NewMemoryStore(), secrets.NewCrypto("test-key")),
+		Audit:   audit.NewService(),
+	})
+
+	req := httptest.NewRequest(stdhttp.MethodPatch, "/api/settings", strings.NewReader(`{"cloudflareApiToken":"cf-secret-token"}`))
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+
+	server.ServeHTTP(rec, req)
+
+	if rec.Code != stdhttp.StatusForbidden {
+		t.Fatalf("expected forbidden settings update, got %d body=%s", rec.Code, rec.Body.String())
 	}
 }
 
