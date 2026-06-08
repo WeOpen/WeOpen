@@ -1,0 +1,40 @@
+version: "3"
+
+info:
+  companyName: "WeOpen"
+  productName: "WeOpen"
+  productIdentifier: "dev.weopen.personal-platform"
+  description: "Personal management platform desktop client"
+  copyright: "(c) 2026, WeOpen"
+  comments: "Desktop preview for the WeOpen personal platform"
+  version: "0.1.0"
+
+dev_mode:
+  root_path: .
+  log_level: warn
+  debounce: 1000
+  ignore:
+    dir:
+      - .git
+      - node_modules
+      - frontend
+      - bin
+    file:
+      - .DS_Store
+      - .gitignore
+      - .gitkeep
+    watched_extension:
+      - "*.go"
+      - "*.js"
+      - "*.ts"
+    git_ignore: true
+  executes:
+    - cmd: pnpm --dir frontend build
+      type: blocking
+    - cmd: pnpm --dir frontend dev --host 127.0.0.1 --port ${port}
+      type: background
+    - cmd: go run .
+      type: primary
+
+fileAssociations: []
+other: []

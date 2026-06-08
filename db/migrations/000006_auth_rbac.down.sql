@@ -1,0 +1,9 @@
+DROP TABLE IF EXISTS user_roles;
+DROP TABLE IF EXISTS role_permissions;
+DROP TABLE IF EXISTS roles;
+
+ALTER TABLE users
+  DROP COLUMN IF EXISTS last_login_at;
+
+ALTER TABLE users
+  DROP COLUMN IF EXISTS status;

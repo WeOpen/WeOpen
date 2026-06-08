@@ -1,0 +1,10 @@
+{
+  "name": "@weopen/config",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./eslint": "./eslint.base.js",
+    "./tsconfig": "./tsconfig.base.json"
+  }
+}

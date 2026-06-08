@@ -1,0 +1,14 @@
+go 1.25.2
+
+use (
+	./apps/desktop
+	./internal/core
+	./internal/plugins/blog
+	./internal/plugins/devtools
+	./internal/plugins/domains
+	./internal/plugins/storage_r2
+	./internal/providers/cloudflare
+	./internal/providers/domains
+	./internal/providers/r2
+	./services/api
+)

@@ -1,0 +1,183 @@
+/* Desktop-only adapters layered on the shared custom Nothing shell. */
+.desktop-panel {
+  border: 1px solid var(--border-visible);
+}
+
+.dashboard-grid,
+.tools-layout {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.settings-form,
+.tool-card,
+.tool-field {
+  display: grid;
+  gap: 12px;
+}
+
+.button-row,
+.status-row,
+.uuid-row {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.status-row {
+  justify-content: space-between;
+}
+
+.status-pill,
+.connection-status,
+.tool-tags span {
+  border-radius: 999px;
+  display: inline-flex;
+  font-size: 13px;
+  font-weight: 900;
+  padding: 7px 10px;
+}
+
+.dashboard-status-online .status-pill,
+.connection-status.ok {
+  background: rgba(34, 197, 94, 0.14);
+  color: #86efac;
+}
+
+.dashboard-status-offline .status-pill,
+.connection-status.error {
+  background: rgba(239, 68, 68, 0.14);
+  color: #fca5a5;
+}
+
+.dashboard-status-unconfigured .status-pill {
+  background: rgba(245, 158, 11, 0.14);
+  color: #fbbf24;
+}
+
+.connection-status {
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.empty-text,
+.error-text {
+  color: var(--muted);
+  line-height: 1.55;
+  margin: 14px 0 0;
+}
+
+.error-text {
+  color: #fca5a5;
+}
+
+.metric-list {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  margin: 18px 0;
+}
+
+.metric-list div,
+.uuid-row code {
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 12px;
+}
+
+.metric-list dt {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.metric-list dd {
+  font-weight: 900;
+  margin: 4px 0 0;
+}
+
+.plugin-list {
+  display: grid;
+  gap: 10px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.plugin-list li {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.045);
+  border-radius: 14px;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 12px;
+}
+
+.plugin-list strong,
+.plugin-list span {
+  display: block;
+}
+
+.plugin-list div span {
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 3px;
+}
+
+.plugin-enabled,
+.plugin-disabled {
+  border-radius: 999px;
+  flex: 0 0 auto;
+  font-size: 12px;
+  font-weight: 900;
+  padding: 5px 8px;
+}
+
+.plugin-enabled {
+  background: rgba(34, 197, 94, 0.14);
+  color: #86efac;
+}
+
+.plugin-disabled {
+  background: rgba(239, 68, 68, 0.14);
+  color: #fca5a5;
+}
+
+.tool-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tool-tags span {
+  background: var(--primary-soft);
+  color: var(--primary-strong);
+}
+
+.tool-output {
+  background: rgba(0, 0, 0, 0.32);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  color: var(--foreground);
+  margin: 14px 0 0;
+  max-height: 260px;
+  overflow: auto;
+  padding: 12px;
+  white-space: pre-wrap;
+}
+
+.tool-output.error {
+  background: rgba(239, 68, 68, 0.14);
+  color: #fca5a5;
+}
+
+.uuid-row code {
+  flex: 1;
+  overflow-wrap: anywhere;
+}

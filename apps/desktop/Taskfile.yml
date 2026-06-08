@@ -1,0 +1,22 @@
+version: "3"
+
+vars:
+  APP_NAME: "WeOpen"
+  VITE_PORT: "{{.WAILS_VITE_PORT | default 9245}}"
+
+tasks:
+  build:
+    summary: Builds the desktop frontend and Go application for the current platform.
+    cmds:
+      - pnpm --dir frontend build
+      - go build -o bin/weopen-desktop.exe .
+
+  dev:
+    summary: Runs the application in Wails development mode.
+    cmds:
+      - wails3 dev -config ./build/config.yml -port {{.VITE_PORT}}
+
+  test:
+    summary: Runs desktop Go tests.
+    cmds:
+      - go test ./...

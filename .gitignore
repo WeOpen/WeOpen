@@ -19,14 +19,43 @@ profile.cov
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
+node_modules/
+.pnpm-store/
 
-# Go workspace file
-go.work
+# JavaScript build outputs
+.next/
+dist/
+build/
+coverage/
+*.tsbuildinfo
+apps/desktop/bin/
+!apps/desktop/build/
+!apps/desktop/build/config.yml
+!apps/desktop/frontend/dist/
+!apps/desktop/frontend/dist/index.html
+
+# Go workspace checksum
 go.work.sum
 
 # env file
 .env
+.env.local
+.env.*.local
 
 # Editor/IDE
 # .idea/
 # .vscode/
+.DS_Store
+test-results/
+tmp/
+skills-lock.json
+
+
+.omx/
+.claude/
+.thesvg/
+thesvg/
+.spec-workflow/
+.playwright-mcp/
+.agents/
+.codex-artifacts/
