@@ -93,6 +93,9 @@ func LoadFromLookup(lookup func(string) (string, bool)) (Config, error) {
 	if len(missing) > 0 {
 		return Config{}, fmt.Errorf("missing required configuration: %s", strings.Join(missing, ", "))
 	}
+	if err := rejectProductionDefaults(cfg); err != nil {
+		return Config{}, err
+	}
 
 	return cfg, nil
 }
@@ -111,6 +114,24 @@ func valueOrDefault(lookup func(string) (string, bool), key string, fallback str
 		return fallback
 	}
 	return value
+}
+
+func rejectProductionDefaults(cfg Config) error {
+	if !cfg.IsProductionLike() {
+		return nil
+	}
+	weakValues := map[string]string{
+		"ADMIN_PASSWORD":        cfg.AdminPassword,
+		"SESSION_SECRET":        cfg.SessionSecret,
+		"SECRET_ENCRYPTION_KEY": cfg.SecretEncryptionKey,
+	}
+	for name, value := range weakValues {
+		switch strings.ToLower(strings.TrimSpace(value)) {
+		case "admin", "password", "change-me-in-production", "change-me-32-byte-key-in-production", "local-session-secret", "local-secret-encryption-key":
+			return fmt.Errorf("%s must be changed for %s environment", name, cfg.AppEnv)
+		}
+	}
+	return nil
 }
 
 func RequireConfig(cfg Config) error {

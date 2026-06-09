@@ -62,9 +62,9 @@ type Service struct {
 
 // LoginResult contains the public user and raw token produced by a successful login.
 type LoginResult struct {
-	User      User      `json:"user"`
-	Token     string    `json:"token"`
-	ExpiresAt time.Time `json:"expiresAt"`
+	User      User
+	Token     string
+	ExpiresAt time.Time
 }
 
 // NewService creates an auth service with a 24-hour session TTL.

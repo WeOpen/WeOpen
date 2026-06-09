@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"database/sql"
-	"encoding/json"
 	"io/fs"
 	"net/http"
 	"net/http/httptest"
@@ -134,14 +133,14 @@ func loginAndReturnToken(t *testing.T, handler http.Handler) string {
 	if loginRec.Code != http.StatusOK {
 		t.Fatalf("expected login status %d, got %d body=%s", http.StatusOK, loginRec.Code, loginRec.Body.String())
 	}
-	var response struct {
-		Token string `json:"token"`
+	for _, cookie := range loginRec.Result().Cookies() {
+		if cookie.Name == "weopen_session" {
+			if cookie.Value == "" {
+				t.Fatal("expected login session cookie value")
+			}
+			return cookie.Value
+		}
 	}
-	if err := json.Unmarshal(loginRec.Body.Bytes(), &response); err != nil {
-		t.Fatalf("expected login json: %v", err)
-	}
-	if response.Token == "" {
-		t.Fatal("expected login token")
-	}
-	return response.Token
+	t.Fatalf("expected login session cookie, got %+v", loginRec.Result().Cookies())
+	return ""
 }

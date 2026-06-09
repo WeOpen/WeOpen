@@ -1,4 +1,6 @@
-// Browser auth calls rely on the API to own session cookies, token validation, and user redaction.
+// Browser auth calls go through the Web same-origin API proxy, which owns browser cookies and redacts raw tokens.
+import { apiUrl } from "./base";
+
 type LoginInput = {
   email: string;
   password: string;
@@ -17,7 +19,6 @@ export type AuthUser = {
 };
 
 type LoginResponse = {
-  token: string;
   expiresAt: string;
   user: AuthUser;
 };
@@ -26,11 +27,10 @@ type CurrentUserResponse = {
   user: AuthUser;
 };
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
 
 /** login starts an API session and stores the HttpOnly cookie set by the server. */
 export async function login(input: LoginInput): Promise<LoginResponse> {
-  const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+  const response = await fetch(apiUrl("/api/auth/login"), {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -49,7 +49,7 @@ export async function login(input: LoginInput): Promise<LoginResponse> {
 
 /** currentUser reads the active API session and returns null for unauthenticated browsers. */
 export async function currentUser(token?: string): Promise<CurrentUserResponse | null> {
-  const response = await fetch(`${API_BASE_URL}/api/me`, {
+  const response = await fetch(apiUrl("/api/me"), {
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
     credentials: "include",
     cache: "no-store"
@@ -64,7 +64,7 @@ export async function currentUser(token?: string): Promise<CurrentUserResponse |
 
 /** logout clears the API-owned session cookie and server-side token hash. */
 export async function logout(): Promise<void> {
-  await fetch(`${API_BASE_URL}/api/auth/logout`, {
+  await fetch(apiUrl("/api/auth/logout"), {
     method: "POST",
     credentials: "include",
     cache: "no-store"

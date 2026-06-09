@@ -1,19 +1,17 @@
+import { apiBaseUrl, apiUrl } from "./base";
+
 export type HealthResponse = {
   status: string;
   service: string;
 };
 
-export async function fetchApiHealth(
-  baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL
-): Promise<HealthResponse> {
-  if (!baseUrl) {
-    throw new Error("NEXT_PUBLIC_API_BASE_URL is not configured");
-  }
-
-  const response = await fetch(`${baseUrl}/healthz`, {
+export async function fetchApiHealth(baseUrl = apiBaseUrl()): Promise<HealthResponse> {
+  const path = baseUrl ? `${baseUrl}/healthz` : apiUrl("/api/healthz");
+  const response = await fetch(path, {
     headers: {
       Accept: "application/json"
-    }
+    },
+    cache: "no-store"
   });
 
   if (!response.ok) {

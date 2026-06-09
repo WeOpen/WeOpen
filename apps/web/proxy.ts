@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { backendApiUrl } from "./src/shared/api/server-base";
 import { buildLoginPath, isPublicWebPath, safeNextPath } from "./src/shared/auth/routes";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
 const SESSION_COOKIE = "weopen_session";
 
 export async function proxy(request: NextRequest) {
@@ -31,7 +31,7 @@ export const config = {
 
 async function hasActiveSession(token: string): Promise<boolean> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/me`, {
+    const response = await fetch(backendApiUrl("/api/me"), {
       headers: { Authorization: `Bearer ${token}` },
       cache: "no-store"
     });

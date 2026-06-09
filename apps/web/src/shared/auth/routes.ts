@@ -29,6 +29,7 @@ export function isPublicWebPath(pathname: string): boolean {
   return (
     pathname === "/" ||
     isLoginPath(pathname) ||
+    pathname.startsWith("/api/") ||
     pathname.startsWith("/_next/") ||
     pathname === "/favicon.ico" ||
     pathname === "/favicon.svg" ||

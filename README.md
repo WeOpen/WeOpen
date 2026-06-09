@@ -328,7 +328,9 @@ go test ./services/api/... ./internal/core/... ./internal/plugins/blog/... ./int
 | `APP_ENV` | API 运行环境 | `local` |
 | `APP_URL` | API 对外地址 | `http://localhost:8080` |
 | `WEB_ORIGIN` | CORS 允许的 Web origin | `http://localhost:3000` |
-| `NEXT_PUBLIC_API_BASE_URL` | Web 访问 API 的地址 | `http://localhost:8080` |
+| `NEXT_PUBLIC_API_BASE_URL` | 浏览器直连 API 的可选地址；默认留空并走 Web 同源 `/api` 代理 | 留空 |
+| `WEOPEN_API_BASE_URL` | Web 服务端代理访问 Go API 的地址 | `http://localhost:8080` |
+| `NEXT_PUBLIC_SHOW_DEV_CREDENTIALS` | 是否在 local 登录页显示本地凭据提示；不暴露密码值 | `false` |
 | `DATABASE_URL` | PostgreSQL 兼容数据库连接；配置后 API auth/session/RBAC 使用 SQL store | 完整持久化时配置 |
 | `MIGRATIONS_DIR` | API 启动时加载 SQL migrations 的目录 | `db/migrations` |
 | `SESSION_SECRET` | Session 签名/派生密钥 | 生产必须替换 |
@@ -345,6 +347,7 @@ go test ./services/api/... ./internal/core/... ./internal/plugins/blog/... ./int
 - v1 插件是**编译期内置插件**，不要引入远程动态代码加载。
 - 不新增依赖，除非任务明确需要并记录原因。
 - Secret 不得进入前端 bundle；不要把密钥放入 `NEXT_PUBLIC_*`。
+- 浏览器默认通过 Web 同源 `/api` 代理访问 Go API；除非明确需要直连，不要设置 `NEXT_PUBLIC_API_BASE_URL`。
 - 高风险操作（删除对象、删除文章、替换 secret、未来 DNS 写操作）必须有确认和审计路径。
 - 提交信息遵循仓库 Lore Commit Protocol：第一行写“为什么”，正文写约束、取舍和验证证据。
 - 提交前运行 `pnpm changelog:staged` 和 `pnpm version:check`，确保变更记录和版本源保持一致。

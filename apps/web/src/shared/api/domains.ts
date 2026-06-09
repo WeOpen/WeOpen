@@ -1,4 +1,6 @@
 // Domain API calls read Cloudflare/manual inventory snapshots; v1 intentionally exposes no DNS writes.
+import { apiUrl } from "./base";
+
 /** CertificateRiskStatus mirrors backend TLS expiry warning thresholds. */
 export type CertificateRiskStatus =
   | "unchecked"
@@ -65,11 +67,10 @@ type DNSRecordsResponse = {
   records: DNSRecordSnapshot[];
 };
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
 
 /** listDomainAssets reads the latest synced domain inventory without contacting providers. */
 export async function listDomainAssets(): Promise<DomainAsset[]> {
-  const response = await fetch(`${API_BASE_URL}/api/plugins/domains/assets`, {
+  const response = await fetch(apiUrl("/api/plugins/domains/assets"), {
     credentials: "include",
     headers: { Accept: "application/json" }
   });
@@ -80,7 +81,7 @@ export async function listDomainAssets(): Promise<DomainAsset[]> {
 
 /** syncDomains asks the API to read Cloudflare inventory and refresh DNS/certificate snapshots. */
 export async function syncDomains(): Promise<SyncDomainsResult> {
-  const response = await fetch(`${API_BASE_URL}/api/plugins/domains/sync`, {
+  const response = await fetch(apiUrl("/api/plugins/domains/sync"), {
     method: "POST",
     credentials: "include",
     headers: { Accept: "application/json" }
@@ -91,7 +92,7 @@ export async function syncDomains(): Promise<SyncDomainsResult> {
 
 /** listDomainDNSRecords reads stored DNS snapshots; DNS mutation is disabled in v1. */
 export async function listDomainDNSRecords(assetId: string): Promise<DNSRecordSnapshot[]> {
-  const response = await fetch(`${API_BASE_URL}/api/plugins/domains/assets/${assetId}/dns`, {
+  const response = await fetch(apiUrl(`/api/plugins/domains/assets/${assetId}/dns`), {
     credentials: "include",
     headers: { Accept: "application/json" }
   });

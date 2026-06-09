@@ -1,4 +1,6 @@
 // Settings calls send secret values to the API once; the browser only receives redacted metadata back.
+import { apiUrl } from "./base";
+
 type UpdateSettingsInput = {
   cloudflareApiToken?: string;
   r2AccessKeyId?: string;
@@ -16,11 +18,10 @@ type SettingsResponse = {
   }>;
 };
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
 
 /** updateSettings writes provider secrets through the authenticated API settings boundary. */
 export async function updateSettings(input: UpdateSettingsInput): Promise<SettingsResponse> {
-  const response = await fetch(`${API_BASE_URL}/api/settings`, {
+  const response = await fetch(apiUrl("/api/settings"), {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json"

@@ -101,3 +101,28 @@ func TestLoadFromLookupReadsExplicitValues(t *testing.T) {
 		t.Fatalf("expected Cloudflare API token, got %q", cfg.CloudflareAPIToken)
 	}
 }
+
+func TestLoadFromLookupRejectsProductionDefaultAdminPassword(t *testing.T) {
+	t.Parallel()
+
+	values := map[string]string{
+		"APP_ENV":               "production",
+		"DATABASE_URL":          "postgres://example",
+		"SESSION_SECRET":        "real-session-secret",
+		"SECRET_ENCRYPTION_KEY": "real-encryption-secret",
+		"ADMIN_EMAIL":           "owner@example.com",
+		"ADMIN_PASSWORD":        "admin",
+		"R2_ACCOUNT_ID":         "account",
+		"R2_BUCKET":             "bucket",
+		"R2_ACCESS_KEY_ID":      "r2-access",
+		"R2_SECRET_ACCESS_KEY":  "r2-secret",
+	}
+
+	_, err := LoadFromLookup(func(key string) (string, bool) {
+		value, ok := values[key]
+		return value, ok
+	})
+	if err == nil || !strings.Contains(err.Error(), "ADMIN_PASSWORD must be changed") {
+		t.Fatalf("expected production admin password rejection, got %v", err)
+	}
+}

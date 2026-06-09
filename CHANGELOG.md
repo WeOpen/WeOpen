@@ -12,10 +12,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added the repository changelog and commit-time changelog policy so future notable changes are recorded in a human-readable release log.
 - Added a root `VERSION` file plus `pnpm version:check` / `pnpm version:sync` scripts to keep workspace packages, app versions, and plugin manifests aligned.
 - Added changelog validation scripts for checking the Keep a Changelog structure and staged changelog updates before commits.
+- Added a same-origin Web API proxy for browser calls so auth cookies keep working when Web and Go API run on different hosts.
+- Added login failure rate limiting, cooldown responses, and login success/failure audit entries.
+- Added production configuration rejection for default or placeholder admin/session secrets.
 
 ### Changed
 
 - Plugin registry, dashboard, and login version displays now read canonical manifest/project versions instead of mock version overrides.
+- Login now hides local credential hints by default, starts with an empty email field, renders live API/environment status, and no longer returns raw session tokens in the login JSON response.
 
 ## [0.1.0] - 2026-06-07
 

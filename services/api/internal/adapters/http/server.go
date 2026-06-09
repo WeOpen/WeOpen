@@ -48,7 +48,12 @@ func NewServer(options ...ServerOptions) http.Handler {
 	var pluginByIDHandler http.Handler
 	mux.HandleFunc("/healthz", healthHandler)
 	if opts.Auth != nil {
-		authHandlers := authHandlers{service: opts.Auth, secureCookies: opts.SecureCookies}
+		authHandlers := authHandlers{
+			service:       opts.Auth,
+			audit:         opts.Audit,
+			loginLimiter:  newLoginRateLimiter(),
+			secureCookies: opts.SecureCookies,
+		}
 		mux.HandleFunc("/api/auth/login", authHandlers.login)
 		mux.HandleFunc("/api/auth/logout", authHandlers.logout)
 		mux.HandleFunc("/api/me", authHandlers.me)

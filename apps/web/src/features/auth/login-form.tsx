@@ -7,7 +7,7 @@ import { Alert, Button, Input } from "@weopen/ui";
 
 export function LoginForm({ nextPath = "/dashboard" }: { nextPath?: string }) {
   const router = useRouter();
-  const [email, setEmail] = useState("admin@example.com");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -32,9 +32,12 @@ export function LoginForm({ nextPath = "/dashboard" }: { nextPath?: string }) {
     <form className="auth-form" onSubmit={onSubmit}>
       <Input
         autoComplete="email"
+        autoFocus
         label="Email"
         name="email"
         onChange={(event) => setEmail(event.target.value)}
+        placeholder="you@example.com"
+        required
         type="email"
         value={email}
       />
@@ -44,6 +47,7 @@ export function LoginForm({ nextPath = "/dashboard" }: { nextPath?: string }) {
         name="password"
         onChange={(event) => setPassword(event.target.value)}
         placeholder="Enter your password"
+        required
         type="password"
         value={password}
       />

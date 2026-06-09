@@ -1,4 +1,6 @@
 // Blog API calls require an authenticated session; server-side plugin permissions remain authoritative.
+import { apiUrl } from "./base";
+
 /** BlogPostStatus mirrors the backend lifecycle states for filtering and edits. */
 export type BlogPostStatus = "draft" | "published" | "archived";
 
@@ -49,15 +51,11 @@ type BlogPostsResponse = {
   posts: BlogPost[];
 };
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
 
 /** listBlogPosts reads posts, optionally filtered by lifecycle status. */
 export async function listBlogPosts(status?: BlogPostStatus): Promise<BlogPost[]> {
-  const url = new URL(`${API_BASE_URL}/api/plugins/blog/posts`);
-  if (status) {
-    url.searchParams.set("status", status);
-  }
-  const response = await fetch(url, {
+  const query = status ? `?status=${encodeURIComponent(status)}` : "";
+  const response = await fetch(apiUrl(`/api/plugins/blog/posts${query}`), {
     credentials: "include",
     headers: { Accept: "application/json" }
   });
@@ -68,7 +66,7 @@ export async function listBlogPosts(status?: BlogPostStatus): Promise<BlogPost[]
 
 /** getBlogPost reads one post by API ID and surfaces server error messages when available. */
 export async function getBlogPost(id: string): Promise<BlogPost> {
-  const response = await fetch(`${API_BASE_URL}/api/plugins/blog/posts/${id}`, {
+  const response = await fetch(apiUrl(`/api/plugins/blog/posts/${id}`), {
     credentials: "include",
     headers: { Accept: "application/json" }
   });
@@ -78,7 +76,7 @@ export async function getBlogPost(id: string): Promise<BlogPost> {
 
 /** createBlogPost creates a post and relies on the API to validate slug, terms, status, and cover object keys. */
 export async function createBlogPost(input: BlogPostInput): Promise<BlogPost> {
-  const response = await fetch(`${API_BASE_URL}/api/plugins/blog/posts`, {
+  const response = await fetch(apiUrl("/api/plugins/blog/posts"), {
     method: "POST",
     credentials: "include",
     headers: {
@@ -93,7 +91,7 @@ export async function createBlogPost(input: BlogPostInput): Promise<BlogPost> {
 
 /** updateBlogPost mutates post content and metadata through the authenticated blog plugin API. */
 export async function updateBlogPost(id: string, input: BlogPostInput): Promise<BlogPost> {
-  const response = await fetch(`${API_BASE_URL}/api/plugins/blog/posts/${id}`, {
+  const response = await fetch(apiUrl(`/api/plugins/blog/posts/${id}`), {
     method: "PATCH",
     credentials: "include",
     headers: {
@@ -108,7 +106,7 @@ export async function updateBlogPost(id: string, input: BlogPostInput): Promise<
 
 /** deleteBlogPost permanently removes a post through the authenticated blog plugin API. */
 export async function deleteBlogPost(id: string): Promise<void> {
-  const response = await fetch(`${API_BASE_URL}/api/plugins/blog/posts/${id}`, {
+  const response = await fetch(apiUrl(`/api/plugins/blog/posts/${id}`), {
     method: "DELETE",
     credentials: "include"
   });

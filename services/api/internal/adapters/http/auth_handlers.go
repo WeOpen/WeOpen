@@ -3,15 +3,19 @@ package http
 import (
 	"encoding/json"
 	"errors"
+	"net"
 	stdhttp "net/http"
 	"strings"
 	"time"
 
+	"github.com/WeOpen/WeOpen/services/api/internal/domain/audit"
 	"github.com/WeOpen/WeOpen/services/api/internal/domain/auth"
 )
 
 type authHandlers struct {
 	service       *auth.Service
+	audit         *audit.Service
+	loginLimiter  *loginRateLimiter
 	secureCookies bool
 }
 
@@ -22,7 +26,6 @@ type loginRequest struct {
 
 type loginResponse struct {
 	User      auth.User `json:"user"`
-	Token     string    `json:"token"`
 	ExpiresAt time.Time `json:"expiresAt"`
 }
 
@@ -42,25 +45,36 @@ func (h authHandlers) login(w stdhttp.ResponseWriter, r *stdhttp.Request) {
 		WriteError(w, r, NewAppError(stdhttp.StatusBadRequest, ErrorCodeValidationFailed, "请求 JSON 无效"))
 		return
 	}
+	limitKey := loginLimitKey(r, req.Email)
+	if !h.loginLimiter.Allow(limitKey) {
+		h.recordLoginAudit(r, "auth.login_rate_limited", "", req.Email, "rate_limited")
+		WriteError(w, r, NewAppError(stdhttp.StatusTooManyRequests, "AUTH_RATE_LIMITED", "登录尝试过多，请稍后再试"))
+		return
+	}
 
 	result, err := h.service.Login(r.Context(), req.Email, req.Password)
 	if err != nil {
+		h.loginLimiter.RecordFailure(limitKey)
 		if errors.Is(err, auth.ErrInvalidCredentials) {
+			h.recordLoginAudit(r, "auth.login_failed", "", req.Email, "invalid_credentials")
 			WriteError(w, r, NewAppError(stdhttp.StatusUnauthorized, "AUTH_INVALID_CREDENTIALS", "邮箱或密码错误"))
 			return
 		}
 		if errors.Is(err, auth.ErrUserDisabled) {
+			h.recordLoginAudit(r, "auth.login_failed", "", req.Email, "user_disabled")
 			WriteError(w, r, NewAppError(stdhttp.StatusForbidden, "AUTH_USER_DISABLED", "账号已停用"))
 			return
 		}
+		h.recordLoginAudit(r, "auth.login_failed", "", req.Email, "internal_error")
 		WriteError(w, r, err)
 		return
 	}
+	h.loginLimiter.Reset(limitKey)
+	h.recordLoginAudit(r, "auth.login_succeeded", result.User.ID, result.User.Email, "")
 
 	setSessionCookie(w, result.Token, result.ExpiresAt, h.secureCookies)
 	WriteJSON(w, stdhttp.StatusOK, loginResponse{
 		User:      result.User,
-		Token:     result.Token,
 		ExpiresAt: result.ExpiresAt,
 	})
 }
@@ -135,4 +149,44 @@ func clearSessionCookie(w stdhttp.ResponseWriter, secure bool) {
 		Secure:   secure,
 		SameSite: stdhttp.SameSiteLaxMode,
 	})
+}
+
+func (h authHandlers) recordLoginAudit(r *stdhttp.Request, action string, actorUserID string, email string, reason string) {
+	if h.audit == nil {
+		return
+	}
+	metadata := map[string]any{
+		"email":         strings.ToLower(strings.TrimSpace(email)),
+		"remoteAddress": remoteAddress(r),
+	}
+	if userAgent := strings.TrimSpace(r.UserAgent()); userAgent != "" {
+		metadata["userAgent"] = userAgent
+	}
+	if reason != "" {
+		metadata["reason"] = reason
+	}
+	_, _ = h.audit.Record(r.Context(), audit.Entry{
+		ActorUserID: actorUserID,
+		Action:      action,
+		TargetType:  "auth_session",
+		TargetID:    actorUserID,
+		Metadata:    metadata,
+	})
+}
+
+func loginLimitKey(r *stdhttp.Request, email string) string {
+	return remoteAddress(r) + "|" + strings.ToLower(strings.TrimSpace(email))
+}
+
+func remoteAddress(r *stdhttp.Request) string {
+	forwardedFor := strings.TrimSpace(r.Header.Get("X-Forwarded-For"))
+	if forwardedFor != "" {
+		first, _, _ := strings.Cut(forwardedFor, ",")
+		return strings.TrimSpace(first)
+	}
+	host, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err == nil && host != "" {
+		return host
+	}
+	return strings.TrimSpace(r.RemoteAddr)
 }

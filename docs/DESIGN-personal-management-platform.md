@@ -141,7 +141,7 @@ personal-platform/
 
 - Vercel Project A：`apps/web`
 - Vercel Project B：`services/api`
-- Web 通过 `NEXT_PUBLIC_API_BASE_URL` 调用 API。
+- 浏览器默认通过 Web 同源 `/api` 代理调用 API，Web 服务端再使用 `WEOPEN_API_BASE_URL` 转发到 Go API；`NEXT_PUBLIC_API_BASE_URL` 仅用于明确绕过代理的部署。
 - API 通过 CORS 限制允许 Web 域名访问。
 
 优点：
@@ -178,6 +178,7 @@ Web：
 
 ```text
 NEXT_PUBLIC_API_BASE_URL=
+WEOPEN_API_BASE_URL=
 NEXT_PUBLIC_APP_NAME=
 ```
 
@@ -900,4 +901,3 @@ Cloudflare Token 建议按插件能力拆分：
 - Wails v3: https://v3.wails.io/
 - Cloudflare R2 Pricing: https://developers.cloudflare.com/r2/pricing/
 - Cloudflare Registrar API: https://developers.cloudflare.com/registrar/registrar-api/
-
