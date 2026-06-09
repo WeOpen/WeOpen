@@ -1,34 +1,49 @@
+import type { Metadata } from "next";
 import Link from "next/link";
-import { AppShell } from "@/shared/layout/app-shell";
-import { Card, MetricCard, PageHeader } from "@weopen/ui";
+
+const landingSignals = [
+  ["Status", "Public preview"],
+  ["Console", "/dashboard"],
+  ["Launch", "Coming soon"]
+];
+
+export const metadata: Metadata = {
+  title: "WeOpen",
+  description: "Public landing page placeholder for WeOpen"
+};
 
 export default function HomePage() {
   return (
-    <AppShell currentPath="/dashboard">
-      <section className="admin-hero">
-        <Card className="admin-hero-panel">
-          <Card.Content>
-            <PageHeader
-              eyebrow="WeOpen Admin"
-              title="你的个人平台，从一个指挥舱开始。"
-              description="管理博客内容、开发者工具、域名、R2 存储和平台设置。Web 与 Desktop 共用基础组件和插件协议，但每个界面都为日常管理优化。"
-            />
-          </Card.Content>
-          <div className="admin-hero-actions">
-            <Link className="ui-button ui-button-primary" href="/dashboard">
-              打开 Dashboard
-            </Link>
-            <Link className="ui-button ui-button-secondary" href="/plugins">
-              查看插件
-            </Link>
+    <main className="landing-page" aria-label="WeOpen public landing placeholder">
+      <section className="landing-shell">
+        <header className="landing-nav" aria-label="Landing navigation">
+          <Link className="landing-brand" href="/" aria-label="WeOpen home">
+            WeOpen
+          </Link>
+          <Link className="landing-console-link" href="/dashboard">
+            Open console
+          </Link>
+        </header>
+
+        <section className="landing-hero" aria-labelledby="landing-title">
+          <div className="landing-copy">
+            <p className="landing-eyebrow">Personal platform</p>
+            <h1 id="landing-title">WeOpen</h1>
+            <p className="landing-description">
+              A public landing page will live here. For now, this static placeholder keeps the root path open while the admin console stays behind its own routes.
+            </p>
           </div>
-        </Card>
-        <div className="admin-stat-list">
-          <MetricCard icon={<span>PL</span>} label="Built-in plugins" value="4" description="博客、工具、域名和云存储" />
-          <MetricCard icon={<span>UI</span>} label="Design system" value="Custom UI" description="Nothing tokens + 自定义组件" />
-          <MetricCard icon={<span>SDK</span>} label="Shared shell" value="Web/Desktop" description="组件、SDK 和 tokens 复用" />
-        </div>
+
+          <dl className="landing-signal-grid" aria-label="Landing page status">
+            {landingSignals.map(([label, value]) => (
+              <div key={label}>
+                <dt>{label}</dt>
+                <dd>{value}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
       </section>
-    </AppShell>
+    </main>
   );
 }

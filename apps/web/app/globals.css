@@ -55,6 +55,143 @@ body > :not(.weopen-mosaic-background) {
   gap: 14px;
 }
 
+.landing-page {
+  color: var(--text-primary);
+  display: grid;
+  min-height: 100svh;
+  padding: clamp(18px, 3vw, 44px);
+}
+
+.landing-shell {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: calc(100svh - clamp(36px, 6vw, 88px));
+}
+
+.landing-nav {
+  align-items: center;
+  display: flex;
+  gap: 18px;
+  justify-content: space-between;
+  min-height: 48px;
+}
+
+.landing-brand,
+.landing-console-link {
+  color: var(--text-display);
+  text-decoration: none;
+}
+
+.landing-brand {
+  font-family: "Doto", "Space Mono", monospace;
+  font-size: clamp(28px, 2vw, 38px);
+  letter-spacing: 0;
+  line-height: 1;
+}
+
+.landing-console-link {
+  -webkit-backdrop-filter: blur(3px) saturate(1.25);
+  backdrop-filter: blur(3px) saturate(1.25);
+  background:
+    linear-gradient(120deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02)),
+    rgba(5, 5, 5, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  font-size: 13px;
+  font-weight: 800;
+  padding: 10px 14px;
+  text-transform: uppercase;
+}
+
+.landing-hero {
+  align-items: end;
+  display: grid;
+  gap: clamp(28px, 5vw, 88px);
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 420px);
+  padding: clamp(64px, 12vh, 156px) 0 clamp(28px, 7vh, 76px);
+}
+
+.landing-copy {
+  display: grid;
+  gap: 18px;
+  max-width: 920px;
+}
+
+.landing-eyebrow,
+.landing-description,
+.landing-signal-grid dt,
+.landing-signal-grid dd {
+  font-family: "Space Mono", monospace;
+  text-transform: uppercase;
+}
+
+.landing-eyebrow {
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  margin: 0;
+}
+
+.landing-copy h1 {
+  color: var(--text-display);
+  font-family: "Doto", "Space Mono", monospace;
+  font-size: clamp(76px, 13vw, 220px);
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 0.82;
+  margin: 0;
+}
+
+.landing-description {
+  color: var(--text-secondary);
+  font-size: clamp(14px, 1.05vw, 18px);
+  line-height: 1.7;
+  margin: 0;
+  max-width: 720px;
+}
+
+.landing-signal-grid {
+  -webkit-backdrop-filter: blur(3px) saturate(1.25) contrast(1.08);
+  backdrop-filter: blur(3px) saturate(1.25) contrast(1.08);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.018) 34%, rgba(0, 0, 0, 0.08) 100%),
+    rgba(5, 5, 5, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    0 18px 70px rgba(0, 0, 0, 0.24);
+  display: grid;
+  gap: 0;
+  margin: 0;
+  overflow: hidden;
+}
+
+.landing-signal-grid div {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: minmax(120px, 0.75fr) minmax(0, 1fr);
+  padding: 18px;
+}
+
+.landing-signal-grid div + div {
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.landing-signal-grid dt {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.landing-signal-grid dd {
+  color: var(--text-display);
+  font-size: 14px;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
 .settings-card {
   max-width: 720px;
 }
@@ -453,6 +590,39 @@ body > :not(.weopen-mosaic-background) {
 
   .admin-hero-panel .page-title {
     font-size: 42px;
+  }
+
+  .landing-page {
+    padding: 18px;
+  }
+
+  .landing-shell {
+    min-height: calc(100svh - 36px);
+  }
+
+  .landing-nav {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .landing-hero {
+    align-items: start;
+    gap: 28px;
+    grid-template-columns: 1fr;
+    padding: 58px 0 22px;
+  }
+
+  .landing-copy h1 {
+    font-size: clamp(66px, 25vw, 116px);
+  }
+
+  .landing-description {
+    font-size: 13px;
+  }
+
+  .landing-signal-grid div {
+    grid-template-columns: 1fr;
+    padding: 14px;
   }
 }
 

@@ -27,6 +27,7 @@ export function buildLoginPath(pathname: string, search = ""): string {
 /** isPublicWebPath returns true for routes that must not require an active API session. */
 export function isPublicWebPath(pathname: string): boolean {
   return (
+    pathname === "/" ||
     isLoginPath(pathname) ||
     pathname.startsWith("/_next/") ||
     pathname === "/favicon.ico" ||
