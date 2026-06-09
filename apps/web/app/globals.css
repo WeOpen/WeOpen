@@ -1,6 +1,40 @@
 @import "./dashboard/dashboard.css";
 @import "../src/plugins/devtools/devtools.css";
 
+html,
+body {
+  background: #050505;
+}
+
+body {
+  min-height: 100dvh;
+}
+
+.weopen-mosaic-background {
+  background: #050505;
+  height: 100dvh;
+  inset: 0;
+  pointer-events: none;
+  position: fixed;
+  width: 100vw;
+  z-index: 0;
+}
+
+body > :not(.weopen-mosaic-background) {
+  position: relative;
+  z-index: 1;
+}
+
+.weopen-admin-shell,
+.auth-page {
+  background: transparent !important;
+}
+
+.weopen-admin-nav-card,
+.weopen-admin-topbar {
+  background: color-mix(in oklab, #000000 72%, transparent) !important;
+}
+
 .auth-page {
   align-items: center;
   background: var(--weopen-shell-bg);
@@ -1472,6 +1506,151 @@
 .custom-ui-spec-card,
 .api-route-panel {
   border-radius: 0 !important;
+}
+
+.weopen-admin-nav-card,
+.weopen-admin-topbar,
+.card,
+.ui-card,
+.weopen-data-table,
+.dashboard-panel,
+.dashboard-directory,
+.plugin-card,
+.blog-editor,
+.blog-preview,
+.storage-upload,
+.domains-list,
+.domain-detail,
+.tool-panel,
+.tool-card,
+.settings-card,
+.settings-session-card,
+.settings-secret-card,
+.settings-audit-log,
+.custom-ui-spec-card,
+.api-route-panel,
+.auth-card {
+  -webkit-backdrop-filter: blur(3px) saturate(1.25) contrast(1.08);
+  backdrop-filter: blur(3px) saturate(1.25) contrast(1.08);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.018) 34%, rgba(0, 0, 0, 0.08) 100%),
+    rgba(5, 5, 5, 0.2) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.06),
+    0 18px 70px rgba(0, 0, 0, 0.24);
+  isolation: isolate;
+  overflow: hidden;
+  position: relative;
+}
+
+.card,
+.ui-card,
+.weopen-data-table,
+.dashboard-panel,
+.dashboard-directory,
+.plugin-card,
+.blog-editor,
+.blog-preview,
+.storage-upload,
+.domains-list,
+.domain-detail,
+.tool-panel,
+.tool-card,
+.settings-card,
+.settings-session-card,
+.settings-secret-card,
+.settings-audit-log,
+.custom-ui-spec-card,
+.api-route-panel,
+.auth-card {
+  border-radius: 8px !important;
+}
+
+.weopen-admin-nav-card,
+.weopen-admin-topbar {
+  background:
+    linear-gradient(120deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.018) 42%, rgba(0, 0, 0, 0.12)),
+    rgba(0, 0, 0, 0.22) !important;
+}
+
+.weopen-admin-topbar {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.08),
+    0 14px 52px rgba(0, 0, 0, 0.42);
+}
+
+.weopen-admin-nav-card::before,
+.weopen-admin-topbar::before,
+.card::before,
+.ui-card::before,
+.weopen-data-table::before,
+.dashboard-panel::before,
+.dashboard-directory::before,
+.plugin-card::before,
+.blog-editor::before,
+.blog-preview::before,
+.storage-upload::before,
+.domains-list::before,
+.domain-detail::before,
+.tool-panel::before,
+.tool-card::before,
+.settings-card::before,
+.settings-session-card::before,
+.settings-secret-card::before,
+.settings-audit-log::before,
+.custom-ui-spec-card::before,
+.api-route-panel::before,
+.auth-card::before {
+  background:
+    radial-gradient(circle at 18% 0%, rgba(255, 255, 255, 0.1), transparent 34%),
+    linear-gradient(100deg, rgba(255, 255, 255, 0.05), transparent 22%, rgba(255, 255, 255, 0.018) 62%, transparent 82%);
+  content: "";
+  inset: 0;
+  opacity: 0.54;
+  pointer-events: none;
+  position: absolute;
+  z-index: 0;
+}
+
+.weopen-admin-nav-card > *,
+.weopen-admin-topbar > *,
+.card > *,
+.ui-card > *,
+.weopen-data-table > *,
+.dashboard-panel > *,
+.dashboard-directory > *,
+.plugin-card > *,
+.blog-editor > *,
+.blog-preview > *,
+.storage-upload > *,
+.domains-list > *,
+.domain-detail > *,
+.tool-panel > *,
+.tool-card > *,
+.settings-card > *,
+.settings-session-card > *,
+.settings-secret-card > *,
+.settings-audit-log > *,
+.custom-ui-spec-card > *,
+.api-route-panel > *,
+.auth-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.weopen-admin-nav-item:hover,
+.weopen-admin-nav-item-active {
+  -webkit-backdrop-filter: blur(12px) saturate(1.35);
+  backdrop-filter: blur(12px) saturate(1.35);
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.035)),
+    rgba(18, 18, 18, 0.58) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 10px 32px rgba(0, 0, 0, 0.32);
 }
 
 .weopen-admin-brand > .weopen-admin-brand-mark {

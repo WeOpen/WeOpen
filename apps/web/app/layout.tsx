@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "@weopen/ui/styles.css";
 import "./globals.css";
+import { MosaicBackground } from "@/shared/layout/mosaic-background";
 
 export const metadata: Metadata = {
   title: "WeOpen Admin",
@@ -17,7 +18,10 @@ export default function RootLayout({
 }>) {
   return (
     <html className="dark" data-theme="dark" lang="zh-CN" suppressHydrationWarning>
-      <body>{children}</body>
+      <body>
+        <MosaicBackground />
+        {children}
+      </body>
     </html>
   );
 }
