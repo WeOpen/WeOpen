@@ -30,6 +30,8 @@ const (
 	PermissionPluginManage Permission = "plugin:manage"
 	// PermissionTaskSchedule allows scheduling background task execution.
 	PermissionTaskSchedule Permission = "task:schedule"
+	// PermissionUserManage allows managing users, roles, password-reset state, and sessions.
+	PermissionUserManage Permission = "user:manage"
 )
 
 // NavItem describes a plugin-owned navigation entry consumed by clients.

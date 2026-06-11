@@ -1,31 +1,68 @@
 "use client";
 
 import { AdminShell, createAdminNavigation } from "@weopen/ui";
+import { useEffect, useMemo, useState } from "react";
 import { SessionControl } from "@/features/auth/session-control";
-import { pluginNavigation } from "@/plugins/registry";
-
-const navItems = createAdminNavigation(
-  pluginNavigation.map((item) => ({
-    description: pluginDescription(item.path),
-    href: item.path,
-    label: item.title,
-    order: item.order
-  }))
-);
+import { pluginManifests } from "@/plugins/registry";
+import { currentUser, hasAnyPermission, type AuthUser } from "@/shared/api/auth";
+import { listPlugins, type BackendPlugin } from "@/shared/api/plugins";
 
 /** AppShell composes the shared custom Nothing-style management shell for Web routes. */
 export function AppShell({
   children,
   currentPath
 }: Readonly<{ children: React.ReactNode; currentPath?: string }>) {
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [plugins, setPlugins] = useState<BackendPlugin[] | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    void Promise.allSettled([currentUser(), listPlugins()]).then(([userResult, pluginResult]) => {
+      if (!isMounted) {
+        return;
+      }
+      setUser(userResult.status === "fulfilled" ? userResult.value?.user ?? null : null);
+      setPlugins(pluginResult.status === "fulfilled" ? pluginResult.value : null);
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const navItems = useMemo(() => {
+    const backendById = new Map((plugins ?? []).map((plugin) => [plugin.id, plugin]));
+    const pluginItems = pluginManifests
+      .filter((manifest) => {
+        const backend = backendById.get(manifest.id);
+        if (backend && !backend.enabled) {
+          return false;
+        }
+        return hasAnyPermission(user, manifest.permissions);
+      })
+      .flatMap((manifest) =>
+        (manifest.nav ?? []).map((item) => ({
+          description: pluginDescription(item.path),
+          href: item.path,
+          label: item.title,
+          order: item.order
+        }))
+      );
+    return createAdminNavigation(pluginItems);
+  }, [plugins, user]);
+
+  const disabledCount = plugins?.filter((plugin) => !plugin.enabled).length ?? 0;
+
   return (
     <AdminShell
       appMark="W"
       appName="WeOpen"
       currentPath={currentPath}
+      environmentLabel={process.env.NODE_ENV?.toUpperCase() ?? "LOCAL"}
       navItems={navItems}
-      statusLabel="AUTH ON"
+      runtimeLabel="WEB"
+      statusLabel={disabledCount > 0 ? `AUTH ON · ${disabledCount} OFF` : "AUTH ON"}
       subtitle="Personal Management Platform"
+      versionLabel={process.env.NEXT_PUBLIC_APP_VERSION ?? "0.1.0"}
       actionSlot={<SessionControl />}
     >
       {children}

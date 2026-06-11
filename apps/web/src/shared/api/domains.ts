@@ -1,5 +1,5 @@
 // Domain API calls read Cloudflare/manual inventory snapshots; v1 intentionally exposes no DNS writes.
-import { apiUrl } from "./base";
+import { apiFetch, apiUrl } from "./base";
 
 /** CertificateRiskStatus mirrors backend TLS expiry warning thresholds. */
 export type CertificateRiskStatus =
@@ -81,7 +81,7 @@ export async function listDomainAssets(): Promise<DomainAsset[]> {
 
 /** syncDomains asks the API to read Cloudflare inventory and refresh DNS/certificate snapshots. */
 export async function syncDomains(): Promise<SyncDomainsResult> {
-  const response = await fetch(apiUrl("/api/plugins/domains/sync"), {
+  const response = await apiFetch("/api/plugins/domains/sync", {
     method: "POST",
     credentials: "include",
     headers: { Accept: "application/json" }

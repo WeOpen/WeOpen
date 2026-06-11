@@ -74,6 +74,37 @@ func TestServiceRejectsInvalidPassword(t *testing.T) {
 	}
 }
 
+func TestServiceRequiresTOTPWhenMFAEnabled(t *testing.T) {
+	t.Parallel()
+
+	store, err := NewMemoryStore("admin@example.com", "admin")
+	if err != nil {
+		t.Fatalf("expected memory store: %v", err)
+	}
+	service := NewService(store)
+	enrollment, err := service.BeginMFAEnrollment(context.Background(), "usr_admin", "admin", "WeOpen")
+	if err != nil {
+		t.Fatalf("expected mfa enrollment: %v", err)
+	}
+	code, err := TOTPCode(enrollment.Secret, time.Now())
+	if err != nil {
+		t.Fatalf("expected totp code: %v", err)
+	}
+	if err := service.VerifyMFAEnrollment(context.Background(), "usr_admin", code); err != nil {
+		t.Fatalf("expected mfa verify: %v", err)
+	}
+
+	if _, err := service.Login(context.Background(), "admin@example.com", "admin"); err != ErrMFACodeRequired {
+		t.Fatalf("expected mfa required, got %v", err)
+	}
+	if _, err := service.LoginWithTOTP(context.Background(), "admin@example.com", "admin", "000000"); err != ErrInvalidMFACode {
+		t.Fatalf("expected invalid mfa code, got %v", err)
+	}
+	if _, err := service.LoginWithTOTP(context.Background(), "admin@example.com", "admin", code); err != nil {
+		t.Fatalf("expected login with mfa code: %v", err)
+	}
+}
+
 func TestServiceRejectsDisabledUser(t *testing.T) {
 	t.Parallel()
 

@@ -21,6 +21,7 @@ test("buildLoginPath preserves the original protected route", () => {
 
 test("isPublicWebPath lets auth and static assets through", () => {
   assert.equal(isPublicWebPath("/"), true);
+  assert.equal(isPublicWebPath("/design-system"), true);
   assert.equal(isPublicWebPath("/login"), true);
   assert.equal(isPublicWebPath("/api/auth/login"), true);
   assert.equal(isPublicWebPath("/api/plugins/blog/posts"), true);
@@ -28,4 +29,5 @@ test("isPublicWebPath lets auth and static assets through", () => {
   assert.equal(isPublicWebPath("/_next/static/chunk.js"), true);
   assert.equal(isPublicWebPath("/favicon.svg"), true);
   assert.equal(isPublicWebPath("/dashboard"), false);
+  assert.equal(isPublicWebPath("/custom-ui"), false);
 });

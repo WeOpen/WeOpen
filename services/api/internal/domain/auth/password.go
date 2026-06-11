@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"unicode"
 
 	"crypto/pbkdf2"
 )
@@ -40,6 +41,30 @@ func HashPassword(password string) (string, error) {
 		base64.RawStdEncoding.EncodeToString(salt),
 		base64.RawStdEncoding.EncodeToString(key),
 	}, "$"), nil
+}
+
+// ValidatePasswordPolicy enforces the minimum policy for new or changed passwords.
+func ValidatePasswordPolicy(password string) error {
+	if len([]rune(password)) < 12 {
+		return ErrInvalidPasswordPolicy
+	}
+	var hasLower, hasUpper, hasDigit, hasSymbol bool
+	for _, char := range password {
+		switch {
+		case unicode.IsLower(char):
+			hasLower = true
+		case unicode.IsUpper(char):
+			hasUpper = true
+		case unicode.IsDigit(char):
+			hasDigit = true
+		case unicode.IsPunct(char) || unicode.IsSymbol(char):
+			hasSymbol = true
+		}
+	}
+	if !hasLower || !hasUpper || !hasDigit || !hasSymbol {
+		return ErrInvalidPasswordPolicy
+	}
+	return nil
 }
 
 func VerifyPassword(encoded string, password string) bool {

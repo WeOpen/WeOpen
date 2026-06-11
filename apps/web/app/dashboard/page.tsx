@@ -1,6 +1,10 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/shared/layout/app-shell";
 import { pluginManifests } from "@/plugins/registry";
+import { listPlugins, type BackendPlugin } from "@/shared/api/plugins";
 import { Card, HorizontalScrollArea, MetricCard } from "@weopen/ui";
 
 const activityRows = [
@@ -15,21 +19,47 @@ const manifestVersionById = Object.fromEntries(
 );
 const platformVersion = manifestVersionById.blog ?? "unknown";
 
-const modules = [
-  ["Blog Plugin", "PLUGIN", "ACTIVE", manifestVersionById.blog ?? platformVersion, "2025-05-20 14:36:21", "/blog"],
-  ["R2 Storage", "PLUGIN", "ACTIVE", manifestVersionById["storage-r2"] ?? platformVersion, "2025-05-20 14:35:48", "/storage"],
-  ["Go API", "SERVICE", "RUNNING", platformVersion, "2025-05-20 14:37:02", "/api"],
-  ["Domains Monitor", "MODULE", "READ ONLY", manifestVersionById.domains ?? platformVersion, "2025-05-20 14:20:11", "/domains"],
-  ["DevTools", "TOOL", "ACTIVE", manifestVersionById.devtools ?? platformVersion, "2025-05-20 14:36:05", "/tools"],
-  ["Plugin Registry", "SERVICE", "ONLINE", platformVersion, "2025-05-20 14:33:19", "/plugins"]
+const moduleDefinitions = [
+  { id: "blog", href: "/blog", name: "Blog Plugin", type: "PLUGIN", version: manifestVersionById.blog ?? platformVersion },
+  { id: "storage-r2", href: "/storage", name: "R2 Storage", type: "PLUGIN", version: manifestVersionById["storage-r2"] ?? platformVersion },
+  { id: "api", href: "/api", name: "Go API", type: "SERVICE", version: platformVersion },
+  { id: "domains", href: "/domains", name: "Domains Monitor", type: "MODULE", version: manifestVersionById.domains ?? platformVersion },
+  { id: "devtools", href: "/tools", name: "DevTools", type: "TOOL", version: manifestVersionById.devtools ?? platformVersion },
+  { id: "plugins", href: "/plugins", name: "Plugin Registry", type: "SERVICE", version: platformVersion }
 ] as const;
 
 export default function DashboardPage() {
+  const [plugins, setPlugins] = useState<BackendPlugin[] | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    void listPlugins().then((nextPlugins) => {
+      if (isMounted) {
+        setPlugins(nextPlugins);
+      }
+    }).catch(() => {
+      if (isMounted) {
+        setPlugins([]);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const pluginState = useMemo(() => new Map((plugins ?? []).map((plugin) => [plugin.id, plugin.enabled])), [plugins]);
+  const activePlugins = plugins?.filter((plugin) => plugin.enabled).length ?? pluginManifests.length;
+  const disabledPlugins = plugins?.filter((plugin) => !plugin.enabled).length ?? 0;
+  const modules = moduleDefinitions.map((module) => ({
+    ...module,
+    status: statusForModule(module.id, pluginState)
+  }));
+
   return (
     <AppShell currentPath="/dashboard">
       <section className="dashboard-metrics" aria-label="Platform status">
         <MetricCard icon={<span>●</span>} label="API Status" value="ONLINE" description="UPTIME 7D 14H 22M" />
-        <MetricCard icon={<span>✣</span>} label="Plugins Installed" value={pluginManifests.length + 2} description="ACTIVE 10 · DISABLED 2" />
+        <MetricCard icon={<span>✣</span>} label="Plugins Installed" value={plugins?.length ?? pluginManifests.length} description={`ACTIVE ${activePlugins} · DISABLED ${disabledPlugins}`} />
         <MetricCard icon={<span>⌁</span>} label="System Health" value="98.6%" description="LAST 24 HOURS" />
         <MetricCard icon={<span>◉</span>} label="Storage R2 Usage" value="42.7%" description="215.4 GB / 504.0 GB" />
       </section>
@@ -85,11 +115,10 @@ export default function DashboardPage() {
               <span role="columnheader">Type</span>
               <span role="columnheader">Status</span>
               <span role="columnheader">Version</span>
-              <span role="columnheader">Author</span>
-              <span role="columnheader">Last Activity</span>
+              <span role="columnheader">Source</span>
               <span role="columnheader">Actions</span>
             </div>
-            {modules.map(([name, type, status, version, lastActivity, href]) => (
+            {modules.map(({ href, name, status, type, version }) => (
               <div className="dashboard-module-row" role="row" key={name}>
                 <Link className="dashboard-module-member" href={href} role="cell">
                   <span className={iconClassForName(name)}>{iconForName(name)}</span>
@@ -99,7 +128,6 @@ export default function DashboardPage() {
                 <span className="dashboard-module-status" role="cell"><i /> {status}</span>
                 <span role="cell">{version}</span>
                 <span role="cell">WeOpen Team</span>
-                <span role="cell">{lastActivity}</span>
                 <span role="cell">···</span>
               </div>
             ))}
@@ -108,6 +136,16 @@ export default function DashboardPage() {
       </Card>
     </AppShell>
   );
+}
+
+function statusForModule(id: string, pluginState: Map<string, boolean>) {
+  if (id === "api" || id === "plugins") {
+    return "RUNNING";
+  }
+  if (!pluginState.size || !pluginState.has(id)) {
+    return "SYNCING";
+  }
+  return pluginState.get(id) ? "ACTIVE" : "DISABLED";
 }
 
 function iconForName(name: string) {

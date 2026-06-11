@@ -1,5 +1,5 @@
 // Settings calls send secret values to the API once; the browser only receives redacted metadata back.
-import { apiUrl } from "./base";
+import { apiFetch, ensureApiResponse } from "./base";
 
 type UpdateSettingsInput = {
   cloudflareApiToken?: string;
@@ -19,9 +19,18 @@ type SettingsResponse = {
 };
 
 
+/** getSettings reads redacted provider secret summaries. */
+export async function getSettings(): Promise<SettingsResponse> {
+  const response = await apiFetch("/api/settings", {
+    headers: { Accept: "application/json" }
+  });
+  await ensureApiResponse(response, "设置读取失败");
+  return response.json() as Promise<SettingsResponse>;
+}
+
 /** updateSettings writes provider secrets through the authenticated API settings boundary. */
 export async function updateSettings(input: UpdateSettingsInput): Promise<SettingsResponse> {
-  const response = await fetch(apiUrl("/api/settings"), {
+  const response = await apiFetch("/api/settings", {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json"
@@ -30,9 +39,7 @@ export async function updateSettings(input: UpdateSettingsInput): Promise<Settin
     body: JSON.stringify(input)
   });
 
-  if (!response.ok) {
-    throw new Error("保存设置失败，请确认已登录。");
-  }
+  await ensureApiResponse(response, "保存设置失败，请确认已登录。");
 
   return response.json() as Promise<SettingsResponse>;
 }

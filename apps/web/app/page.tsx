@@ -20,9 +20,14 @@ export default function HomePage() {
           <Link className="landing-brand" href="/" aria-label="WeOpen home">
             WeOpen
           </Link>
-          <Link className="landing-console-link" href="/dashboard">
-            Open console
-          </Link>
+          <div className="landing-nav-actions">
+            <Link className="landing-console-link" href="/design-system">
+              Design system
+            </Link>
+            <Link className="landing-console-link" href="/dashboard">
+              Open console
+            </Link>
+          </div>
         </header>
 
         <section className="landing-hero" aria-labelledby="landing-title">

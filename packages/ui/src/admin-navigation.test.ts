@@ -11,7 +11,7 @@ describe("createAdminNavigation", () => {
 
     assert.deepEqual(
       nav.map((item) => item.href),
-      ["/dashboard", "/api", "/plugins", "/blog", "/tools", "/settings", "/custom-ui"]
+      ["/dashboard", "/api", "/plugins", "/blog", "/tools", "/settings"]
     );
     assert.equal(nav.find((item) => item.href === "/dashboard")?.tone, "primary");
     assert.equal(nav.find((item) => item.href === "/tools")?.source, "plugin");

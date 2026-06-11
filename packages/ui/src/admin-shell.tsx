@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, useReducedMotion, useScroll, useSpring, useTransform } from "motion/react";
-import { useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { AdminNavigationItem } from "./admin-navigation";
 import { Button } from "./button";
 import { Chip } from "./chip";
@@ -13,9 +13,12 @@ export type AdminShellProps = {
   brandHref?: string;
   subtitle: string;
   currentPath?: string;
+  environmentLabel?: string;
   navItems: AdminNavigationItem[];
   statusLabel?: string;
   searchPlaceholder?: string;
+  runtimeLabel?: string;
+  versionLabel?: string;
   actionSlot?: ReactNode;
   children: ReactNode;
   onNavItemSelect?: (item: AdminNavigationItem) => void;
@@ -24,7 +27,6 @@ export type AdminShellProps = {
 const glyphByHref: Record<string, string> = {
   "/api": ">_",
   "/blog": "▤",
-  "/custom-ui": "□",
   "/dashboard": "▦",
   "/domains": "◎",
   "/plugins": "✣",
@@ -32,8 +34,6 @@ const glyphByHref: Record<string, string> = {
   "/storage": "◉",
   "/tools": "<>"
 };
-
-const systemTime = "2025-05-20 14:37:11 UTC";
 
 const navItemTransition = { duration: 0.15, ease: "easeOut" } as const;
 const navSweepTransition = { duration: 0.28, ease: [0.16, 1, 0.3, 1] } as const;
@@ -57,11 +57,15 @@ export function AdminShell({
   brandHref = "/dashboard",
   children,
   currentPath,
+  environmentLabel = "LOCAL",
   navItems,
   onNavItemSelect,
-  statusLabel
+  runtimeLabel = "BROWSER",
+  statusLabel,
+  versionLabel = "0.1.0"
 }: AdminShellProps) {
   const [isNavOpen, setIsNavOpen] = useState(false);
+  const [systemTime, setSystemTime] = useState(() => formatSystemTime(new Date()));
   const mainScrollRef = useRef<HTMLElement>(null);
   const settingsHref = hrefForNavItem(navItems, "/settings", "#settings");
   const { scrollYProgress } = useScroll({ container: mainScrollRef });
@@ -70,6 +74,11 @@ export function AdminShell({
     mass: 0.2,
     stiffness: 120
   });
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setSystemTime(formatSystemTime(new Date())), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   return (
     <div className="weopen-admin-shell">
@@ -133,15 +142,15 @@ export function AdminShell({
           </div>
           <div className="weopen-admin-topbar-meta">
             <span>ENV</span>
-            <strong>PRODUCTION</strong>
+            <strong>{environmentLabel}</strong>
           </div>
           <div className="weopen-admin-topbar-meta">
-            <span>REGION</span>
-            <strong>GLOBAL</strong>
+            <span>RUNTIME</span>
+            <strong>{runtimeLabel}</strong>
           </div>
           <div className="weopen-admin-topbar-meta">
             <span>VERSION</span>
-            <strong>v1.2.0</strong>
+            <strong>{versionLabel}</strong>
           </div>
           <div className="weopen-admin-topbar-mode">
             {statusLabel ?? "LOCAL MODE"}
@@ -153,6 +162,14 @@ export function AdminShell({
       </main>
     </div>
   );
+}
+
+function formatSystemTime(date: Date): string {
+  return `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())} ${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())}:${pad(date.getUTCSeconds())} UTC`;
+}
+
+function pad(value: number): string {
+  return String(value).padStart(2, "0");
 }
 
 function NavigationPanel({

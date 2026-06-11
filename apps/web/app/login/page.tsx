@@ -1,4 +1,5 @@
 import { LoginForm } from "@/features/auth/login-form";
+import { LoginCheckedTime } from "@/features/auth/login-checked-time";
 import { builtinPluginManifests } from "@/plugins";
 import { backendApiUrl } from "@/shared/api/server-base";
 import { safeNextPath } from "@/shared/auth/routes";
@@ -12,9 +13,9 @@ type LoginPageProps = {
 type LoginSystemStatus = {
   environment: string;
   region: string;
-  checkedAt: string;
   apiLabel: string;
   apiDetail: string;
+  apiTone: "success" | "danger";
   mode: string;
 };
 
@@ -33,12 +34,18 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         <p>PERSONAL MANAGEMENT PLATFORM</p>
         <span>CONTROL. MANAGE. OPERATE.</span>
         <dl className="auth-system-list">
-          <div><dt>System</dt><dd>WeOpen Control</dd></div>
+          <div><dt>System</dt><dd>WeOpen</dd></div>
           <div><dt>Version</dt><dd>v{platformVersion}</dd></div>
           <div><dt>Environment</dt><dd>{systemStatus.environment}</dd></div>
           <div><dt>Region</dt><dd>{systemStatus.region}</dd></div>
-          <div><dt>Checked (UTC)</dt><dd>{systemStatus.checkedAt}</dd></div>
-          <div><dt>Status</dt><dd><i /> {systemStatus.apiLabel}</dd></div>
+          <div><dt>Checked</dt><dd><LoginCheckedTime /></dd></div>
+          <div>
+            <dt>Status</dt>
+            <dd className="auth-system-status">
+              <i className={`auth-system-status-dot auth-system-status-dot-${systemStatus.apiTone}`} />
+              {systemStatus.apiLabel}
+            </dd>
+          </div>
           <div><dt>Mode</dt><dd><b>{systemStatus.mode}</b></dd></div>
         </dl>
       </section>
@@ -50,11 +57,6 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             <p>Authorized personnel only</p>
           </div>
           <LoginForm nextPath={nextPath} />
-          <div className="auth-session-strip">
-            <div><i /> <strong>{systemStatus.apiLabel}</strong><span>{systemStatus.apiDetail}</span></div>
-            <div><strong>◌ {systemStatus.mode}</strong><span>{systemStatus.environment}</span></div>
-            <div><strong>◷ Session</strong><span>Awaiting credentials</span></div>
-          </div>
         </div>
         {showLocalCredentialHint ? (
           <p className="auth-dev-credentials">Local credentials are read from <strong>ADMIN_EMAIL / ADMIN_PASSWORD</strong> in your API environment.</p>
@@ -66,7 +68,6 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 }
 
 async function loadLoginSystemStatus(): Promise<LoginSystemStatus> {
-  const checkedAt = formatUTC(new Date());
   const environment = environmentLabel();
   const region = deploymentRegion();
   const mode = isLocalEnvironment() ? "Local Mode" : "Production Mode";
@@ -80,28 +81,29 @@ async function loadLoginSystemStatus(): Promise<LoginSystemStatus> {
       return {
         environment,
         region,
-        checkedAt,
         apiLabel: "API Unavailable",
         apiDetail: `Health check ${response.status}`,
+        apiTone: "danger",
         mode
       };
     }
     const health = (await response.json()) as { status?: string; service?: string };
+    const isReady = health.status === "ok";
     return {
       environment,
       region,
-      checkedAt,
-      apiLabel: health.status === "ok" ? "API Ready" : "API Degraded",
+      apiLabel: isReady ? "API Ready" : "API Degraded",
       apiDetail: health.service ?? "weopen-api",
+      apiTone: isReady ? "success" : "danger",
       mode
     };
   } catch {
     return {
       environment,
       region,
-      checkedAt,
       apiLabel: "API Offline",
       apiDetail: "Health check failed",
+      apiTone: "danger",
       mode
     };
   }
@@ -122,8 +124,4 @@ function environmentLabel(): string {
 
 function deploymentRegion(): string {
   return process.env.VERCEL_REGION ?? process.env.NEXT_PUBLIC_DEPLOY_REGION ?? "local";
-}
-
-function formatUTC(date: Date): string {
-  return date.toISOString().replace("T", " ").replace(/\.\d{3}Z$/, " UTC");
 }

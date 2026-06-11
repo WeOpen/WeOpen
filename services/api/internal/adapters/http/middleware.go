@@ -60,7 +60,7 @@ func WithCORS(allowedOrigin string) Middleware {
 				w.Header().Add("Vary", "Origin")
 			}
 			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS")
-			w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type, X-Request-Id")
+			w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type, X-CSRF-Token, X-Request-Id")
 
 			if r.Method == stdhttp.MethodOptions {
 				w.WriteHeader(stdhttp.StatusNoContent)

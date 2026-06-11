@@ -100,8 +100,8 @@ func (s *SQLAuthStore) EnsureAdmin(ctx context.Context, email string, password s
 		}
 		userID = deterministicAdminUserID(normalizedEmail)
 		if _, err = s.exec(ctx, tx, `
-			INSERT INTO users (id, email, password_hash, display_name, status, created_at, updated_at)
-			VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+			INSERT INTO users (id, email, password_hash, display_name, status, must_change_password, password_changed_at, mfa_enabled, created_at, updated_at)
+			VALUES (?, ?, ?, ?, ?, FALSE, CURRENT_TIMESTAMP, FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 		`, userID, normalizedEmail, passwordHash, "Admin", auth.UserStatusActive); err != nil {
 			return fmt.Errorf("insert admin user: %w", err)
 		}
@@ -187,6 +187,254 @@ func (s *SQLAuthStore) TouchLastLogin(ctx context.Context, userID string, at tim
 	return nil
 }
 
+// ListUsers returns every user with role-derived permissions.
+func (s *SQLAuthStore) ListUsers(ctx context.Context) ([]auth.User, error) {
+	rows, err := s.query(ctx, s.db, `
+		SELECT id
+		FROM users
+		ORDER BY email
+	`)
+	if err != nil {
+		return nil, fmt.Errorf("list users: %w", err)
+	}
+	defer rows.Close()
+
+	var users []auth.User
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			return nil, fmt.Errorf("scan user id: %w", err)
+		}
+		user, err := s.UserByID(ctx, id)
+		if err != nil {
+			return nil, err
+		}
+		users = append(users, user)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate users: %w", err)
+	}
+	return users, nil
+}
+
+// ListRoles returns every role and its permissions.
+func (s *SQLAuthStore) ListRoles(ctx context.Context) ([]auth.Role, error) {
+	rows, err := s.query(ctx, s.db, `
+		SELECT id, name, description, created_at, updated_at
+		FROM roles
+		ORDER BY name
+	`)
+	if err != nil {
+		return nil, fmt.Errorf("list roles: %w", err)
+	}
+	defer rows.Close()
+
+	var roles []auth.Role
+	for rows.Next() {
+		var role auth.Role
+		if err := rows.Scan(&role.ID, &role.Name, &role.Description, &role.CreatedAt, &role.UpdatedAt); err != nil {
+			return nil, fmt.Errorf("scan role: %w", err)
+		}
+		permissions, err := s.permissionsForRole(ctx, role.ID)
+		if err != nil {
+			return nil, err
+		}
+		role.Permissions = permissions
+		roles = append(roles, role)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate roles: %w", err)
+	}
+	return roles, nil
+}
+
+// CreateUser inserts one user and assigns role names atomically.
+func (s *SQLAuthStore) CreateUser(ctx context.Context, user auth.User, roleNames []string) (auth.User, error) {
+	normalizedEmail := normalizeEmail(user.Email)
+	if normalizedEmail == "" || user.PasswordHash == "" {
+		return auth.User{}, auth.ErrInvalidCredentials
+	}
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return auth.User{}, fmt.Errorf("begin create user transaction: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	roleIDs, err := s.roleIDsByName(ctx, tx, roleNames)
+	if err != nil {
+		return auth.User{}, err
+	}
+	userID := user.ID
+	if userID == "" {
+		userID = deterministicUserID(normalizedEmail)
+	}
+	displayName := strings.TrimSpace(user.DisplayName)
+	if displayName == "" {
+		displayName = normalizedEmail
+	}
+	status := user.Status
+	if status == "" {
+		status = auth.UserStatusActive
+	}
+	if _, err := s.exec(ctx, tx, `
+		INSERT INTO users (id, email, password_hash, display_name, status, must_change_password, mfa_enabled, created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?, ?, FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+	`, userID, normalizedEmail, user.PasswordHash, displayName, status, user.MustChangePassword); err != nil {
+		return auth.User{}, fmt.Errorf("insert user: %w", err)
+	}
+	if err := s.replaceUserRoles(ctx, tx, userID, roleIDs); err != nil {
+		return auth.User{}, err
+	}
+	if err := tx.Commit(); err != nil {
+		return auth.User{}, fmt.Errorf("commit create user transaction: %w", err)
+	}
+	return s.UserByID(ctx, userID)
+}
+
+// UpdateUser updates mutable user attributes and role assignment.
+func (s *SQLAuthStore) UpdateUser(ctx context.Context, userID string, update auth.UserUpdate) (auth.User, error) {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return auth.User{}, fmt.Errorf("begin update user transaction: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	if update.DisplayName != nil {
+		result, err := s.exec(ctx, tx, `UPDATE users SET display_name = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`, strings.TrimSpace(*update.DisplayName), userID)
+		if err != nil {
+			return auth.User{}, fmt.Errorf("update user display name: %w", err)
+		}
+		if changed, _ := result.RowsAffected(); changed == 0 {
+			return auth.User{}, auth.ErrUserNotFound
+		}
+	}
+	if update.Status != nil {
+		status := strings.TrimSpace(*update.Status)
+		if status != auth.UserStatusActive && status != auth.UserStatusDisabled {
+			return auth.User{}, auth.ErrInvalidCredentials
+		}
+		result, err := s.exec(ctx, tx, `UPDATE users SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`, status, userID)
+		if err != nil {
+			return auth.User{}, fmt.Errorf("update user status: %w", err)
+		}
+		if changed, _ := result.RowsAffected(); changed == 0 {
+			return auth.User{}, auth.ErrUserNotFound
+		}
+		if status == auth.UserStatusDisabled {
+			if _, err := s.exec(ctx, tx, `DELETE FROM sessions WHERE user_id = ?`, userID); err != nil {
+				return auth.User{}, fmt.Errorf("revoke disabled user sessions: %w", err)
+			}
+		}
+	}
+	if update.RoleNames != nil {
+		roleIDs, err := s.roleIDsByName(ctx, tx, *update.RoleNames)
+		if err != nil {
+			return auth.User{}, err
+		}
+		if err := s.replaceUserRoles(ctx, tx, userID, roleIDs); err != nil {
+			return auth.User{}, err
+		}
+		if _, err := s.exec(ctx, tx, `UPDATE users SET updated_at = CURRENT_TIMESTAMP WHERE id = ?`, userID); err != nil {
+			return auth.User{}, fmt.Errorf("touch user after roles update: %w", err)
+		}
+	}
+	if err := tx.Commit(); err != nil {
+		return auth.User{}, fmt.Errorf("commit update user transaction: %w", err)
+	}
+	return s.UserByID(ctx, userID)
+}
+
+// ListSessions returns sessions newest-first, optionally scoped to one user.
+func (s *SQLAuthStore) ListSessions(ctx context.Context, userID string) ([]auth.SessionInfo, error) {
+	query := `
+		SELECT id, user_id, expires_at, created_at
+		FROM sessions
+	`
+	args := []any{}
+	if strings.TrimSpace(userID) != "" {
+		query += ` WHERE user_id = ?`
+		args = append(args, userID)
+	}
+	query += ` ORDER BY created_at DESC`
+	rows, err := s.query(ctx, s.db, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("list sessions: %w", err)
+	}
+	defer rows.Close()
+
+	var sessions []auth.SessionInfo
+	for rows.Next() {
+		var session auth.SessionInfo
+		if err := rows.Scan(&session.ID, &session.UserID, &session.ExpiresAt, &session.CreatedAt); err != nil {
+			return nil, fmt.Errorf("scan session: %w", err)
+		}
+		sessions = append(sessions, session)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate sessions: %w", err)
+	}
+	return sessions, nil
+}
+
+// DeleteSessionByID revokes one session by public ID.
+func (s *SQLAuthStore) DeleteSessionByID(ctx context.Context, sessionID string) error {
+	if _, err := s.exec(ctx, s.db, `DELETE FROM sessions WHERE id = ?`, sessionID); err != nil {
+		return fmt.Errorf("delete session by id: %w", err)
+	}
+	return nil
+}
+
+// DeleteSessionsForUser revokes all sessions for a user except one optional token hash.
+func (s *SQLAuthStore) DeleteSessionsForUser(ctx context.Context, userID string, exceptTokenHash string) error {
+	if strings.TrimSpace(exceptTokenHash) == "" {
+		if _, err := s.exec(ctx, s.db, `DELETE FROM sessions WHERE user_id = ?`, userID); err != nil {
+			return fmt.Errorf("delete user sessions: %w", err)
+		}
+		return nil
+	}
+	if _, err := s.exec(ctx, s.db, `DELETE FROM sessions WHERE user_id = ? AND token_hash <> ?`, userID, exceptTokenHash); err != nil {
+		return fmt.Errorf("delete user sessions except current: %w", err)
+	}
+	return nil
+}
+
+// UpdatePassword stores a new hash and clears the first-change flag.
+func (s *SQLAuthStore) UpdatePassword(ctx context.Context, userID string, passwordHash string, changedAt time.Time) error {
+	result, err := s.exec(ctx, s.db, `
+		UPDATE users
+		SET password_hash = ?,
+		    must_change_password = FALSE,
+		    password_changed_at = ?,
+		    updated_at = ?
+		WHERE id = ?
+	`, passwordHash, changedAt, changedAt, userID)
+	if err != nil {
+		return fmt.Errorf("update password: %w", err)
+	}
+	if changed, _ := result.RowsAffected(); changed == 0 {
+		return auth.ErrUserNotFound
+	}
+	return nil
+}
+
+// UpdateMFA stores or clears TOTP state.
+func (s *SQLAuthStore) UpdateMFA(ctx context.Context, userID string, secret string, enabled bool) error {
+	result, err := s.exec(ctx, s.db, `
+		UPDATE users
+		SET mfa_totp_secret = nullif(?, ''),
+		    mfa_enabled = ?,
+		    updated_at = CURRENT_TIMESTAMP
+		WHERE id = ?
+	`, secret, enabled, userID)
+	if err != nil {
+		return fmt.Errorf("update mfa: %w", err)
+	}
+	if changed, _ := result.RowsAffected(); changed == 0 {
+		return auth.ErrUserNotFound
+	}
+	return nil
+}
+
 func (s *SQLAuthStore) ensureAdminRole(ctx context.Context, execer sqlExecer) error {
 	if _, err := s.exec(ctx, execer, `
 		INSERT INTO roles (id, name, description, created_at, updated_at)
@@ -229,7 +477,18 @@ func (s *SQLAuthStore) userByColumn(ctx context.Context, column string, value st
 		return auth.User{}, fmt.Errorf("unsupported user lookup column %q", column)
 	}
 	query := fmt.Sprintf(`
-		SELECT id, email, password_hash, display_name, status, last_login_at, created_at, updated_at
+		SELECT id,
+		       email,
+		       password_hash,
+		       display_name,
+		       status,
+		       must_change_password,
+		       password_changed_at,
+		       mfa_enabled,
+		       COALESCE(mfa_totp_secret, ''),
+		       last_login_at,
+		       created_at,
+		       updated_at
 		FROM users
 		WHERE %s = ?
 	`, column)
@@ -237,12 +496,17 @@ func (s *SQLAuthStore) userByColumn(ctx context.Context, column string, value st
 
 	var user auth.User
 	var lastLoginAt sql.NullTime
+	var passwordChangedAt sql.NullTime
 	if err := row.Scan(
 		&user.ID,
 		&user.Email,
 		&user.PasswordHash,
 		&user.DisplayName,
 		&user.Status,
+		&user.MustChangePassword,
+		&passwordChangedAt,
+		&user.MFAEnabled,
+		&user.MFASecret,
 		&lastLoginAt,
 		&user.CreatedAt,
 		&user.UpdatedAt,
@@ -254,6 +518,9 @@ func (s *SQLAuthStore) userByColumn(ctx context.Context, column string, value st
 	}
 	if lastLoginAt.Valid {
 		user.LastLoginAt = &lastLoginAt.Time
+	}
+	if passwordChangedAt.Valid {
+		user.PasswordChangedAt = &passwordChangedAt.Time
 	}
 	roles, err := s.rolesForUser(ctx, user.ID)
 	if err != nil {
@@ -322,6 +589,67 @@ func (s *SQLAuthStore) permissionsForUser(ctx context.Context, userID string) ([
 	return permissions, nil
 }
 
+func (s *SQLAuthStore) permissionsForRole(ctx context.Context, roleID string) ([]plugin.Permission, error) {
+	rows, err := s.query(ctx, s.db, `
+		SELECT permission
+		FROM role_permissions
+		WHERE role_id = ?
+		ORDER BY permission
+	`, roleID)
+	if err != nil {
+		return nil, fmt.Errorf("load role permissions: %w", err)
+	}
+	defer rows.Close()
+
+	var permissions []plugin.Permission
+	for rows.Next() {
+		var permission plugin.Permission
+		if err := rows.Scan(&permission); err != nil {
+			return nil, fmt.Errorf("scan role permission: %w", err)
+		}
+		permissions = append(permissions, permission)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate role permissions: %w", err)
+	}
+	return permissions, nil
+}
+
+func (s *SQLAuthStore) roleIDsByName(ctx context.Context, queryer sqlQueryer, roleNames []string) ([]string, error) {
+	roleIDs := make([]string, 0, len(roleNames))
+	for _, roleName := range roleNames {
+		roleName = strings.ToLower(strings.TrimSpace(roleName))
+		if roleName == "" {
+			continue
+		}
+		var id string
+		if err := s.queryRow(ctx, queryer, `SELECT id FROM roles WHERE name = ?`, roleName).Scan(&id); err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return nil, auth.ErrRoleNotFound
+			}
+			return nil, fmt.Errorf("load role %s: %w", roleName, err)
+		}
+		roleIDs = append(roleIDs, id)
+	}
+	return roleIDs, nil
+}
+
+func (s *SQLAuthStore) replaceUserRoles(ctx context.Context, execer sqlExecer, userID string, roleIDs []string) error {
+	if _, err := s.exec(ctx, execer, `DELETE FROM user_roles WHERE user_id = ?`, userID); err != nil {
+		return fmt.Errorf("clear user roles: %w", err)
+	}
+	for _, roleID := range roleIDs {
+		if _, err := s.exec(ctx, execer, `
+			INSERT INTO user_roles (user_id, role_id, created_at)
+			VALUES (?, ?, CURRENT_TIMESTAMP)
+			ON CONFLICT (user_id, role_id) DO NOTHING
+		`, userID, roleID); err != nil {
+			return fmt.Errorf("assign user role: %w", err)
+		}
+	}
+	return nil
+}
+
 func (s *SQLAuthStore) exec(ctx context.Context, execer sqlExecer, query string, args ...any) (sql.Result, error) {
 	return execer.ExecContext(ctx, s.rebind(query), args...)
 }
@@ -335,7 +663,11 @@ func (s *SQLAuthStore) queryRow(ctx context.Context, queryer sqlQueryer, query s
 }
 
 func (s *SQLAuthStore) rebind(query string) string {
-	if s.dialect != SQLDialectPostgres {
+	return rebindSQL(query, s.dialect)
+}
+
+func rebindSQL(query string, dialect SQLDialect) string {
+	if dialect != SQLDialectPostgres {
 		return query
 	}
 	var builder strings.Builder
@@ -354,6 +686,11 @@ func (s *SQLAuthStore) rebind(query string) string {
 
 func deterministicAdminUserID(email string) string {
 	sum := sha256.Sum256([]byte(email))
+	return "usr_" + hex.EncodeToString(sum[:8])
+}
+
+func deterministicUserID(email string) string {
+	sum := sha256.Sum256([]byte("user:" + email))
 	return "usr_" + hex.EncodeToString(sum[:8])
 }
 

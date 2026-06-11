@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 	"sync"
 
 	"github.com/WeOpen/WeOpen/internal/core/plugin"
@@ -61,7 +62,26 @@ func (s *MemoryStore) SetEnabled(_ context.Context, manifest plugin.Manifest, en
 
 // SQLStore persists plugin state in the core plugins table.
 type SQLStore struct {
-	db SQLDB
+	db      SQLDB
+	dialect SQLDialect
+}
+
+// SQLDialect selects placeholder rendering for the plugin state store.
+type SQLDialect string
+
+const (
+	SQLDialectSQLite   SQLDialect = "sqlite"
+	SQLDialectPostgres SQLDialect = "postgres"
+)
+
+// SQLStoreOption customizes SQLStore behavior.
+type SQLStoreOption func(*SQLStore)
+
+// WithSQLDialect configures SQL placeholder rendering.
+func WithSQLDialect(dialect SQLDialect) SQLStoreOption {
+	return func(store *SQLStore) {
+		store.dialect = dialect
+	}
 }
 
 // SQLDB is the database/sql subset needed by SQLStore.
@@ -71,20 +91,24 @@ type SQLDB interface {
 }
 
 // NewSQLStore creates a plugin state store backed by the plugins table.
-func NewSQLStore(db SQLDB) *SQLStore {
-	return &SQLStore{db: db}
+func NewSQLStore(db SQLDB, options ...SQLStoreOption) *SQLStore {
+	store := &SQLStore{db: db, dialect: SQLDialectSQLite}
+	for _, option := range options {
+		option(store)
+	}
+	return store
 }
 
 // Seed creates missing plugin rows without overriding existing enabled state.
 func (s *SQLStore) Seed(ctx context.Context, manifests []plugin.Manifest) error {
 	for _, manifest := range manifests {
-		if _, err := s.db.ExecContext(ctx, `
+		if _, err := s.db.ExecContext(ctx, s.rebind(`
 INSERT INTO plugins (id, version, enabled)
-VALUES ($1, $2, TRUE)
+VALUES (?, ?, TRUE)
 ON CONFLICT (id) DO UPDATE SET
   version = EXCLUDED.version,
-  updated_at = NOW()
-`, manifest.ID, manifest.Version); err != nil {
+  updated_at = CURRENT_TIMESTAMP
+`), manifest.ID, manifest.Version); err != nil {
 			return fmt.Errorf("seed plugin %s: %w", manifest.ID, err)
 		}
 	}
@@ -116,15 +140,33 @@ func (s *SQLStore) Enabled(ctx context.Context) (map[string]bool, error) {
 
 // SetEnabled upserts one plugin enabled state in the database.
 func (s *SQLStore) SetEnabled(ctx context.Context, manifest plugin.Manifest, enabled bool) error {
-	if _, err := s.db.ExecContext(ctx, `
+	if _, err := s.db.ExecContext(ctx, s.rebind(`
 INSERT INTO plugins (id, version, enabled)
-VALUES ($1, $2, $3)
+VALUES (?, ?, ?)
 ON CONFLICT (id) DO UPDATE SET
   version = EXCLUDED.version,
   enabled = EXCLUDED.enabled,
-  updated_at = NOW()
-`, manifest.ID, manifest.Version, enabled); err != nil {
+  updated_at = CURRENT_TIMESTAMP
+`), manifest.ID, manifest.Version, enabled); err != nil {
 		return fmt.Errorf("set plugin %s enabled state: %w", manifest.ID, err)
 	}
 	return nil
+}
+
+func (s *SQLStore) rebind(query string) string {
+	if s.dialect != SQLDialectPostgres {
+		return query
+	}
+	var builder strings.Builder
+	placeholder := 1
+	for _, char := range query {
+		if char == '?' {
+			builder.WriteString("$")
+			builder.WriteString(fmt.Sprint(placeholder))
+			placeholder++
+			continue
+		}
+		builder.WriteRune(char)
+	}
+	return builder.String()
 }

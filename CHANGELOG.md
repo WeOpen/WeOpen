@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added CSRF token issuance and double-submit validation for cookie-authenticated unsafe API requests.
+- Added SQL-backed login rate-limit buckets so production API instances can share lockout state.
+- Added SQL-backed audit log persistence and wired database-backed plugin enablement state into API startup.
+- Added admin user, role, and session management APIs plus a settings-page access-control panel.
+- Added TOTP MFA enrollment, verification, disablement, and login enforcement for MFA-enabled users.
 - Added the repository changelog and commit-time changelog policy so future notable changes are recorded in a human-readable release log.
 - Added a root `VERSION` file plus `pnpm version:check` / `pnpm version:sync` scripts to keep workspace packages, app versions, and plugin manifests aligned.
 - Added changelog validation scripts for checking the Keep a Changelog structure and staged changelog updates before commits.
@@ -18,8 +23,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Frontend API clients now use a shared credentialed fetch helper that attaches CSRF tokens and preserves structured API errors.
+- The plugin registry and dashboard now consume backend plugin enabled state instead of relying only on compile-time manifests.
+- The settings screen now reads live provider secret summaries, access-control data, sessions, and audit entries instead of static mock rows.
 - Plugin registry, dashboard, and login version displays now read canonical manifest/project versions instead of mock version overrides.
 - Login now hides local credential hints by default, starts with an empty email field, renders live API/environment status, and no longer returns raw session tokens in the login JSON response.
+
+### Fixed
+
+- Fixed plugin route permission matching to fail closed for unmatched unsafe plugin endpoints.
+- Fixed disabled plugin handling so backend plugin routes reject requests when the plugin is turned off.
+- Fixed the design-system page JSX string escaping so Web typechecking succeeds.
+
+### Security
+
+- Added password policy enforcement for newly created users and password changes, with first-login password-change state on admin-created users.
+- Added permission-aware navigation/action disabling for plugin and user-management surfaces.
 
 ## [0.1.0] - 2026-06-07
 

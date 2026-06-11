@@ -30,11 +30,12 @@ func TestAuthHandlersSetSecureCookieWhenConfigured(t *testing.T) {
 		t.Fatalf("expected login status %d, got %d body=%s", stdhttp.StatusOK, loginRec.Code, loginRec.Body.String())
 	}
 	cookies := loginRec.Result().Cookies()
-	if len(cookies) != 1 || cookies[0].Name != auth.SessionCookieName {
+	cookie := sessionCookieFromRecorder(t, loginRec)
+	if cookie.Name != auth.SessionCookieName {
 		t.Fatalf("expected session cookie, got %+v", cookies)
 	}
-	if !cookies[0].Secure {
-		t.Fatalf("expected secure session cookie, got %+v", cookies[0])
+	if !cookie.Secure {
+		t.Fatalf("expected secure session cookie, got %+v", cookie)
 	}
 }
 
@@ -122,6 +123,40 @@ func TestAuthHandlersRateLimitRepeatedFailedLogins(t *testing.T) {
 	}
 }
 
+func TestCookieAuthenticatedMutationRequiresCSRFToken(t *testing.T) {
+	t.Parallel()
+
+	store, err := auth.NewMemoryStore("admin@example.com", "admin")
+	if err != nil {
+		t.Fatalf("expected auth store: %v", err)
+	}
+	server := NewServer(ServerOptions{Auth: auth.NewService(store)})
+	loginReq := httptest.NewRequest(stdhttp.MethodPost, "/api/auth/login", strings.NewReader(`{"email":"admin@example.com","password":"admin"}`))
+	loginReq.Header.Set("Content-Type", "application/json")
+	loginRec := httptest.NewRecorder()
+	server.ServeHTTP(loginRec, loginReq)
+	sessionCookie := sessionCookieFromRecorder(t, loginRec)
+	csrfCookie := csrfCookieFromRecorder(t, loginRec)
+
+	logoutReq := httptest.NewRequest(stdhttp.MethodPost, "/api/auth/logout", nil)
+	logoutReq.AddCookie(sessionCookie)
+	logoutRec := httptest.NewRecorder()
+	server.ServeHTTP(logoutRec, logoutReq)
+	if logoutRec.Code != stdhttp.StatusForbidden {
+		t.Fatalf("expected missing csrf to be forbidden, got %d body=%s", logoutRec.Code, logoutRec.Body.String())
+	}
+
+	allowedReq := httptest.NewRequest(stdhttp.MethodPost, "/api/auth/logout", nil)
+	allowedReq.AddCookie(sessionCookie)
+	allowedReq.AddCookie(csrfCookie)
+	allowedReq.Header.Set(csrfHeaderName, csrfCookie.Value)
+	allowedRec := httptest.NewRecorder()
+	server.ServeHTTP(allowedRec, allowedReq)
+	if allowedRec.Code != stdhttp.StatusOK {
+		t.Fatalf("expected logout with csrf to pass, got %d body=%s", allowedRec.Code, allowedRec.Body.String())
+	}
+}
+
 func TestAuthHandlersAuditLoginFailureAndSuccess(t *testing.T) {
 	t.Parallel()
 
@@ -196,5 +231,16 @@ func sessionCookieFromRecorder(t *testing.T, rec *httptest.ResponseRecorder) *st
 		}
 	}
 	t.Fatalf("expected %s cookie, got %+v", auth.SessionCookieName, rec.Result().Cookies())
+	return nil
+}
+
+func csrfCookieFromRecorder(t *testing.T, rec *httptest.ResponseRecorder) *stdhttp.Cookie {
+	t.Helper()
+	for _, cookie := range rec.Result().Cookies() {
+		if cookie.Name == csrfCookieName {
+			return cookie
+		}
+	}
+	t.Fatalf("expected %s cookie, got %+v", csrfCookieName, rec.Result().Cookies())
 	return nil
 }

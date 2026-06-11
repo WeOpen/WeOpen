@@ -3,12 +3,15 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { login } from "@/shared/api/auth";
+import { ApiError } from "@/shared/api/base";
 import { Alert, Button, Input } from "@weopen/ui";
 
 export function LoginForm({ nextPath = "/dashboard" }: { nextPath?: string }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [totpCode, setTotpCode] = useState("");
+  const [requiresMFA, setRequiresMFA] = useState(false);
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -17,11 +20,14 @@ export function LoginForm({ nextPath = "/dashboard" }: { nextPath?: string }) {
     setIsSubmitting(true);
     setMessage("");
     try {
-      await login({ email, password });
+      await login({ email, password, totpCode: requiresMFA ? totpCode : undefined });
       setMessage("Signed in. Entering the command center.");
       router.replace(nextPath);
       router.refresh();
     } catch (error) {
+      if (error instanceof ApiError && error.code === "AUTH_MFA_REQUIRED") {
+        setRequiresMFA(true);
+      }
       setMessage(error instanceof Error ? error.message : "Sign in failed");
     } finally {
       setIsSubmitting(false);
@@ -51,6 +57,20 @@ export function LoginForm({ nextPath = "/dashboard" }: { nextPath?: string }) {
         type="password"
         value={password}
       />
+      {requiresMFA ? (
+        <Input
+          autoComplete="one-time-code"
+          inputMode="numeric"
+          label="Authenticator code"
+          maxLength={6}
+          name="totpCode"
+          onChange={(event) => setTotpCode(event.target.value)}
+          pattern="[0-9]{6}"
+          placeholder="000000"
+          required
+          value={totpCode}
+        />
+      ) : null}
       <Button fullWidth isPending={isSubmitting} type="submit" variant="secondary">
         {isSubmitting ? "Signing In" : "Sign In"}
       </Button>

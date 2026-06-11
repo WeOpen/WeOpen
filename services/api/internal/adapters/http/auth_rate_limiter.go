@@ -1,8 +1,11 @@
 package http
 
 import (
-	"sync"
+	"context"
+	"errors"
 	"time"
+
+	"github.com/WeOpen/WeOpen/services/api/internal/domain/auth"
 )
 
 const (
@@ -12,70 +15,62 @@ const (
 )
 
 type loginRateLimiter struct {
-	mu       sync.Mutex
-	now      func() time.Time
-	attempts map[string]loginAttempt
+	now   func() time.Time
+	store auth.LoginRateLimitStore
 }
 
-type loginAttempt struct {
-	Failures     int
-	FirstFailure time.Time
-	LockedUntil  time.Time
-}
-
-func newLoginRateLimiter() *loginRateLimiter {
-	return &loginRateLimiter{
-		now:      time.Now,
-		attempts: map[string]loginAttempt{},
+func newLoginRateLimiter(store auth.LoginRateLimitStore) *loginRateLimiter {
+	if store == nil {
+		store = auth.NewMemoryLoginRateLimitStore()
 	}
+	return &loginRateLimiter{now: time.Now, store: store}
 }
 
-func (l *loginRateLimiter) Allow(key string) bool {
+func (l *loginRateLimiter) Allow(ctx context.Context, key string) bool {
 	if l == nil || key == "" {
 		return true
 	}
 
-	l.mu.Lock()
-	defer l.mu.Unlock()
-
 	now := l.now()
-	attempt := l.attempts[key]
+	attempt, err := l.store.LoginAttempt(ctx, key)
+	if errors.Is(err, auth.ErrLoginAttemptNotFound) {
+		return true
+	}
+	if err != nil {
+		// Fail closed for active lockouts, fail open for store outages to avoid locking every user out.
+		return true
+	}
 	if !attempt.LockedUntil.IsZero() && attempt.LockedUntil.After(now) {
 		return false
 	}
 	if attempt.FirstFailure.IsZero() || now.Sub(attempt.FirstFailure) > loginFailureWindow {
-		delete(l.attempts, key)
+		_ = l.store.DeleteLoginAttempt(ctx, key)
 		return true
 	}
 	return true
 }
 
-func (l *loginRateLimiter) RecordFailure(key string) {
+func (l *loginRateLimiter) RecordFailure(ctx context.Context, key string) {
 	if l == nil || key == "" {
 		return
 	}
 
-	l.mu.Lock()
-	defer l.mu.Unlock()
-
 	now := l.now()
-	attempt := l.attempts[key]
-	if attempt.FirstFailure.IsZero() || now.Sub(attempt.FirstFailure) > loginFailureWindow {
-		attempt = loginAttempt{FirstFailure: now}
+	attempt, err := l.store.LoginAttempt(ctx, key)
+	if err != nil || attempt.FirstFailure.IsZero() || now.Sub(attempt.FirstFailure) > loginFailureWindow {
+		attempt = auth.LoginAttempt{Key: key, FirstFailure: now}
 	}
 	attempt.Failures++
+	attempt.UpdatedAt = now
 	if attempt.Failures >= loginFailureLimit {
 		attempt.LockedUntil = now.Add(loginCooldownPeriod)
 	}
-	l.attempts[key] = attempt
+	_ = l.store.SaveLoginAttempt(ctx, attempt)
 }
 
-func (l *loginRateLimiter) Reset(key string) {
+func (l *loginRateLimiter) Reset(ctx context.Context, key string) {
 	if l == nil || key == "" {
 		return
 	}
-
-	l.mu.Lock()
-	defer l.mu.Unlock()
-	delete(l.attempts, key)
+	_ = l.store.DeleteLoginAttempt(ctx, key)
 }

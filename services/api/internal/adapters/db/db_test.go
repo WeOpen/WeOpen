@@ -36,8 +36,15 @@ func TestLoadMigrationsReadsCoreMigration(t *testing.T) {
 	if !strings.Contains(migrations[0].SQL, "CREATE TABLE IF NOT EXISTS users") {
 		t.Fatal("expected users table in core migration")
 	}
-	if !strings.Contains(migrations[len(migrations)-1].SQL, "CREATE TABLE IF NOT EXISTS roles") {
-		t.Fatal("expected rbac roles table in latest migration")
+	allSQL := ""
+	for _, migration := range migrations {
+		allSQL += migration.SQL
+	}
+	if !strings.Contains(allSQL, "CREATE TABLE IF NOT EXISTS roles") {
+		t.Fatal("expected rbac roles table in loaded migrations")
+	}
+	if !strings.Contains(allSQL, "CREATE TABLE IF NOT EXISTS login_attempts") {
+		t.Fatal("expected auth security migration in loaded migrations")
 	}
 }
 

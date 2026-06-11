@@ -36,12 +36,6 @@ const coreEnd: AdminNavigationItem[] = [
     href: "/settings",
     label: "Settings",
     source: "core"
-  },
-  {
-    description: "Custom React primitives and Nothing tokens",
-    href: "/custom-ui",
-    label: "Custom UI",
-    source: "core"
   }
 ];
 

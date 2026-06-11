@@ -28,6 +28,7 @@ export function buildLoginPath(pathname: string, search = ""): string {
 export function isPublicWebPath(pathname: string): boolean {
   return (
     pathname === "/" ||
+    isDesignSystemPath(pathname) ||
     isLoginPath(pathname) ||
     pathname.startsWith("/api/") ||
     pathname.startsWith("/_next/") ||
@@ -41,4 +42,8 @@ export function isPublicWebPath(pathname: string): boolean {
 
 function isLoginPath(pathname: string): boolean {
   return pathname === "/login" || pathname.startsWith("/login/");
+}
+
+function isDesignSystemPath(pathname: string): boolean {
+  return pathname === "/design-system" || pathname.startsWith("/design-system/");
 }

@@ -26,6 +26,8 @@ const REQUEST_HEADER_BLOCKLIST = new Set([
   "upgrade"
 ]);
 
+const BACKEND_UNAVAILABLE_MESSAGE = "后台服务未连接，请先启动 API 服务后重试";
+
 export async function GET(request: NextRequest, context: RouteContext) {
   return proxyToBackend(request, context);
 }
@@ -52,13 +54,18 @@ async function proxyToBackend(request: NextRequest, context: RouteContext): Prom
   const target = new URL(backendApiUrl(backendPath));
   target.search = request.nextUrl.search;
 
-  const backendResponse = await fetch(target, {
-    method: request.method,
-    headers: requestHeaders(request.headers),
-    body: shouldForwardBody(request.method) ? await request.arrayBuffer() : undefined,
-    cache: "no-store",
-    redirect: "manual"
-  });
+  let backendResponse: Response;
+  try {
+    backendResponse = await fetch(target, {
+      method: request.method,
+      headers: requestHeaders(request.headers),
+      body: shouldForwardBody(request.method) ? await request.arrayBuffer() : undefined,
+      cache: "no-store",
+      redirect: "manual"
+    });
+  } catch {
+    return backendUnavailableResponse();
+  }
 
   if (isLoginRoute(segments) && isJSONResponse(backendResponse)) {
     const payload = (await backendResponse.json()) as Record<string, unknown>;
@@ -130,4 +137,16 @@ function isLoginRoute(segments: string[]): boolean {
 
 function isJSONResponse(response: Response): boolean {
   return response.headers.get("content-type")?.includes("application/json") ?? false;
+}
+
+function backendUnavailableResponse(): NextResponse {
+  return NextResponse.json(
+    {
+      error: {
+        code: "BACKEND_UNAVAILABLE",
+        message: BACKEND_UNAVAILABLE_MESSAGE
+      }
+    },
+    { status: 503 }
+  );
 }

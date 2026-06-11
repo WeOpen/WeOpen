@@ -1,5 +1,5 @@
 // Storage API calls coordinate API authorization, presigned R2 upload URLs, and object metadata indexing.
-import { apiUrl } from "./base";
+import { apiFetch, apiUrl } from "./base";
 
 /** StorageVisibility controls whether the API may expose a public download URL. */
 export type StorageVisibility = "private" | "public";
@@ -57,7 +57,7 @@ export async function listStorageObjects(): Promise<StorageObject[]> {
 
 /** createUploadURL asks the API to validate metadata and sign a short-lived R2 upload URL. */
 export async function createUploadURL(input: CreateUploadInput): Promise<UploadURLResponse> {
-  const response = await fetch(apiUrl("/api/plugins/storage-r2/upload-url"), {
+  const response = await apiFetch("/api/plugins/storage-r2/upload-url", {
     method: "POST",
     credentials: "include",
     headers: {
@@ -72,7 +72,7 @@ export async function createUploadURL(input: CreateUploadInput): Promise<UploadU
 
 /** completeStorageUpload records metadata after the browser PUT succeeds against the signed R2 URL. */
 export async function completeStorageUpload(input: CreateUploadInput): Promise<StorageObject> {
-  const response = await fetch(apiUrl("/api/plugins/storage-r2/objects/complete"), {
+  const response = await apiFetch("/api/plugins/storage-r2/objects/complete", {
     method: "POST",
     credentials: "include",
     headers: {
@@ -104,7 +104,7 @@ export async function setStorageVisibility(
   id: string,
   visibility: StorageVisibility
 ): Promise<StorageObject> {
-  const response = await fetch(apiUrl(`/api/plugins/storage-r2/objects/${id}`), {
+  const response = await apiFetch(`/api/plugins/storage-r2/objects/${id}`, {
     method: "PATCH",
     credentials: "include",
     headers: {
@@ -119,7 +119,7 @@ export async function setStorageVisibility(
 
 /** deleteStorageObject removes indexed metadata and any provider-backed object according to API rules. */
 export async function deleteStorageObject(id: string): Promise<void> {
-  const response = await fetch(apiUrl(`/api/plugins/storage-r2/objects/${id}`), {
+  const response = await apiFetch(`/api/plugins/storage-r2/objects/${id}`, {
     method: "DELETE",
     credentials: "include"
   });

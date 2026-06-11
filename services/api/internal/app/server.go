@@ -20,6 +20,7 @@ import (
 	"github.com/WeOpen/WeOpen/services/api/internal/config"
 	"github.com/WeOpen/WeOpen/services/api/internal/domain/audit"
 	"github.com/WeOpen/WeOpen/services/api/internal/domain/auth"
+	"github.com/WeOpen/WeOpen/services/api/internal/domain/pluginstate"
 )
 
 // databaseConnector opens a configured SQL database and returns its placeholder dialect plus a close hook.
@@ -31,13 +32,13 @@ func NewHTTPServer(cfg config.Config) (*http.Server, error) {
 }
 
 func newHTTPServerWithDatabaseConnector(cfg config.Config, connectDatabase databaseConnector) (*http.Server, error) {
-	authStore, closeAuthDatabase, err := newAuthStore(context.Background(), cfg, connectDatabase)
+	stores, err := newRuntimeStores(context.Background(), cfg, connectDatabase)
 	if err != nil {
 		return nil, err
 	}
-	authService := auth.NewService(authStore)
+	authService := auth.NewService(stores.authStore)
 	secretService := secrets.NewService(secrets.NewMemoryStore(), secrets.NewCrypto(cfg.SecretEncryptionKey))
-	auditService := audit.NewService()
+	auditService := audit.NewServiceWithStore(stores.auditStore)
 
 	r2Client, err := r2provider.NewClient(r2provider.Config{
 		AccountID:       cfg.R2AccountID,
@@ -46,7 +47,7 @@ func newHTTPServerWithDatabaseConnector(cfg config.Config, connectDatabase datab
 		SecretAccessKey: cfg.R2SecretAccessKey,
 	})
 	if err != nil {
-		closeAuthDatabaseIfNeeded(closeAuthDatabase)
+		closeDatabaseIfNeeded(stores.close)
 		return nil, fmt.Errorf("initialize r2 provider: %w", err)
 	}
 	storageService := storage.NewService(storage.NewMemoryRepository(), r2Client, storageAuditRecorder{audit: auditService})
@@ -56,7 +57,7 @@ func newHTTPServerWithDatabaseConnector(cfg config.Config, connectDatabase datab
 		fallback: cfg.CloudflareAPIToken,
 	})
 	if err != nil {
-		closeAuthDatabaseIfNeeded(closeAuthDatabase)
+		closeDatabaseIfNeeded(stores.close)
 		return nil, fmt.Errorf("initialize cloudflare provider: %w", err)
 	}
 	domainService := domainplugin.NewService(
@@ -75,46 +76,71 @@ func newHTTPServerWithDatabaseConnector(cfg config.Config, connectDatabase datab
 			Secrets:       secretService,
 			Audit:         auditService,
 			Plugins:       pluginRegistry,
+			PluginStates:  stores.pluginStates,
 			PluginRoutes:  builtinPluginRoutes(blogService, storageService, domainService),
+			LoginAttempts: stores.loginAttempts,
 			SecureCookies: cfg.IsProductionLike(),
 		}),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
-	if closeAuthDatabase != nil {
-		server.RegisterOnShutdown(func() { _ = closeAuthDatabase() })
+	if stores.close != nil {
+		server.RegisterOnShutdown(func() { _ = stores.close() })
 	}
 	return server, nil
 }
 
-func closeAuthDatabaseIfNeeded(closeAuthDatabase func() error) {
-	if closeAuthDatabase != nil {
-		_ = closeAuthDatabase()
+func closeDatabaseIfNeeded(closeDatabase func() error) {
+	if closeDatabase != nil {
+		_ = closeDatabase()
 	}
 }
 
-func newAuthStore(ctx context.Context, cfg config.Config, connectDatabase databaseConnector) (auth.Store, func() error, error) {
+type runtimeStores struct {
+	authStore     auth.Store
+	auditStore    audit.Store
+	pluginStates  pluginstate.Store
+	loginAttempts auth.LoginRateLimitStore
+	close         func() error
+}
+
+func newRuntimeStores(ctx context.Context, cfg config.Config, connectDatabase databaseConnector) (runtimeStores, error) {
 	if strings.TrimSpace(cfg.DatabaseURL) == "" {
 		authStore, err := auth.NewMemoryStore(cfg.AdminEmail, cfg.AdminPassword)
 		if err != nil {
-			return nil, nil, fmt.Errorf("initialize memory auth store: %w", err)
+			return runtimeStores{}, fmt.Errorf("initialize memory auth store: %w", err)
 		}
-		return authStore, nil, nil
+		return runtimeStores{
+			authStore:     authStore,
+			auditStore:    audit.NewMemoryStore(),
+			pluginStates:  pluginstate.NewMemoryStore(),
+			loginAttempts: auth.NewMemoryLoginRateLimitStore(),
+		}, nil
 	}
 
 	database, dialect, closeDatabase, err := connectDatabase(ctx, cfg)
 	if err != nil {
-		return nil, nil, fmt.Errorf("connect auth database: %w", err)
+		return runtimeStores{}, fmt.Errorf("connect auth database: %w", err)
 	}
 	if err := applyConfiguredMigrations(ctx, database, cfg.MigrationsDir); err != nil {
 		_ = closeDatabase()
-		return nil, nil, err
+		return runtimeStores{}, err
 	}
 	authStore := dbadapter.NewSQLAuthStore(database, dbadapter.WithSQLDialect(dialect))
 	if err := authStore.EnsureAdmin(ctx, cfg.AdminEmail, cfg.AdminPassword); err != nil {
 		_ = closeDatabase()
-		return nil, nil, fmt.Errorf("seed sql auth admin: %w", err)
+		return runtimeStores{}, fmt.Errorf("seed sql auth admin: %w", err)
 	}
-	return authStore, closeDatabase, nil
+	pluginDialect := pluginstate.SQLDialectSQLite
+	if dialect == dbadapter.SQLDialectPostgres {
+		pluginDialect = pluginstate.SQLDialectPostgres
+	}
+	return runtimeStores{
+		authStore:     authStore,
+		auditStore:    dbadapter.NewSQLAuditStore(database, dbadapter.WithSQLDialect(dialect)),
+		pluginStates:  pluginstate.NewSQLStore(database, pluginstate.WithSQLDialect(pluginDialect)),
+		loginAttempts: dbadapter.NewSQLLoginRateLimitStore(database, dbadapter.WithSQLDialect(dialect)),
+		close:         closeDatabase,
+	}, nil
 }
 
 func connectConfiguredDatabase(ctx context.Context, cfg config.Config) (*sql.DB, dbadapter.SQLDialect, func() error, error) {
