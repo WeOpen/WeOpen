@@ -1,4 +1,5 @@
 import type { ButtonHTMLAttributes, MouseEventHandler, ReactNode } from "react";
+import { PixelIcon } from "./pixel-icon";
 import { cn } from "./utils";
 
 type ButtonVariant =
@@ -72,7 +73,7 @@ export function Button({
       type={type}
       {...props}
     >
-      {isPending ? <span aria-hidden="true" className="button__pending">[···]</span> : null}
+      {isPending ? <span aria-hidden="true" className="button__pending"><PixelIcon isActive name="deferred" variant="bare" /></span> : null}
       {children}
     </button>
   );

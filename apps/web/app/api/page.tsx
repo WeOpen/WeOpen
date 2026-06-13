@@ -1,5 +1,5 @@
 import { AppShell } from "@/shared/layout/app-shell";
-import { Card, MetricCard, PageHeader, StatusChip } from "@weopen/ui";
+import { Card, MetricCard, PageHeader, PixelIcon, StatusChip } from "@weopen/ui";
 
 const apiRoutes = [
   ["/healthz", "PUBLIC", "200 OK"],
@@ -15,10 +15,10 @@ export default function ApiPage() {
       <section className="api-workspace">
         <PageHeader eyebrow="API" title="Go API" description="HTTP service boundary for auth, settings, audit logs, plugin metadata and authenticated plugin routes." />
         <div className="storage-stats">
-          <MetricCard icon={<span>&gt;_</span>} label="Service" value="ONLINE" description="Go HTTP API" trend="live" trendDirection="up" />
-          <MetricCard icon={<span>AUTH</span>} label="Session" value="COOKIE" description="HttpOnly auth boundary" />
-          <MetricCard icon={<span>PLG</span>} label="Plugin routes" value="4" description="Mounted behind auth" />
-          <MetricCard icon={<span>HDR</span>} label="Actor header" value="READY" description="X-WeOpen-Actor-ID" />
+          <MetricCard icon={<PixelIcon name="service" />} label="Service" value="ONLINE" description="Go HTTP API" trend="live" trendDirection="up" />
+          <MetricCard icon={<PixelIcon name="auth" />} label="Session" value="COOKIE" description="HttpOnly auth boundary" />
+          <MetricCard icon={<PixelIcon name="routes" />} label="Plugin routes" value="4" description="Mounted behind auth" />
+          <MetricCard icon={<PixelIcon name="header" />} label="Actor header" value="READY" description="X-WeOpen-Actor-ID" />
         </div>
         <Card className="api-route-panel">
           <Card.Header><Card.Title>Route Map</Card.Title></Card.Header>

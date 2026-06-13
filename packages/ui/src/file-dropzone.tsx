@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { Button } from "./button";
+import { PixelIcon } from "./pixel-icon";
 import { cn } from "./utils";
 
 export type FileDropzoneProps = {
@@ -55,7 +56,7 @@ export function FileDropzone({
         }
       }}
     >
-      <span className="weopen-file-dropzone-icon" aria-hidden="true">[↑]</span>
+      <span className="weopen-file-dropzone-icon" aria-hidden="true"><PixelIcon name="upload" /></span>
       <div>
         <strong>{title}</strong>
         {description ? <p>{description}</p> : null}

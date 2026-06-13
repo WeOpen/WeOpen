@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { listAuditLogs, type AuditEntry } from "@/shared/api/audit";
-import { Card, HorizontalScrollArea } from "@weopen/ui";
+import { Card, DataTable, StatusChip } from "@weopen/ui";
 import { formatTimestamp } from "@/shared/format";
 
 export function AuditLogPanel() {
@@ -30,31 +30,46 @@ export function AuditLogPanel() {
     <Card className="settings-audit-log">
       <Card.Header>
         <Card.Title>Audit Log</Card.Title>
-        <button type="button" disabled>{error ? "READ BLOCKED" : "LIVE"}</button>
+        <StatusChip tone={error ? "danger" : "success"}>{error ? "READ BLOCKED" : "LIVE"}</StatusChip>
       </Card.Header>
       <Card.Content>
         {error ? <p role="alert">{error}</p> : null}
-        <HorizontalScrollArea
-          className="settings-audit-scroll"
-          viewportClassName="settings-audit-table"
-          role="table"
+        <DataTable
           aria-label="Audit log"
-        >
-          <div role="row"><span>Time (UTC)</span><span>Actor</span><span>Action</span><span>Resource</span><span>Details</span></div>
-          {entries.length ? entries.map((entry) => (
-            <div role="row" key={entry.id}>
-              <span>{formatTimestamp(entry.createdAt)}</span>
-              <span>{entry.actorUserId || "system"}</span>
-              <span>{entry.action}</span>
-              <span>{entry.targetType}</span>
-              <span>{entry.targetId || metadataSummary(entry.metadata)}</span>
-            </div>
-          )) : (
-            <div role="row">
-              <span>—</span><span>—</span><span>No audit entries yet</span><span>—</span><span>—</span>
-            </div>
-          )}
-        </HorizontalScrollArea>
+          className="settings-audit-table"
+          columns={[
+            {
+              id: "createdAt",
+              label: "Time (UTC)",
+              render: (entry) => formatTimestamp(entry.createdAt)
+            },
+            {
+              id: "actor",
+              label: "Actor",
+              render: (entry) => entry.actorUserId || "system"
+            },
+            {
+              id: "action",
+              label: "Action",
+              render: (entry) => entry.action
+            },
+            {
+              id: "resource",
+              label: "Resource",
+              render: (entry) => entry.targetType
+            },
+            {
+              id: "details",
+              label: "Details",
+              render: (entry) => entry.targetId || metadataSummary(entry.metadata)
+            }
+          ]}
+          emptyDescription="No audit entries have been recorded yet."
+          emptyTitle="No audit entries yet"
+          getRowId={(entry) => entry.id}
+          minWidth={760}
+          rows={entries}
+        />
       </Card.Content>
     </Card>
   );

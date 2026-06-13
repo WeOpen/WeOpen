@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Input, SelectField, Textarea } from "@weopen/ui";
+import { Button, Card, Input, SelectField, Textarea } from "@weopen/ui";
 import type { ToolResult } from "./types";
 import { hashAlgorithms, hashText, hmacText, type HashAlgorithm } from "./tools";
 import { CopyButton } from "./copy-button";
@@ -45,7 +45,7 @@ export function HashTool() {
 
       <div className="tool-grid">
         <Textarea className="tool-textarea tool-textarea-short" label="Input text" onChange={(event) => setInput(event.target.value)} spellCheck={false} value={input} />
-        <div className="tool-card">
+        <Card className="tool-card">
           <SelectField
             label="Algorithm"
             onChange={(value) => setAlgorithm(value as HashAlgorithm)}
@@ -53,11 +53,11 @@ export function HashTool() {
             value={algorithm}
           />
           <Input label="HMAC secret" onChange={(event) => setSecret(event.target.value)} type="password" value={secret} />
-        </div>
+        </Card>
       </div>
 
       <div className="tool-grid">
-        <div className="tool-card">
+        <Card className="tool-card">
           <div className="tool-card-header">
             <strong>Digest</strong>
             <div className="tool-actions">
@@ -69,9 +69,9 @@ export function HashTool() {
           </div>
           <code className="tool-output-block">{hashResult.ok ? hashResult.output : ""}</code>
           {!hashResult.ok ? <p className="tool-error">{hashResult.error}</p> : null}
-        </div>
+        </Card>
 
-        <div className="tool-card">
+        <Card className="tool-card">
           <div className="tool-card-header">
             <strong>HMAC</strong>
             <div className="tool-actions">
@@ -83,7 +83,7 @@ export function HashTool() {
           </div>
           <code className="tool-output-block">{hmacResult.ok ? hmacResult.output : ""}</code>
           {!hmacResult.ok ? <p className="tool-error">{hmacResult.error}</p> : null}
-        </div>
+        </Card>
       </div>
     </section>
   );

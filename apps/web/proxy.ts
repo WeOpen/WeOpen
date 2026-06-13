@@ -8,10 +8,6 @@ export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const token = request.cookies.get(SESSION_COOKIE)?.value;
 
-  if (isLegacyCustomUiPath(pathname)) {
-    return NextResponse.redirect(new URL(`/design-system${search}`, request.url));
-  }
-
   if (isPublicWebPath(pathname)) {
     if (pathname === "/login" && token && (await hasActiveSession(token))) {
       const nextPath = safeNextPath(request.nextUrl.searchParams.get("next"));
@@ -43,8 +39,4 @@ async function hasActiveSession(token: string): Promise<boolean> {
   } catch {
     return false;
   }
-}
-
-function isLegacyCustomUiPath(pathname: string): boolean {
-  return pathname === "/custom-ui" || pathname.startsWith("/custom-ui/");
 }

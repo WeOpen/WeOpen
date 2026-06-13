@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Button, Card } from "@weopen/ui";
+import { Button, Card, StatusChip, type StatusChipTone } from "@weopen/ui";
 import {
   loadDashboardSummary,
   type RemoteApiSettings
@@ -29,6 +29,11 @@ export function DesktopDashboard({ onOpenSettings, settings }: DesktopDashboardP
     }
     return "尚未配置远程 API";
   }, [summary.status]);
+  const statusTone: StatusChipTone = summary.status === "online"
+    ? "success"
+    : summary.status === "offline"
+      ? "danger"
+      : "warning";
 
   const refresh = useCallback(async () => {
     setIsLoading(true);
@@ -48,7 +53,7 @@ export function DesktopDashboard({ onOpenSettings, settings }: DesktopDashboardP
         title="平台连接状态"
       >
         <div className="status-row">
-          <span className="status-pill">{statusLabel}</span>
+          <StatusChip className="status-pill" tone={statusTone}>{statusLabel}</StatusChip>
           <Button disabled={isLoading} onPress={refresh} variant="secondary">
             {isLoading ? "刷新中..." : "刷新"}
           </Button>
@@ -86,11 +91,14 @@ export function DesktopDashboard({ onOpenSettings, settings }: DesktopDashboardP
               <li key={plugin.id}>
                 <div>
                   <strong>{plugin.name}</strong>
-                  <span>{plugin.description || plugin.id}</span>
+                  <span className="plugin-description">{plugin.description || plugin.id}</span>
                 </div>
-                <span className={plugin.enabled ? "plugin-enabled" : "plugin-disabled"}>
+                <StatusChip
+                  className={plugin.enabled ? "plugin-enabled" : "plugin-disabled"}
+                  tone={plugin.enabled ? "success" : "danger"}
+                >
                   {plugin.enabled ? "启用" : "停用"}
-                </span>
+                </StatusChip>
               </li>
             ))}
           </ul>

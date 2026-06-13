@@ -1,10 +1,12 @@
 "use client";
 
-import { motion, useReducedMotion, useScroll, useSpring, useTransform } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { AdminNavigationItem } from "./admin-navigation";
 import { Button } from "./button";
 import { Chip } from "./chip";
+import { PixelIcon } from "./pixel-icon";
+import { ScrollRail } from "./scroll-rail";
 import { cn } from "./utils";
 
 export type AdminShellProps = {
@@ -20,19 +22,15 @@ export type AdminShellProps = {
   runtimeLabel?: string;
   versionLabel?: string;
   actionSlot?: ReactNode;
+  footerActionSlot?: ReactNode;
   children: ReactNode;
   onNavItemSelect?: (item: AdminNavigationItem) => void;
 };
 
-const glyphByHref: Record<string, string> = {
-  "/api": ">_",
-  "/blog": "▤",
-  "/dashboard": "▦",
-  "/domains": "◎",
-  "/plugins": "✣",
-  "/settings": "⚙",
-  "/storage": "◉",
-  "/tools": "<>"
+type SystemClockState = {
+  label: string;
+  now: Date;
+  timeZone?: string;
 };
 
 const navItemTransition = { duration: 0.15, ease: "easeOut" } as const;
@@ -58,6 +56,7 @@ export function AdminShell({
   children,
   currentPath,
   environmentLabel = "LOCAL",
+  footerActionSlot,
   navItems,
   onNavItemSelect,
   runtimeLabel = "BROWSER",
@@ -65,26 +64,27 @@ export function AdminShell({
   versionLabel = "0.1.0"
 }: AdminShellProps) {
   const [isNavOpen, setIsNavOpen] = useState(false);
-  const [systemTime, setSystemTime] = useState(() => formatSystemTime(new Date()));
+  const [systemClock, setSystemClock] = useState<SystemClockState | null>(null);
   const mainScrollRef = useRef<HTMLElement>(null);
   const settingsHref = hrefForNavItem(navItems, "/settings", "#settings");
-  const { scrollYProgress } = useScroll({ container: mainScrollRef });
-  const scrollRailProgress = useSpring(useTransform(scrollYProgress, [0, 1], [0.08, 1]), {
-    damping: 28,
-    mass: 0.2,
-    stiffness: 120
-  });
 
   useEffect(() => {
-    const timer = window.setInterval(() => setSystemTime(formatSystemTime(new Date())), 1000);
-    return () => window.clearInterval(timer);
+    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || undefined;
+    const label = timeZone ?? "Local";
+    const syncSystemTime = () => setSystemClock({ label, now: new Date(), timeZone });
+    const initialTimer = window.setTimeout(syncSystemTime, 0);
+    const timer = window.setInterval(syncSystemTime, 1000);
+    return () => {
+      window.clearTimeout(initialTimer);
+      window.clearInterval(timer);
+    };
   }, []);
+
+  const systemTimeDisplay = systemClock ? formatUserTimeDisplay(systemClock.now, systemClock.label, systemClock.timeZone) : null;
 
   return (
     <div className="weopen-admin-shell">
-      <div className="weopen-scroll-rail" aria-hidden="true">
-        <motion.div className="weopen-scroll-rail-progress" style={{ scaleY: scrollRailProgress }} />
-      </div>
+      <ScrollRail containerRef={mainScrollRef} />
 
       <aside aria-label="管理导航" className="weopen-admin-sidebar">
         <NavigationPanel
@@ -94,6 +94,7 @@ export function AdminShell({
           navItems={navItems}
           onNavItemSelect={onNavItemSelect}
           settingsHref={settingsHref}
+          footerActionSlot={footerActionSlot}
         />
       </aside>
 
@@ -103,7 +104,9 @@ export function AdminShell({
           <div className="mobile-nav-dialog" role="dialog" aria-modal="true" aria-label="WeOpen 导航">
             <div className="mobile-nav-header">
               <span>WeOpen 导航</span>
-              <Button isIconOnly onPress={() => setIsNavOpen(false)} variant="ghost">×</Button>
+              <Button aria-label="关闭导航" isIconOnly onPress={() => setIsNavOpen(false)} variant="ghost">
+                <PixelIcon name="close" variant="bare" />
+              </Button>
             </div>
             <NavigationPanel
               appName={appName}
@@ -116,14 +119,21 @@ export function AdminShell({
                 setIsNavOpen(false);
               }}
               settingsHref={settingsHref}
+              footerActionSlot={footerActionSlot}
             />
           </div>
         </div>
       ) : null}
 
       <main className="weopen-admin-main" ref={mainScrollRef}>
-        <header className="weopen-admin-topbar" aria-label="System status">
-          <div className="weopen-admin-topbar-command">
+        <header
+          className={cn("weopen-admin-topbar", {
+            "weopen-admin-topbar-has-mode": Boolean(statusLabel),
+            "weopen-admin-topbar-has-slot": Boolean(actionSlot)
+          })}
+          aria-label="System status"
+        >
+          <div className="weopen-admin-topbar-mobile-nav">
             <Button
               aria-label="打开导航"
               className="weopen-mobile-nav-trigger"
@@ -131,14 +141,24 @@ export function AdminShell({
               onPress={() => setIsNavOpen(true)}
               variant="secondary"
             >
-              ≡
+              <PixelIcon name="menu" variant="bare" />
             </Button>
-            <span>COMMAND CENTER</span>
-            <strong><span aria-hidden="true">●</span> ONLINE</strong>
           </div>
           <div className="weopen-admin-topbar-time">
             <span>SYSTEM TIME</span>
-            <strong>{systemTime}</strong>
+            <strong className="weopen-admin-topbar-time-value">
+              {systemTimeDisplay ? (
+                <>
+                  <time dateTime={systemClock?.now.toISOString()}>{systemTimeDisplay.time}</time>
+                  <small>{systemTimeDisplay.timeZone}</small>
+                </>
+              ) : (
+                <>
+                  <span>Detecting time</span>
+                  <small>Detecting timezone</small>
+                </>
+              )}
+            </strong>
           </div>
           <div className="weopen-admin-topbar-meta">
             <span>ENV</span>
@@ -152,10 +172,12 @@ export function AdminShell({
             <span>VERSION</span>
             <strong>{versionLabel}</strong>
           </div>
-          <div className="weopen-admin-topbar-mode">
-            {statusLabel ?? "LOCAL MODE"}
-          </div>
-          <div className="weopen-admin-topbar-slot">{actionSlot}</div>
+          {statusLabel ? (
+            <div className="weopen-admin-topbar-mode">
+              {statusLabel}
+            </div>
+          ) : null}
+          {actionSlot ? <div className="weopen-admin-topbar-slot">{actionSlot}</div> : null}
         </header>
 
         <div className="weopen-admin-content">{children}</div>
@@ -164,12 +186,23 @@ export function AdminShell({
   );
 }
 
-function formatSystemTime(date: Date): string {
-  return `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())} ${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())}:${pad(date.getUTCSeconds())} UTC`;
-}
+function formatUserTimeDisplay(date: Date, label: string, timeZone?: string): { time: string; timeZone: string } {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    day: "2-digit",
+    hour: "2-digit",
+    hourCycle: "h23",
+    minute: "2-digit",
+    month: "2-digit",
+    second: "2-digit",
+    ...(timeZone ? { timeZone } : {}),
+    year: "numeric"
+  }).formatToParts(date);
+  const values = new Map(parts.map((part) => [part.type, part.value]));
 
-function pad(value: number): string {
-  return String(value).padStart(2, "0");
+  return {
+    time: `${values.get("year") ?? "0000"}-${values.get("month") ?? "00"}-${values.get("day") ?? "00"} ${values.get("hour") ?? "00"}:${values.get("minute") ?? "00"}:${values.get("second") ?? "00"}`,
+    timeZone: label
+  };
 }
 
 function NavigationPanel({
@@ -179,7 +212,8 @@ function NavigationPanel({
   isDrawer,
   navItems,
   onNavItemSelect,
-  settingsHref
+  settingsHref,
+  footerActionSlot
 }: {
   appName: string;
   brandHref: string;
@@ -188,6 +222,7 @@ function NavigationPanel({
   navItems: AdminNavigationItem[];
   onNavItemSelect?: (item: AdminNavigationItem) => void;
   settingsHref?: string;
+  footerActionSlot?: ReactNode;
 }) {
   const shouldReduceMotion = useReducedMotion();
 
@@ -201,15 +236,17 @@ function NavigationPanel({
         <nav className="weopen-admin-nav-list">
           {navItems.map((item) => {
             const isActive = isActivePath(currentPath, item.href);
-            const glyphVariants = createNavGlyphVariants(item);
+            const glyphVariants = createNavGlyphVariants();
             const glyph = (
               <motion.span
+                animate={onNavItemSelect ? (isActive ? "active" : "idle") : undefined}
                 aria-hidden="true"
                 className={navGlyphClassName(item)}
+                initial={false}
                 transition={shouldReduceMotion ? { duration: 0 } : navGlyphTransition}
                 variants={glyphVariants}
               >
-                {glyphForItem(item)}
+                <PixelIcon name={pixelIconNameForItem(item)} />
               </motion.span>
             );
 
@@ -259,25 +296,16 @@ function NavigationPanel({
         </nav>
       </div>
 
-      <footer className="weopen-admin-nav-footer">
-        <a href={settingsHref ?? brandHref}>
-          <span aria-hidden="true">●</span>
+      <footer className={cn("weopen-admin-nav-footer", { "weopen-admin-nav-footer-with-action": Boolean(footerActionSlot) })}>
+        <a className="weopen-admin-nav-footer-link" href={settingsHref ?? brandHref}>
+          <PixelIcon name="status" />
           <strong>WEOPEN ADMIN</strong>
           <small>ADMIN</small>
         </a>
+        {footerActionSlot ? <div className="weopen-admin-nav-footer-action">{footerActionSlot}</div> : null}
       </footer>
     </div>
   );
-}
-
-function glyphForItem(item: AdminNavigationItem): string {
-  if (glyphByHref[item.href]) {
-    return glyphByHref[item.href];
-  }
-  if (item.href.includes("storage")) {
-    return "R2";
-  }
-  return item.source === "plugin" ? "PLG" : "●";
 }
 
 function navGlyphClassName(item: AdminNavigationItem): string {
@@ -286,14 +314,21 @@ function navGlyphClassName(item: AdminNavigationItem): string {
   return cn("weopen-admin-nav-glyph", `weopen-admin-nav-glyph-${routeName}`);
 }
 
-function createNavGlyphVariants(item: AdminNavigationItem) {
-  const scale = item.href === "/api" || item.href === "/tools" ? 0.76 : 1;
-
+function createNavGlyphVariants() {
   return {
-    active: { color: "var(--accent)", rotate: 4, scale, x: 3 },
-    idle: { color: "var(--text-display)", rotate: 0, scale, x: 0 },
-    hover: { color: "var(--accent)", rotate: -6, scale, x: 4 }
+    active: { color: "var(--accent)", x: 3 },
+    idle: { color: "var(--text-display)", x: 0 },
+    hover: { color: "var(--accent)", x: 4 }
   } as const;
+}
+
+function pixelIconNameForItem(item: AdminNavigationItem): string {
+  const routeName = item.href.replace(/^[/#]+/, "").split("/")[0] || "fallback";
+
+  if (item.href.includes("storage")) {
+    return "storage";
+  }
+  return item.source === "plugin" && routeName === "fallback" ? "plugins" : routeName;
 }
 
 function hrefForNavItem(navItems: AdminNavigationItem[], path: string, hash: string): string | undefined {

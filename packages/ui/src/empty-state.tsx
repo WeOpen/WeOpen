@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Card } from "./card";
+import { PixelIcon } from "./pixel-icon";
 import { cn } from "./utils";
 
 export type EmptyStateProps = {
@@ -14,7 +15,7 @@ export function EmptyState({ actions, className, description, icon, title }: Emp
   return (
     <Card className={cn("weopen-empty-state", className)} variant="transparent">
       <Card.Content>
-        <span className="weopen-empty-state-icon">{icon ?? "···"}</span>
+        <span className="weopen-empty-state-icon">{icon ?? <PixelIcon name="empty" />}</span>
         <strong>{title}</strong>
         {description ? <p>{description}</p> : null}
         {actions ? <div className="weopen-empty-state-actions">{actions}</div> : null}

@@ -5,7 +5,14 @@ import { AppShell } from "@/shared/layout/app-shell";
 import { pluginManifests } from "@/plugins/registry";
 import { currentUser, hasPermission, type AuthUser } from "@/shared/api/auth";
 import { listPlugins, setPluginEnabled, type BackendPlugin } from "@/shared/api/plugins";
-import { Card, Button, StatusChip } from "@weopen/ui";
+import { Button, Card, PixelIcon, StatusChip } from "@weopen/ui";
+
+const pluginIconById: Record<string, string> = {
+  blog: "blog",
+  devtools: "tools",
+  domains: "domains",
+  "storage-r2": "storage"
+};
 
 export default function PluginsPage() {
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -64,7 +71,7 @@ export default function PluginsPage() {
             {mergedPlugins.map((plugin, index) => (
               <Card className={plugin.enabled ? "plugin-card plugin-card-active" : "plugin-card plugin-card-disabled"} key={plugin.id}>
                 <Card.Header>
-                  <span className="plugin-card-icon">{iconForPlugin(plugin.id)}</span>
+                  <span className="plugin-card-icon"><PixelIcon name={pluginIconById[plugin.id] ?? "plugins"} /></span>
                   <div>
                     <Card.Title>{displayName(plugin.id, plugin.name)}</Card.Title>
                     <Card.Description>{englishDescription(plugin.id, plugin.description ?? "")}</Card.Description>
@@ -99,14 +106,14 @@ export default function PluginsPage() {
         </div>
 
         <aside className="plugin-inspector" aria-label="Manifest inspector">
-          <Button fullWidth isDisabled variant="secondary">↻ Live API Registry</Button>
+          <Button fullWidth isDisabled variant="secondary"><PixelIcon name="routes" variant="bare" /> Live API Registry</Button>
           <p>{plugins ? "Synced from /api/plugins" : "Reading backend registry..."}</p>
           {selectedPlugin ? (
             <>
               <Card>
                 <Card.Header>
                   <Card.Title>Manifest Inspector</Card.Title>
-                  <span className="inspector-order">● {selectedPlugin.enabled ? "ENABLED" : "DISABLED"}</span>
+                  <span className="inspector-order"><PixelIcon name="status" variant="bare" /> {selectedPlugin.enabled ? "ENABLED" : "DISABLED"}</span>
                 </Card.Header>
                 <Card.Content>
                   <pre>{JSON.stringify(selectedPlugin, null, 2)}</pre>
@@ -172,11 +179,4 @@ function englishDescription(pluginId: string, fallback: string) {
     "storage-r2": "Cloud storage adapter for Cloudflare R2 bucket operations."
   };
   return descriptions[pluginId] ?? fallback;
-}
-
-function iconForPlugin(pluginId: string) {
-  if (pluginId === "blog") return "▤";
-  if (pluginId === "storage-r2") return "◉";
-  if (pluginId === "domains") return "◎";
-  return "</>";
 }

@@ -20,11 +20,11 @@ Fonts required by the Nothing design direction are loaded through the shared UI 
 | `docs/image/devtools.png` | `/tools` | `.codex-artifacts/weopen-nothing-refactor-2k/tools.png` | Passed |
 | `docs/image/settings.png` | `/settings` | `.codex-artifacts/weopen-nothing-refactor-2k/settings.png` | Passed |
 | `docs/image/login.png` | `/login` | `.codex-artifacts/weopen-nothing-refactor-2k/login.png` | Passed |
-| `docs/image/customui.png` | `/custom-ui` | `.codex-artifacts/weopen-nothing-refactor-2k/custom-ui.png` | Passed |
+| `docs/image/design-system.png` | `/design-system` | `.codex-artifacts/weopen-nothing-refactor-2k/design-system.png` | Passed |
 | 3000 dev debug | `/dashboard` | `.codex-artifacts/weopen-nothing-refactor-3000-debug/dashboard-2048x997.png` | Passed |
-| 3000 mid-width debug | `/custom-ui` | `.codex-artifacts/weopen-nothing-refactor-3000-debug/custom-ui-2048x997.png` | Passed |
-| 3000 mid-width debug | `/custom-ui` | `.codex-artifacts/weopen-nothing-refactor-3000-debug/custom-ui-1440x900-after.png` | Passed |
-| 3000 mid-width debug | `/custom-ui` | `.codex-artifacts/weopen-nothing-refactor-3000-debug/custom-ui-1512x982-after.png` | Passed |
+| 3000 mid-width debug | `/design-system` | `.codex-artifacts/weopen-nothing-refactor-3000-debug/design-system-2048x997.png` | Passed |
+| 3000 mid-width debug | `/design-system` | `.codex-artifacts/weopen-nothing-refactor-3000-debug/design-system-1440x900-after.png` | Passed |
+| 3000 mid-width debug | `/design-system` | `.codex-artifacts/weopen-nothing-refactor-3000-debug/design-system-1512x982-after.png` | Passed |
 | 3000 login fit | `/login` | `.codex-artifacts/weopen-login-fit/login-2048x997-final-full.png` | Passed |
 | 3000 login fit | `/login` | `.codex-artifacts/weopen-login-fit/login-1440x900-final-full.png` | Passed |
 | 3000 login fit | `/login` | `.codex-artifacts/weopen-login-fit/login-1366x768-final-full.png` | Passed |
@@ -49,7 +49,7 @@ Fonts required by the Nothing design direction are loaded through the shared UI 
 
 - [x] 2560×1440 shell is less cramped: sidebar, topbar, content gutters, card gaps, and table rows scale up for true wide layouts, while the `1440px–2199px` mid-width override prevents ordinary desktop dev windows from inheriting oversized 2K density.
 - [x] Dashboard metric cards and overview panels have larger instrument-like proportions without losing the strict console grid.
-- [x] Blog editor, storage table, domains/TLS matrix, devtools workbench, settings console, custom UI catalog, and login split layout remain readable without horizontal overlap.
+- [x] Blog editor, storage table, domains/TLS matrix, devtools workbench, settings console, design system catalog, and login split layout remain readable without horizontal overlap.
 - [x] Metric card value/chip rows stay legible in 2K, including DevTools runtime status.
 - [x] Nothing-style constraints remain intact: OLED black, monochrome chrome, thin borders, no shadows/blur/gradients in UI chrome, and red reserved for active/critical signals. The web shell now forces dark theme on boot so stale `localStorage.weopen-theme=light` cannot create black-on-black text.
 
@@ -61,7 +61,7 @@ Fonts required by the Nothing design direction are loaded through the shared UI 
 - [x] UI chrome avoids shadows, blur, gradients, and rounded app-card styling; borders and spacing carry hierarchy.
 - [x] Red is reserved for active route, warning/accent, and critical state signals.
 - [x] Dashboard, plugin registry, blog editor, storage objects, domains/TLS, devtools, settings/audit, login, and custom component catalog all have dedicated layouts aligned to their reference image.
-- [x] Custom UI route demonstrates the new internal primitives and the theme-token panel requested by the prototype.
+- [x] Design System route demonstrates the new internal primitives and the theme-token panel requested by the prototype.
 - [x] Offline API states do not obscure the visual prototype; sample data is used for visual continuity while preserving real controls for live API data.
 - [x] No HeroUI dependency/import is used in the web or UI package surfaces.
 
@@ -69,7 +69,7 @@ Fonts required by the Nothing design direction are loaded through the shared UI 
 
 - The 2K pass keeps the same information architecture while increasing the breathing room that carries the Nothing-style hierarchy.
 - The 1440px+ media query intentionally expands layout rhythm for wide layouts, with a later 1440–2199px override to keep mid-width browser windows readable. This uses CSS viewport width, not physical pixels, to account for Retina/QHD browser scaling.
-- `/custom-ui` stacks its token panel below the component catalog at 1440–1599px, then restores the right-hand token rail on wider viewports.
+- `/design-system` stacks its token panel below the component catalog at 1440–1599px, then restores the right-hand token rail on wider viewports.
 - `/login` removes the separate red framed W mark, uses Doto for the WEOPEN wordmark, and fits tested desktop viewports without vertical scrolling.
 - The shell sidebar brand uses a centered Doto WEOPEN wordmark, and the fixed left navigation rail is more compact while preserving readable labels and active state.
 - Sidebar API/Tools and Dashboard DevTools code glyphs are size-normalized, with hover/focus/active nav icon motion and red accent color feedback.

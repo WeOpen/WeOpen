@@ -32,7 +32,7 @@
 
 .status-pill,
 .connection-status,
-.tool-tags span {
+.tool-tags .tool-tag {
   border-radius: 999px;
   display: inline-flex;
   font-size: 13px;
@@ -120,11 +120,11 @@
 }
 
 .plugin-list strong,
-.plugin-list span {
+.plugin-list .plugin-description {
   display: block;
 }
 
-.plugin-list div span {
+.plugin-list .plugin-description {
   color: var(--muted);
   font-size: 13px;
   margin-top: 3px;
@@ -155,7 +155,7 @@
   gap: 8px;
 }
 
-.tool-tags span {
+.tool-tags .tool-tag {
   background: var(--primary-soft);
   color: var(--primary-strong);
 }

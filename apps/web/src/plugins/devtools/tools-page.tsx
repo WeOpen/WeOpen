@@ -11,7 +11,7 @@ import { RegexTool } from "./regex-tool";
 import { TimeTool } from "./time-tool";
 import { developerTools } from "./tools";
 import { UuidTool } from "./uuid-tool";
-import { MetricCard, StatusChip, Tabs } from "@weopen/ui";
+import { MetricCard, PixelIcon, StatusChip, Tabs } from "@weopen/ui";
 
 const tabs = [
   { id: "json", label: "JSON", component: <JsonTool /> },
@@ -42,10 +42,10 @@ export function ToolsPage({ manifest }: { manifest?: PluginManifest }) {
   return (
     <section className="devtools-workspace">
       <div className="devtools-stats">
-        <MetricCard icon={<span>RUN</span>} label="Available Tools" value={availableCount} description="All run in your browser" />
-        <MetricCard icon={<span>●</span>} label="Local Runtime" value="ACTIVE" description="V8 (Chrome) · isolated context" trend="active" trendDirection="up" />
-        <MetricCard icon={<span>DEF</span>} label="Deferred Tools" value={deferredCount} description="Require server context" />
-        <MetricCard icon={<span>CAT</span>} label="Categories" value={categories} description="Filter & discover" />
+        <MetricCard icon={<PixelIcon name="tools" />} label="Available Tools" value={availableCount} description="All run in your browser" />
+        <MetricCard icon={<PixelIcon name="runtime" />} label="Local Runtime" value="ACTIVE" description="V8 (Chrome) · isolated context" trend="active" trendDirection="up" />
+        <MetricCard icon={<PixelIcon name="deferred" />} label="Deferred Tools" value={deferredCount} description="Require server context" />
+        <MetricCard icon={<PixelIcon name="categories" />} label="Categories" value={categories} description="Filter & discover" />
       </div>
 
       <div className="devtools-layout">

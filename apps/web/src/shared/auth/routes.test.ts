@@ -29,5 +29,4 @@ test("isPublicWebPath lets auth and static assets through", () => {
   assert.equal(isPublicWebPath("/_next/static/chunk.js"), true);
   assert.equal(isPublicWebPath("/favicon.svg"), true);
   assert.equal(isPublicWebPath("/dashboard"), false);
-  assert.equal(isPublicWebPath("/custom-ui"), false);
 });

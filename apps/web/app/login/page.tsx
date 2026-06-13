@@ -1,8 +1,10 @@
+import Link from "next/link";
 import { LoginForm } from "@/features/auth/login-form";
 import { LoginCheckedTime } from "@/features/auth/login-checked-time";
 import { builtinPluginManifests } from "@/plugins";
 import { backendApiUrl } from "@/shared/api/server-base";
 import { safeNextPath } from "@/shared/auth/routes";
+import { Card, PixelIcon } from "@weopen/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +31,15 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
   return (
     <main className="auth-page">
+      <nav className="auth-quick-links" aria-label="Public navigation">
+        <Link className="landing-console-link auth-quick-link" href="/">
+          HOME
+        </Link>
+        <Link className="landing-console-link auth-quick-link" href="/design-system">
+          DESIGN SYSTEM
+        </Link>
+      </nav>
+
       <section className="auth-brand-panel" aria-label="WeOpen system identity">
         <h1>WEOPEN</h1>
         <p>PERSONAL MANAGEMENT PLATFORM</p>
@@ -51,17 +62,17 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
       </section>
 
       <section className="auth-access-panel" aria-label="Admin access">
-        <div className="auth-card">
+        <Card className="auth-card">
           <div className="auth-card-header">
             <h2>Admin Access</h2>
             <p>Authorized personnel only</p>
           </div>
           <LoginForm nextPath={nextPath} />
-        </div>
+        </Card>
         {showLocalCredentialHint ? (
           <p className="auth-dev-credentials">Local credentials are read from <strong>ADMIN_EMAIL / ADMIN_PASSWORD</strong> in your API environment.</p>
         ) : null}
-        <p className="auth-warning"><span>●</span> Use strong passwords and keep your session private</p>
+        <p className="auth-warning"><PixelIcon name="warning" variant="bare" /> Use strong passwords and keep your session private</p>
       </section>
     </main>
   );

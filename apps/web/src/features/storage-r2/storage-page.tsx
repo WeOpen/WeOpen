@@ -11,7 +11,7 @@ import {
 import { formatBytes, slugifyFilename } from "@/shared/format";
 import { ObjectTable } from "./object-table";
 import { UploadPanel } from "./upload-panel";
-import { Alert, MetricCard, PageHeader } from "@weopen/ui";
+import { Alert, MetricCard, PageHeader, PixelIcon } from "@weopen/ui";
 
 export function StoragePage() {
   const [objects, setObjects] = useState<StorageObject[]>([]);
@@ -115,10 +115,10 @@ export function StoragePage() {
       />
 
       <div className="storage-stats">
-        <MetricCard icon={<span>□</span>} label="Objects" value={isLoading ? "···" : `${Math.max(objects.length, 1308)}`} description="Total objects" />
-        <MetricCard icon={<span>✓</span>} label="Bucket Ready" value="YES" description="Bucket status" />
-        <MetricCard icon={<span>&lt;/&gt;</span>} label="API Readiness" value="READY" description="R2 API status" />
-        <MetricCard icon={<span>◉</span>} label="Storage Used" value={objects.length ? formatBytes(totalBytes) : "215.4 GB"} description={`of 504.0 GB (${publicCount ? `${publicCount} public` : "42.7%"})`} />
+        <MetricCard icon={<PixelIcon name="objects" />} label="Objects" value={isLoading ? "···" : `${Math.max(objects.length, 1308)}`} description="Total objects" />
+        <MetricCard icon={<PixelIcon name="bucket" />} label="Bucket Ready" value="YES" description="Bucket status" />
+        <MetricCard icon={<PixelIcon name="code" />} label="API Readiness" value="READY" description="R2 API status" />
+        <MetricCard icon={<PixelIcon name="storage" />} label="Storage Used" value={objects.length ? formatBytes(totalBytes) : "215.4 GB"} description={`of 504.0 GB (${publicCount ? `${publicCount} public` : "42.7%"})`} />
       </div>
 
       {message ? (

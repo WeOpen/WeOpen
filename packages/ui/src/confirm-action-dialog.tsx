@@ -1,7 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { Button } from "./button";
 
 export type ConfirmActionDialogProps = {
@@ -24,7 +25,12 @@ export function ConfirmActionDialog({
   trigger
 }: ConfirmActionDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const [isPending, setIsPending] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   async function confirm() {
     setIsPending(true);
@@ -36,12 +42,8 @@ export function ConfirmActionDialog({
     }
   }
 
-  return (
-    <>
-      <span className="confirm-trigger" onClick={() => setIsOpen(true)}>
-        {trigger}
-      </span>
-      {isOpen ? (
+  const dialog = isOpen && isMounted
+    ? createPortal(
         <div className="dialog-layer" role="presentation">
           <button aria-label="关闭确认框" className="dialog-backdrop" onClick={() => setIsOpen(false)} type="button" />
           <div aria-modal="true" className={`weopen-confirm-dialog weopen-confirm-dialog--${tone}`} role="dialog">
@@ -59,8 +61,17 @@ export function ConfirmActionDialog({
               </Button>
             </div>
           </div>
-        </div>
-      ) : null}
+        </div>,
+        document.body
+      )
+    : null;
+
+  return (
+    <>
+      <span className="confirm-trigger" onClick={() => setIsOpen(true)}>
+        {trigger}
+      </span>
+      {dialog}
     </>
   );
 }

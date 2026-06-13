@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import type { ButtonProps } from "./button";
 import { Button } from "./button";
+import { PixelIcon } from "./pixel-icon";
 
 export const DEFAULT_THEME_STORAGE_KEY = "weopen-theme";
 
@@ -46,7 +47,7 @@ export function ThemeToggle({
       variant="secondary"
       {...props}
     >
-      {theme === "dark" ? "LT" : "DK"}
+      <PixelIcon name={theme === "dark" ? "theme-light" : "theme-dark"} variant="bare" />
     </Button>
   );
 }

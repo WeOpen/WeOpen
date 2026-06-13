@@ -50,20 +50,17 @@ export function AppShell({
     return createAdminNavigation(pluginItems);
   }, [plugins, user]);
 
-  const disabledCount = plugins?.filter((plugin) => !plugin.enabled).length ?? 0;
-
   return (
     <AdminShell
       appMark="W"
       appName="WeOpen"
       currentPath={currentPath}
       environmentLabel={process.env.NODE_ENV?.toUpperCase() ?? "LOCAL"}
+      footerActionSlot={<SessionControl compact />}
       navItems={navItems}
       runtimeLabel="WEB"
-      statusLabel={disabledCount > 0 ? `AUTH ON · ${disabledCount} OFF` : "AUTH ON"}
       subtitle="Personal Management Platform"
       versionLabel={process.env.NEXT_PUBLIC_APP_VERSION ?? "0.1.0"}
-      actionSlot={<SessionControl />}
     >
       {children}
     </AdminShell>

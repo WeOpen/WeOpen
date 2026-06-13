@@ -11,7 +11,7 @@ import { DomainDetail } from "./domain-detail";
 import { DNSRecordTable } from "./dns-record-table";
 import { summarizeDomainAssets } from "./domain-utils";
 import type { PluginManifest } from "@weopen/plugin-sdk";
-import { Alert, Button, Card, MetricCard, PageHeader } from "@weopen/ui";
+import { Alert, Button, Card, MetricCard, PageHeader, PixelIcon } from "@weopen/ui";
 
 type DomainsPageProps = {
   manifest?: PluginManifest;
@@ -141,9 +141,9 @@ export function DomainsPage({ manifest }: DomainsPageProps) {
       </Card>
 
       <div className="domains-stats">
-        <MetricCard icon={<span>DNS</span>} label="Domains" value={isLoading && assets.length ? "···" : `${summary.total}`} description="Cloudflare asset snapshot" />
-        <MetricCard icon={<span>OK</span>} label="Active" value={`${summary.active}`} description="Provider marked active" trend="read-only" />
-        <MetricCard icon={<span>TLS</span>} label="TLS Risk" value={`${summary.warnings}`} description="Expiring or failed checks" trend={summary.warnings ? "check" : "clear"} trendDirection={summary.warnings ? "down" : "up"} />
+        <MetricCard icon={<PixelIcon name="dns" />} label="Domains" value={isLoading && assets.length ? "···" : `${summary.total}`} description="Cloudflare asset snapshot" />
+        <MetricCard icon={<PixelIcon name="check" />} label="Active" value={`${summary.active}`} description="Provider marked active" trend="read-only" />
+        <MetricCard icon={<PixelIcon name="tls" />} label="TLS Risk" value={`${summary.warnings}`} description="Expiring or failed checks" trend={summary.warnings ? "check" : "clear"} trendDirection={summary.warnings ? "down" : "up"} />
         <MetricCard icon={<CloudflareIcon />} label="Provider" value={summary.providers.join(", ") || "Cloudflare"} description="Current sync source" />
       </div>
 
@@ -196,7 +196,7 @@ export function DomainsPage({ manifest }: DomainsPageProps) {
 }
 
 function CloudflareIcon() {
-  return <span aria-hidden="true">CF</span>;
+  return <PixelIcon name="cloud" />;
 }
 
 function formatRisk(asset: DomainAsset) {

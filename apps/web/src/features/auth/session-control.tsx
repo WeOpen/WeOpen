@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@weopen/ui";
+import { Button, PixelIcon } from "@weopen/ui";
 import { currentUser, logout, type AuthUser } from "@/shared/api/auth";
 
 type SessionState = {
@@ -10,13 +10,21 @@ type SessionState = {
   user: AuthUser | null;
 };
 
+type SessionControlProps = {
+  compact?: boolean;
+};
+
 /** SessionControl shows the active principal and provides an explicit session teardown. */
-export function SessionControl() {
+export function SessionControl({ compact = false }: SessionControlProps) {
   const router = useRouter();
   const [{ isLoading, user }, setSession] = useState<SessionState>({ isLoading: true, user: null });
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   useEffect(() => {
+    if (compact) {
+      return;
+    }
+
     let isMounted = true;
 
     void currentUser().then((result) => {
@@ -29,7 +37,7 @@ export function SessionControl() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [compact]);
 
   const roleLabel = user?.roles?.[0]?.toUpperCase() ?? "AUTH";
 
@@ -44,11 +52,13 @@ export function SessionControl() {
   }
 
   return (
-    <div className="auth-session-control" aria-label="Current session">
-      <div className="auth-session-principal">
-        <span>{isLoading ? "CHECKING" : user ? roleLabel : "NO SESSION"}</span>
-        <strong>{user?.displayName || user?.email || "UNAUTHENTICATED"}</strong>
-      </div>
+    <div className={compact ? "auth-session-control auth-session-control-compact" : "auth-session-control"} aria-label="Current session">
+      {compact ? null : (
+        <div className="auth-session-principal">
+          <span>{isLoading ? "CHECKING" : user ? roleLabel : "NO SESSION"}</span>
+          <strong>{user?.displayName || user?.email || "UNAUTHENTICATED"}</strong>
+        </div>
+      )}
       <Button
         aria-label="Sign out"
         className="auth-session-logout"
@@ -57,7 +67,8 @@ export function SessionControl() {
         size="sm"
         variant="secondary"
       >
-        LOGOUT
+        <PixelIcon name="logout" variant="bare" />
+        <span>LOGOUT</span>
       </Button>
     </div>
   );

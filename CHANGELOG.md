@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added shared UI form controls, interactive primitives, pixel icons, scroll rails, and toast state/rendering primitives for the Nothing-style admin surface.
+- Added a Web toast bridge and expanded design-system page examples so live pages can exercise shared feedback, motion, and interaction patterns.
+- Added updated design-system reference screenshots for desktop, fold, mobile, and hero states.
 - Added CSRF token issuance and double-submit validation for cookie-authenticated unsafe API requests.
 - Added SQL-backed login rate-limit buckets so production API instances can share lockout state.
 - Added SQL-backed audit log persistence and wired database-backed plugin enablement state into API startup.
@@ -23,6 +26,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Refined Web and desktop admin shells with tighter shared visual language, dot-matrix scroll treatments, table overflow behavior, and pixel-icon module/status affordances.
+- Reworked dashboard module listings to use the shared data-table and status-chip primitives with consistent horizontal scrolling.
 - Frontend API clients now use a shared credentialed fetch helper that attaches CSRF tokens and preserves structured API errors.
 - The plugin registry and dashboard now consume backend plugin enabled state instead of relying only on compile-time manifests.
 - The settings screen now reads live provider secret summaries, access-control data, sessions, and audit entries instead of static mock rows.
@@ -31,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Fixed remaining custom UI overflow and control-state inconsistencies across dashboard, plugin, devtools, storage, audit-log, and login surfaces.
 - Fixed plugin route permission matching to fail closed for unmatched unsafe plugin endpoints.
 - Fixed disabled plugin handling so backend plugin routes reject requests when the plugin is turned off.
 - Fixed the design-system page JSX string escaping so Web typechecking succeeds.

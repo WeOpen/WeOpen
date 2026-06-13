@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { login } from "@/shared/api/auth";
 import { ApiError } from "@/shared/api/base";
+import { queueAppToast } from "@/shared/layout/app-toast-bridge";
 import { Alert, Button, Input } from "@weopen/ui";
 
 export function LoginForm({ nextPath = "/dashboard" }: { nextPath?: string }) {
@@ -21,7 +22,11 @@ export function LoginForm({ nextPath = "/dashboard" }: { nextPath?: string }) {
     setMessage("");
     try {
       await login({ email, password, totpCode: requiresMFA ? totpCode : undefined });
-      setMessage("Signed in. Entering the command center.");
+      queueAppToast({
+        description: "Entering the command center.",
+        title: "Signed in",
+        tone: "success"
+      });
       router.replace(nextPath);
       router.refresh();
     } catch (error) {
@@ -75,7 +80,7 @@ export function LoginForm({ nextPath = "/dashboard" }: { nextPath?: string }) {
         {isSubmitting ? "Signing In" : "Sign In"}
       </Button>
       {message ? (
-        <Alert status={message.includes("Signed") ? "success" : "danger"}>
+        <Alert status="danger">
           <Alert.Content>
             <Alert.Description>{message}</Alert.Description>
           </Alert.Content>

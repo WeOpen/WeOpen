@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button, Card } from "@weopen/ui";
+import { Button, Card, Chip, Input, Textarea } from "@weopen/ui";
 import {
   compressJson,
   convertDateToTimestamp,
@@ -38,15 +38,19 @@ export function DesktopTools() {
       >
         <div className="tool-tags">
           {availableTools.map((tool) => (
-            <span key={tool.id}>{tool.name}</span>
+            <Chip className="tool-tag" color="accent" key={tool.id} size="sm" variant="outline">
+              {tool.name}
+            </Chip>
           ))}
         </div>
       </Card>
 
       <Card className="desktop-panel" title="JSON">
-        <textarea
+        <Textarea
+          aria-label="JSON input"
           className="desktop-textarea"
           onChange={(event) => setJsonInput(event.currentTarget.value)}
+          spellCheck={false}
           value={jsonInput}
         />
         <div className="button-row">
@@ -59,7 +63,8 @@ export function DesktopTools() {
       </Card>
 
       <Card className="desktop-panel" title="Base64">
-        <textarea
+        <Textarea
+          aria-label="Base64 text input"
           className="desktop-textarea"
           onChange={(event) => setTextInput(event.currentTarget.value)}
           value={textInput}
@@ -74,7 +79,8 @@ export function DesktopTools() {
       </Card>
 
       <Card className="desktop-panel" title="时间转换">
-        <input
+        <Input
+          aria-label="Timestamp or date input"
           className="desktop-input"
           onChange={(event) => setTimeInput(event.currentTarget.value)}
           value={timeInput}
@@ -95,13 +101,15 @@ export function DesktopTools() {
             重新生成
           </Button>
         </div>
-        <input
+        <Input
+          aria-label="Regex pattern"
           className="desktop-input"
           onChange={(event) => setRegexPattern(event.currentTarget.value)}
           placeholder="Regex pattern"
           value={regexPattern}
         />
-        <textarea
+        <Textarea
+          aria-label="Regex sample text"
           className="desktop-textarea"
           onChange={(event) => setRegexText(event.currentTarget.value)}
           value={regexText}

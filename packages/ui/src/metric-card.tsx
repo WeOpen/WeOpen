@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Card } from "./card";
 import { Chip } from "./chip";
+import { PixelIcon } from "./pixel-icon";
 import { cn } from "./utils";
 
 export type MetricCardProps = {
@@ -33,8 +34,8 @@ export function MetricCard({
           <strong>{value}</strong>
           {trend ? (
             <Chip color={chipColor(trendDirection)} size="sm" variant="outline">
-              {trendDirection === "up" ? <span aria-hidden="true">↗</span> : null}
-              {trendDirection === "down" ? <span aria-hidden="true">↘</span> : null}
+              {trendDirection === "up" ? <PixelIcon name="trend-up" variant="bare" /> : null}
+              {trendDirection === "down" ? <PixelIcon name="trend-down" variant="bare" /> : null}
               <Chip.Label>{trend}</Chip.Label>
             </Chip>
           ) : null}
