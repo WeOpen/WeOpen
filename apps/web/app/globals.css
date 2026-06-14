@@ -3407,6 +3407,7 @@ body > :not(.weopen-mosaic-background, .dialog-layer, .weopen-tooltip-portal, .w
 }
 
 .auth-session-control-compact {
+  align-items: center;
   justify-content: center;
   min-width: 0;
   width: auto;
@@ -3439,6 +3440,9 @@ body > :not(.weopen-mosaic-background, .dialog-layer, .weopen-tooltip-portal, .w
 }
 
 .weopen-admin-nav-footer-action .auth-session-logout {
+  align-items: center;
+  justify-content: center;
   min-height: 32px !important;
-  padding-inline: 10px !important;
+  padding: 0 !important;
+  width: 32px;
 }

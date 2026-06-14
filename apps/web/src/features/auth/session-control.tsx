@@ -62,13 +62,14 @@ export function SessionControl({ compact = false }: SessionControlProps) {
       <Button
         aria-label="Sign out"
         className="auth-session-logout"
+        isIconOnly={compact}
         isPending={isLoggingOut}
         onPress={onLogout}
         size="sm"
         variant="secondary"
       >
         <PixelIcon name="logout" variant="bare" />
-        <span>LOGOUT</span>
+        {compact ? null : <span>LOGOUT</span>}
       </Button>
     </div>
   );
