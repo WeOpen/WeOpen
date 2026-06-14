@@ -1,4 +1,3 @@
-import { AppShell } from "@/shared/layout/app-shell";
 import { Card, MetricCard, PageHeader, PixelIcon, StatusChip } from "@weopen/ui";
 
 const apiRoutes = [
@@ -11,7 +10,6 @@ const apiRoutes = [
 
 export default function ApiPage() {
   return (
-    <AppShell currentPath="/api">
       <section className="api-workspace">
         <PageHeader eyebrow="API" title="Go API" description="HTTP service boundary for auth, settings, audit logs, plugin metadata and authenticated plugin routes." />
         <div className="storage-stats">
@@ -35,6 +33,5 @@ export default function ApiPage() {
           </Card.Content>
         </Card>
       </section>
-    </AppShell>
   );
 }

@@ -1,4 +1,3 @@
-import { AppShell } from "@/shared/layout/app-shell";
 import { BlogPluginPage } from "@/features/blog";
 
 type BlogPostPageProps = {
@@ -8,9 +7,5 @@ type BlogPostPageProps = {
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const { id } = await params;
 
-  return (
-    <AppShell currentPath="/blog">
-      <BlogPluginPage initialPostId={id} />
-    </AppShell>
-  );
+  return <BlogPluginPage initialPostId={id} />;
 }

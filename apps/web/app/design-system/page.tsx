@@ -667,6 +667,7 @@ export default function DesignSystemPage() {
               tone="danger"
             >
               <ConfirmActionDialog
+                cancelLabel="Cancel"
                 confirmLabel="Acknowledge"
                 description="This preview opens a modal confirmation surface."
                 onConfirm={() => undefined}
@@ -741,9 +742,9 @@ export default function DesignSystemPage() {
             >
               <CommandSurface
                 items={[
-                  { name: "Button", description: "Primary actions and variants", status: "READY" },
-                  { name: "Dialog", description: "Confirm destructive operations", status: "REVIEW" },
-                  { name: "Marquee", description: "Motion rail for lightweight highlights", status: "LOCAL" }
+                  { name: "Button", description: "Primary actions and variants", status: "READY", tone: "success" },
+                  { name: "Dialog", description: "Confirm destructive operations", status: "REVIEW", tone: "warning" },
+                  { name: "Marquee", description: "Motion rail for lightweight highlights", status: "LOCAL", tone: "neutral" }
                 ]}
               />
             </ComponentPreviewCard>

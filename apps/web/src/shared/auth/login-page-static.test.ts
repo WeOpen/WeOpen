@@ -12,7 +12,7 @@ const loginForm = readFileSync(
   "utf8"
 );
 const loginApiProxy = readFileSync(
-  fileURLToPath(new URL("../../../app/api/[...path]/route.ts", import.meta.url)),
+  fileURLToPath(new URL("../../../app/(admin)/api/[...path]/route.ts", import.meta.url)),
   "utf8"
 );
 const authApi = readFileSync(

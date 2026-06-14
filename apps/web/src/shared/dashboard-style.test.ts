@@ -8,11 +8,15 @@ const globalsCss = readFileSync(
   "utf8"
 );
 const dashboardPage = readFileSync(
-  fileURLToPath(new URL("../../app/dashboard/page.tsx", import.meta.url)),
+  fileURLToPath(new URL("../../app/(admin)/dashboard/page.tsx", import.meta.url)),
   "utf8"
 );
 const pluginsPage = readFileSync(
-  fileURLToPath(new URL("../../app/plugins/page.tsx", import.meta.url)),
+  fileURLToPath(new URL("../../app/(admin)/plugins/page.tsx", import.meta.url)),
+  "utf8"
+);
+const appShell = readFileSync(
+  fileURLToPath(new URL("./layout/app-shell.tsx", import.meta.url)),
   "utf8"
 );
 
@@ -29,5 +33,10 @@ describe("dashboard table scroll styling", () => {
     assert.doesNotMatch(dashboardPage, /function iconForName/);
     assert.match(pluginsPage, /PixelIcon/);
     assert.doesNotMatch(pluginsPage, /function iconForPlugin/);
+  });
+
+  test("admin shell navigation uses Next client links", () => {
+    assert.match(appShell, /import Link from "next\/link"/);
+    assert.match(appShell, /linkComponent=\{Link\}/);
   });
 });

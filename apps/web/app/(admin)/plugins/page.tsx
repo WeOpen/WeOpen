@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { AppShell } from "@/shared/layout/app-shell";
 import { pluginManifests } from "@/plugins/registry";
 import { currentUser, hasPermission, type AuthUser } from "@/shared/api/auth";
 import { listPlugins, setPluginEnabled, type BackendPlugin } from "@/shared/api/plugins";
@@ -57,7 +56,6 @@ export default function PluginsPage() {
   }
 
   return (
-    <AppShell currentPath="/plugins">
       <section className="plugin-registry-page">
         <div className="plugin-registry-main">
           <div className="plugin-registry-hero">
@@ -139,7 +137,6 @@ export default function PluginsPage() {
           ) : null}
         </aside>
       </section>
-    </AppShell>
   );
 }
 

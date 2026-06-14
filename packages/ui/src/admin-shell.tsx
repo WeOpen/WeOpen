@@ -1,13 +1,28 @@
 "use client";
 
 import { motion, useReducedMotion } from "motion/react";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  forwardRef,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type AnchorHTMLAttributes,
+  type ComponentType,
+  type ReactNode
+} from "react";
 import type { AdminNavigationItem } from "./admin-navigation";
 import { Button } from "./button";
 import { Chip } from "./chip";
 import { PixelIcon } from "./pixel-icon";
 import { ScrollRail } from "./scroll-rail";
 import { cn } from "./utils";
+
+export type AdminShellLinkProps = Omit<AnchorHTMLAttributes<HTMLAnchorElement>, "href"> & {
+  href: string;
+};
+
+export type AdminShellLinkComponent = ComponentType<AdminShellLinkProps>;
 
 export type AdminShellProps = {
   appName: string;
@@ -16,6 +31,7 @@ export type AdminShellProps = {
   subtitle: string;
   currentPath?: string;
   environmentLabel?: string;
+  linkComponent?: AdminShellLinkComponent;
   navItems: AdminNavigationItem[];
   statusLabel?: string;
   searchPlaceholder?: string;
@@ -57,6 +73,7 @@ export function AdminShell({
   currentPath,
   environmentLabel = "LOCAL",
   footerActionSlot,
+  linkComponent,
   navItems,
   onNavItemSelect,
   runtimeLabel = "BROWSER",
@@ -91,6 +108,7 @@ export function AdminShell({
           appName={appName}
           brandHref={brandHref}
           currentPath={currentPath}
+          linkComponent={linkComponent}
           navItems={navItems}
           onNavItemSelect={onNavItemSelect}
           settingsHref={settingsHref}
@@ -113,6 +131,7 @@ export function AdminShell({
               brandHref={brandHref}
               currentPath={currentPath}
               isDrawer
+              linkComponent={linkComponent}
               navItems={navItems}
               onNavItemSelect={(item) => {
                 onNavItemSelect?.(item);
@@ -210,6 +229,7 @@ function NavigationPanel({
   brandHref,
   currentPath,
   isDrawer,
+  linkComponent,
   navItems,
   onNavItemSelect,
   settingsHref,
@@ -219,18 +239,21 @@ function NavigationPanel({
   brandHref: string;
   currentPath?: string;
   isDrawer?: boolean;
+  linkComponent?: AdminShellLinkComponent;
   navItems: AdminNavigationItem[];
   onNavItemSelect?: (item: AdminNavigationItem) => void;
   settingsHref?: string;
   footerActionSlot?: ReactNode;
 }) {
   const shouldReduceMotion = useReducedMotion();
+  const LinkComponent = linkComponent ?? AnchorLink;
+  const MotionLink = useMemo(() => motion.create(LinkComponent), [LinkComponent]);
 
   return (
     <div className={cn("weopen-admin-nav-card", { "weopen-admin-nav-card-drawer": isDrawer })}>
-      <a className="weopen-admin-brand" href={brandHref}>
+      <LinkComponent className="weopen-admin-brand" href={brandHref}>
         <strong>{appName.toUpperCase()}</strong>
-      </a>
+      </LinkComponent>
 
       <div className="weopen-admin-nav-scroll">
         <nav className="weopen-admin-nav-list">
@@ -268,7 +291,7 @@ function NavigationPanel({
             }
 
             return (
-              <motion.a
+              <MotionLink
                 animate={isActive ? "active" : "idle"}
                 aria-current={isActive ? "page" : undefined}
                 className={cn("weopen-admin-nav-item", { "weopen-admin-nav-item-active": isActive })}
@@ -290,23 +313,31 @@ function NavigationPanel({
                 {glyph}
                 <span>{item.label}</span>
                 {item.badge ? <Chip size="sm" variant="outline">{item.badge}</Chip> : null}
-              </motion.a>
+              </MotionLink>
             );
           })}
         </nav>
       </div>
 
       <footer className={cn("weopen-admin-nav-footer", { "weopen-admin-nav-footer-with-action": Boolean(footerActionSlot) })}>
-        <a className="weopen-admin-nav-footer-link" href={settingsHref ?? brandHref}>
+        <LinkComponent className="weopen-admin-nav-footer-link" href={settingsHref ?? brandHref}>
           <PixelIcon name="status" />
           <strong>WEOPEN ADMIN</strong>
           <small>ADMIN</small>
-        </a>
+        </LinkComponent>
         {footerActionSlot ? <div className="weopen-admin-nav-footer-action">{footerActionSlot}</div> : null}
       </footer>
     </div>
   );
 }
+
+const AnchorLink = forwardRef<HTMLAnchorElement, AdminShellLinkProps>(function AnchorLink({ children, href, ...props }, ref) {
+  return (
+    <a href={href} ref={ref} {...props}>
+      {children}
+    </a>
+  );
+});
 
 function navGlyphClassName(item: AdminNavigationItem): string {
   const routeName = item.href.replace(/^[/#]+/, "").replace(/[^a-z0-9-]+/gi, "-") || "root";

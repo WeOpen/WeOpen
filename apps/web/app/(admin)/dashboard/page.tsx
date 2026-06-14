@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { AppShell } from "@/shared/layout/app-shell";
 import { pluginManifests } from "@/plugins/registry";
 import { listPlugins, type BackendPlugin } from "@/shared/api/plugins";
 import { Button, Card, DataTable, MetricCard, PixelIcon, StatusChip, type StatusChipTone } from "@weopen/ui";
@@ -60,7 +59,7 @@ export default function DashboardPage() {
   }));
 
   return (
-    <AppShell currentPath="/dashboard">
+    <>
       <section className="dashboard-metrics" aria-label="Platform status">
         <MetricCard icon={<PixelIcon name="api" />} label="API Status" value="ONLINE" description="UPTIME 7D 14H 22M" />
         <MetricCard icon={<PixelIcon name="plugins" />} label="Plugins Installed" value={plugins?.length ?? pluginManifests.length} description={`ACTIVE ${activePlugins} · DISABLED ${disabledPlugins}`} />
@@ -162,7 +161,7 @@ export default function DashboardPage() {
           />
         </Card.Content>
       </Card>
-    </AppShell>
+    </>
   );
 }
 

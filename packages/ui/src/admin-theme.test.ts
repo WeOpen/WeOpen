@@ -74,6 +74,13 @@ describe("custom Nothing admin theme", () => {
     }
   });
 
+  test("lets host apps supply their router link to admin shell navigation", () => {
+    assert.match(publicApi, /AdminShellLinkComponent/);
+    assert.match(adminShellSource, /linkComponent\?: AdminShellLinkComponent/);
+    assert.match(adminShellSource, /const LinkComponent = linkComponent \?\? AnchorLink/);
+    assert.match(adminShellSource, /motion\.create\(LinkComponent\)/);
+  });
+
   test("uses the shared pixel icon system for generated UI icons", () => {
     assert.match(publicApi, /export \{ PixelIcon \}/);
     assert.match(publicApi, /PixelIconVariant/);

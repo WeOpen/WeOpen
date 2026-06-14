@@ -53,7 +53,7 @@ export function ConfirmActionDialog({
             </div>
             <p>{description}</p>
             <div className="dialog__footer">
-              <Button onPress={() => setIsOpen(false)} type="button" variant="ghost">
+              <Button onPress={() => setIsOpen(false)} type="button" variant="secondary">
                 {cancelLabel}
               </Button>
               <Button isPending={isPending} onPress={() => void confirm()} type="button" variant={tone === "danger" ? "danger" : "secondary"}>

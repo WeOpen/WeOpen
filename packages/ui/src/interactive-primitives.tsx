@@ -24,11 +24,25 @@ export function SegmentedControl({
   className,
   onValueChange,
   options,
+  style,
   value,
   ...props
 }: SegmentedControlProps) {
+  const selectedIndex = Math.max(0, options.findIndex((option) => option.value === value));
+
   return (
-    <div aria-label={ariaLabel} className={cn("weopen-segmented-control", className)} role="tablist" {...props}>
+    <div
+      aria-label={ariaLabel}
+      className={cn("weopen-segmented-control", className)}
+      role="tablist"
+      style={{
+        ...style,
+        "--weopen-segment-count": options.length,
+        "--weopen-segment-index": selectedIndex
+      } as CSSProperties}
+      {...props}
+    >
+      <span aria-hidden="true" className="weopen-segmented-control__indicator" />
       {options.map((option) => (
         <button
           aria-selected={value === option.value}
@@ -85,10 +99,13 @@ export function KeyboardShortcut({ className, keys, label, ...props }: KeyboardS
   );
 }
 
+export type CommandSurfaceTone = "accent" | "danger" | "neutral" | "success" | "warning";
+
 export type CommandSurfaceItem = {
   description: ReactNode;
   name: ReactNode;
   status: ReactNode;
+  tone?: CommandSurfaceTone;
 };
 
 export type CommandSurfaceProps = HTMLAttributes<HTMLDivElement> & {
@@ -115,7 +132,7 @@ export function CommandSurface({
         <button key={index} type="button">
           <span>{item.name}</span>
           <small>{item.description}</small>
-          <em>{item.status}</em>
+          <em data-tone={item.tone ?? "neutral"}>{item.status}</em>
         </button>
       ))}
     </div>

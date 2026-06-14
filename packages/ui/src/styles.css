@@ -41,6 +41,7 @@
   --radius-compact: 8px;
   --radius-technical: 4px;
   --ease-out: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
 
   /* Compatibility aliases used by app-level CSS. */
   --background: var(--black);
@@ -264,7 +265,7 @@ select:disabled {
   min-height: 44px;
   padding: 0 var(--space-lg);
   text-transform: uppercase;
-  transition: border-color 180ms var(--ease-out), color 180ms var(--ease-out), background-color 180ms var(--ease-out), opacity 180ms var(--ease-out);
+  transition: border-color 180ms var(--ease-out), color 180ms var(--ease-out), background-color 180ms var(--ease-out), opacity 180ms var(--ease-out), transform 120ms var(--ease-out);
   white-space: nowrap;
 }
 
@@ -272,6 +273,11 @@ select:disabled {
 .ui-button:hover {
   border-color: var(--text-primary);
   color: var(--text-display);
+}
+
+.button:active:not(:disabled),
+.ui-button:active:not(:disabled) {
+  transform: scale(0.97);
 }
 
 .button:focus-visible,
@@ -840,6 +846,7 @@ a:focus-visible {
   min-height: 42px;
   padding: 0 var(--space-md);
   text-transform: uppercase;
+  transition: border-color 180ms var(--ease-out), color 180ms var(--ease-out);
 }
 
 .tabs__tab--selected {
@@ -1416,6 +1423,20 @@ a:focus-visible {
   grid-auto-columns: minmax(0, 1fr);
   grid-auto-flow: column;
   padding: 4px;
+  position: relative;
+}
+
+.weopen-segmented-control__indicator {
+  background: var(--text-display);
+  bottom: 4px;
+  left: 4px;
+  pointer-events: none;
+  position: absolute;
+  top: 4px;
+  transform: translateX(calc(var(--weopen-segment-index, 0) * 100%));
+  transition: transform 240ms var(--ease-out-expo);
+  width: calc((100% - 8px) / var(--weopen-segment-count, 1));
+  z-index: 0;
 }
 
 .weopen-segmented-control button {
@@ -1425,8 +1446,10 @@ a:focus-visible {
   font-family: "Space Mono", monospace;
   font-size: 12px;
   min-height: 38px;
+  position: relative;
   text-transform: uppercase;
-  transition: background-color 180ms var(--ease-out), color 180ms var(--ease-out);
+  transition: background-color 180ms var(--ease-out), color 180ms var(--ease-out), transform 120ms var(--ease-out);
+  z-index: 1;
 }
 
 .weopen-segmented-control button:hover,
@@ -1435,8 +1458,11 @@ a:focus-visible {
 }
 
 .weopen-segmented-control button[aria-selected="true"] {
-  background: var(--text-display);
   color: var(--black);
+}
+
+.weopen-segmented-control button:active {
+  transform: scale(0.96);
 }
 
 .weopen-progress-rail {
@@ -1535,12 +1561,27 @@ a:focus-visible {
 }
 
 .weopen-command-surface em {
-  color: var(--accent);
+  color: var(--text-secondary);
   font-style: normal;
+}
+
+.weopen-command-surface em[data-tone="success"] {
+  color: var(--success);
+}
+
+.weopen-command-surface em[data-tone="warning"] {
+  color: var(--warning);
+}
+
+.weopen-command-surface em[data-tone="danger"],
+.weopen-command-surface em[data-tone="accent"] {
+  color: var(--accent);
 }
 
 .weopen-marquee-rail {
   border: 1px solid var(--border-visible);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
   overflow: hidden;
   padding: 14px 0;
 }
@@ -1727,6 +1768,15 @@ a:focus-visible {
   .weopen-border-beam::before {
     animation: none;
   }
+
+  .dialog-backdrop,
+  .weopen-confirm-dialog {
+    animation-name: weopen-dialog-backdrop-in;
+  }
+
+  .weopen-segmented-control__indicator {
+    transition: none;
+  }
 }
 
 .table__content {
@@ -1755,6 +1805,14 @@ a:focus-visible {
 
 tbody tr:last-child .table__cell {
   border-bottom: 0;
+}
+
+.weopen-data-table tbody tr {
+  transition: background-color 180ms var(--ease-out);
+}
+
+.weopen-data-table tbody tr:hover .table__cell {
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .weopen-empty-state .card__content {
@@ -1786,7 +1844,36 @@ tbody tr:last-child .table__cell {
   display: inline-flex;
 }
 
+@keyframes weopen-dialog-backdrop-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes weopen-dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.dialog-backdrop {
+  -webkit-backdrop-filter: blur(2px);
+  animation: weopen-dialog-backdrop-in 160ms var(--ease-out);
+  backdrop-filter: blur(2px);
+}
+
 .weopen-confirm-dialog {
+  animation: weopen-dialog-in 220ms var(--ease-out-expo);
   background: var(--surface);
   border: 1px solid var(--border-visible);
   border-radius: 16px;
@@ -2461,7 +2548,8 @@ body {
   min-width: 0;
 }
 
-.weopen-admin-nav-footer-link > span {
+.weopen-admin-nav-footer-link > .weopen-pixel-icon {
+  align-self: center;
   color: var(--accent);
   grid-row: span 2;
 }
@@ -3130,6 +3218,19 @@ body {
 .weopen-admin-nav-item:hover .weopen-admin-nav-glyph,
 .weopen-admin-nav-item-active .weopen-admin-nav-glyph {
   color: var(--accent);
+}
+
+.weopen-brand-mark {
+  color: currentColor;
+  display: inline-block;
+  height: 1em;
+  width: auto;
+}
+
+.weopen-brand-mark-dot,
+.weopen-brand-mark-tip {
+  transform-box: fill-box;
+  transform-origin: center;
 }
 
 .weopen-pixel-icon {

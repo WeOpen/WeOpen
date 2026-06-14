@@ -1,4 +1,3 @@
-import { AppShell } from "@/shared/layout/app-shell";
 import { SettingsForm } from "@/features/settings/settings-form";
 import { AdminAccessPanel } from "@/features/settings/admin-access-panel";
 import { AuditLogPanel } from "@/features/settings/audit-log-panel";
@@ -7,7 +6,6 @@ import { Card, PageHeader, StatusChip } from "@weopen/ui";
 
 export default function SettingsPage() {
   return (
-    <AppShell currentPath="/settings">
       <section className="settings-console">
         <PageHeader
           actions={<StatusChip tone="success">Live API</StatusChip>}
@@ -36,6 +34,5 @@ export default function SettingsPage() {
           <AuditLogPanel />
         </div>
       </section>
-    </AppShell>
   );
 }

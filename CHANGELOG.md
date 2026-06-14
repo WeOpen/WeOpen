@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added a reusable `WeOpenMark` pixel-dot brand mark plus SVG/ICO/Apple favicon assets for consistent browser and login branding.
+- Added an authenticated Web admin route-group layout so management pages share one persistent shell boundary.
 - Added shared UI form controls, interactive primitives, pixel icons, scroll rails, and toast state/rendering primitives for the Nothing-style admin surface.
 - Added a Web toast bridge and expanded design-system page examples so live pages can exercise shared feedback, motion, and interaction patterns.
 - Added updated design-system reference screenshots for desktop, fold, mobile, and hero states.
@@ -26,6 +28,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Moved Web management routes under the `(admin)` route group and let the shared AppShell derive active navigation from `usePathname`.
+- Updated shared admin navigation to support Next.js client links, preserving client-side transitions and shell state across admin route changes.
+- Refined segmented controls, command-surface tones, and button press feedback with smoother shared micro-interactions.
 - Refined Web and desktop admin shells with tighter shared visual language, dot-matrix scroll treatments, table overflow behavior, and pixel-icon module/status affordances.
 - Reworked dashboard module listings to use the shared data-table and status-chip primitives with consistent horizontal scrolling.
 - Frontend API clients now use a shared credentialed fetch helper that attaches CSRF tokens and preserves structured API errors.
@@ -36,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Fixed admin navigation remount/flash behavior during Web route changes by moving shell composition into the route-group layout.
 - Fixed remaining custom UI overflow and control-state inconsistencies across dashboard, plugin, devtools, storage, audit-log, and login surfaces.
 - Fixed plugin route permission matching to fail closed for unmatched unsafe plugin endpoints.
 - Fixed disabled plugin handling so backend plugin routes reject requests when the plugin is turned off.

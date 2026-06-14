@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import { AppShell } from "@/shared/layout/app-shell";
 import { webPluginRegistry } from "@/plugins/registry";
 
 type PluginDetailPageProps = {
@@ -17,9 +16,5 @@ export default async function PluginDetailPage({ params }: PluginDetailPageProps
   }
 
   const Component = plugin.component;
-  return (
-    <AppShell currentPath={plugin.manifest.nav?.[0]?.path ?? "/plugins"}>
-      {Component ? <Component manifest={plugin.manifest} /> : null}
-    </AppShell>
-  );
+  return Component ? <Component manifest={plugin.manifest} /> : null;
 }

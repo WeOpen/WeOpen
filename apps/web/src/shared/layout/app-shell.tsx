@@ -1,6 +1,8 @@
 "use client";
 
 import { AdminShell, createAdminNavigation } from "@weopen/ui";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { SessionControl } from "@/features/auth/session-control";
 import { pluginManifests } from "@/plugins/registry";
@@ -9,9 +11,9 @@ import { listPlugins, type BackendPlugin } from "@/shared/api/plugins";
 
 /** AppShell composes the shared custom Nothing-style management shell for Web routes. */
 export function AppShell({
-  children,
-  currentPath
-}: Readonly<{ children: React.ReactNode; currentPath?: string }>) {
+  children
+}: Readonly<{ children: React.ReactNode }>) {
+  const pathname = usePathname();
   const [user, setUser] = useState<AuthUser | null>(null);
   const [plugins, setPlugins] = useState<BackendPlugin[] | null>(null);
 
@@ -54,9 +56,10 @@ export function AppShell({
     <AdminShell
       appMark="W"
       appName="WeOpen"
-      currentPath={currentPath}
+      currentPath={pathname}
       environmentLabel={process.env.NODE_ENV?.toUpperCase() ?? "LOCAL"}
       footerActionSlot={<SessionControl compact />}
+      linkComponent={Link}
       navItems={navItems}
       runtimeLabel="WEB"
       subtitle="Personal Management Platform"
