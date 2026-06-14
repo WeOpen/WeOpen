@@ -3439,6 +3439,10 @@ body > :not(.weopen-mosaic-background, .dialog-layer, .weopen-tooltip-portal, .w
   padding-inline: 12px !important;
 }
 
+.weopen-admin-nav-footer-action {
+  justify-content: center;
+}
+
 .weopen-admin-nav-footer-action .auth-session-logout {
   align-items: center;
   justify-content: center;
