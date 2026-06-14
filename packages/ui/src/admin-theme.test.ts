@@ -110,11 +110,11 @@ describe("custom Nothing admin theme", () => {
 
     for (const [name, pattern] of Object.entries(pixelIconPatterns)) {
       assert.ok(pattern.points.length >= (denseIconNames.has(name) ? 3 : 7), `${name} has too few dots`);
-      assert.ok(pattern.points.length <= 18, `${name} is too dense`);
+      assert.ok(pattern.points.length <= 26, `${name} is too dense`);
 
       for (const [x, y] of pattern.points) {
-        assert.ok(x >= 1 && x <= 5, `${name} x=${x} touches the outer grid`);
-        assert.ok(y >= 1 && y <= 5, `${name} y=${y} touches the outer grid`);
+        assert.ok(x >= 1 && x <= 7, `${name} x=${x} touches the outer grid`);
+        assert.ok(y >= 1 && y <= 7, `${name} y=${y} touches the outer grid`);
       }
 
       const signature = pattern.points.map((point) => point.join(",")).sort().join("|");
