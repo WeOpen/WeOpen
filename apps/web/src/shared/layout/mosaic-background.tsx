@@ -78,9 +78,9 @@ function mixChannel(from: number, to: number, amount: number): number {
 }
 
 function accentColor(tile: Tile, energy: number, time: number): string {
-  const pulse = 0.08 * Math.sin(time * 0.004 + tile.phase);
-  const amount = Math.max(0, Math.min(1, energy + pulse));
-  const base = 34 + tile.tone * 42;
+  const pulse = 0.06 * Math.sin(time * 0.004 + tile.phase);
+  const amount = Math.max(0, Math.min(1, energy + pulse)) * 0.55;
+  const base = 18 + tile.tone * 14;
   const r = mixChannel(base, 37, amount);
   const g = mixChannel(base, 206, amount);
   const b = mixChannel(base, 83, amount);
@@ -88,7 +88,7 @@ function accentColor(tile: Tile, energy: number, time: number): string {
 }
 
 function baseColor(tile: Tile): string {
-  const value = Math.round(17 + tile.tone * 42 + Math.min(tile.size / 20, 1) * 8);
+  const value = Math.round(9 + tile.tone * 14 + Math.min(tile.size / 20, 1) * 4);
   return `rgb(${value}, ${value}, ${value})`;
 }
 
@@ -212,7 +212,7 @@ export function MosaicBackground() {
       trail.push({
         energy,
         life: 1,
-        radius: energy > 1 ? 28 : 20,
+        radius: energy > 1 ? 22 : 16,
         x,
         y
       });

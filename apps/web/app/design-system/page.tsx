@@ -75,10 +75,10 @@ const componentRows: ComponentRow[] = [
 
 const tokenRows = [
   ["BG", "#000000"],
-  ["SURFACE", "#111111"],
-  ["BORDER", "#333333"],
+  ["SURFACE", "#030303"],
+  ["BORDER", "#3A3A3A"],
   ["TEXT PRIMARY", "#E8E8E8"],
-  ["TEXT SECONDARY", "#999999"],
+  ["TEXT SECONDARY", "#9A9A9A"],
   ["ACCENT", "#D71921"],
   ["SUCCESS", "#22C55E"],
   ["WARNING", "#F59E0B"]
@@ -86,9 +86,9 @@ const tokenRows = [
 
 const componentStats = [
   ["Groups", "06"],
-  ["Primitives", "28"],
+  ["Primitives", "26"],
   ["Motion", "180ms"],
-  ["Radius", "8px"]
+  ["Radius", "0"]
 ];
 
 export default function DesignSystemPage() {
@@ -186,7 +186,7 @@ export default function DesignSystemPage() {
             Home
           </Link>
           <Link className="landing-console-link" href="/dashboard">
-            Open console
+            Console
           </Link>
         </div>
       </header>
@@ -194,9 +194,9 @@ export default function DesignSystemPage() {
       <section className="design-system-hero">
         <div className="design-system-hero-copy">
           <PageHeader
-            eyebrow="Design System"
+            eyebrow="v0.1 · OLED Theme"
             title="DESIGN SYSTEM"
-            description="Custom React components and WeOpen theme tokens."
+            description="Custom React components and the WeOpen theme tokens that power them."
           />
           <div className="design-system-group-nav" aria-label="Component groups">
             {[
@@ -879,7 +879,7 @@ export default function DesignSystemPage() {
               </div>
               <div>
                 <h3>Radius</h3>
-                <p>NONE 0</p><p>SM 2</p><p>MD 4</p><p>LG 8</p><p>ROUND 999</p>
+                <p>BASE 0</p><p>COMPACT 0</p><p>TECHNICAL 0</p><p>PILL 999</p>
               </div>
             </section>
             <section>
@@ -934,13 +934,13 @@ function ComponentSection({ children, description, eyebrow, title }: ComponentSe
   );
 }
 
-function ComponentPreviewCard({ api, children, code, detail, index, title, tone = "neutral", wide }: ComponentPreviewCardProps) {
+function ComponentPreviewCard({ api, children, code, detail, index, title, wide }: ComponentPreviewCardProps) {
   return (
     <Card className={`design-system-spec-card design-system-component-card${wide ? " design-system-component-card-wide" : ""}`}>
       <Card.Header>
         <div className="design-system-card-title-row">
           <Card.Title>{title}</Card.Title>
-          <StatusChip tone={tone}>{index}</StatusChip>
+          <StatusChip>{index}</StatusChip>
         </div>
         <p className="design-system-card-detail">{detail}</p>
       </Card.Header>

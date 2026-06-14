@@ -25,7 +25,7 @@ export default function HomePage() {
               Design system
             </Link>
             <Link className="landing-console-link" href="/dashboard">
-              Open console
+              Console
             </Link>
           </div>
         </header>

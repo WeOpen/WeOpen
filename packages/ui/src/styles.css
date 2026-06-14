@@ -793,7 +793,7 @@ a:focus-visible {
   border: 1px solid var(--border-visible);
   border-radius: var(--radius);
   color: var(--text-secondary);
-  font-family: "Space Mono", var(--font-mono, monospace);
+  font-family: "Space Grotesk", var(--font-sans, system-ui), sans-serif;
   font-size: var(--body-sm);
   padding: var(--space-md);
 }
@@ -815,6 +815,7 @@ a:focus-visible {
 }
 
 .alert__description {
+  color: var(--text-primary);
   margin: 0;
 }
 
@@ -1461,7 +1462,7 @@ a:focus-visible {
 
 .weopen-progress-rail i {
   background:
-    linear-gradient(90deg, var(--accent) 0 var(--weopen-progress-value), transparent var(--weopen-progress-value)),
+    linear-gradient(90deg, var(--text-primary) 0 var(--weopen-progress-value), transparent var(--weopen-progress-value)),
     repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.18) 0 1px, transparent 1px 10px);
   border: 1px solid var(--border-visible);
   display: block;
@@ -2055,7 +2056,7 @@ tbody tr:last-child .table__cell {
   --text-secondary: #9a9a9a;
   --text-primary: #e8e8e8;
   --text-display: #ffffff;
-  --accent: #ff111a;
+  --accent: #d71921;
   --success: #22c55e;
   --warning: #f59e0b;
   --radius: 0;
@@ -2076,7 +2077,7 @@ body {
 }
 
 body {
-  font-family: "Space Mono", var(--font-mono, monospace);
+  font-family: "Space Grotesk", var(--font-sans, system-ui), sans-serif;
   font-size: 15px;
   letter-spacing: -0.01em;
 }
@@ -2158,7 +2159,7 @@ body {
 .page-description,
 .weopen-metric-card p {
   color: var(--text-secondary);
-  font-family: "Space Mono", var(--font-mono, monospace);
+  font-family: "Space Grotesk", var(--font-sans, system-ui), sans-serif;
   font-size: 13px;
   line-height: 1.55;
 }
@@ -2175,9 +2176,9 @@ body {
 
 .button--primary,
 .ui-button-primary {
-  background: transparent;
-  border-color: var(--accent);
-  color: var(--accent);
+  background: var(--text-display);
+  border-color: var(--text-display);
+  color: var(--black);
 }
 
 .button--secondary,
@@ -2668,7 +2669,7 @@ body {
 
 .tabs__tab--selected {
   border-bottom-color: var(--accent);
-  color: var(--accent);
+  color: var(--text-display);
 }
 
 .tabs__indicator {
