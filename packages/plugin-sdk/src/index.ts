@@ -6,4 +6,5 @@ export type {
   PluginWidgetManifest,
   RegisteredPlugin
 } from "./manifest";
-export { DuplicatePluginError, PluginNotFoundError, PluginRegistry } from "./registry";
+export { definePluginManifest } from "./manifest";
+export { DuplicatePluginError, PluginNotFoundError, PluginRegistry, createPluginRegistry } from "./registry";

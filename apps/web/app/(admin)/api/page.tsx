@@ -1,37 +1,43 @@
-import { Card, MetricCard, PageHeader, PixelIcon, StatusChip } from "@weopen/ui";
+import { headers } from "next/headers";
+import { ApiDirectory } from "./api-directory";
+import { backendApiUrl } from "@/shared/api/server-base";
+import type { ApiRouteCatalog } from "@/shared/api/routes";
 
-const apiRoutes = [
-  ["/healthz", "PUBLIC", "200 OK"],
-  ["/api/auth/login", "PUBLIC", "READY"],
-  ["/api/plugins", "AUTH", "READY"],
-  ["/api/plugins/blog/*", "AUTH", "READY"],
-  ["/api/plugins/storage-r2/*", "AUTH", "READY"]
-];
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
-export default function ApiPage() {
-  return (
-      <section className="api-workspace">
-        <PageHeader eyebrow="API" title="Go API" description="HTTP service boundary for auth, settings, audit logs, plugin metadata and authenticated plugin routes." />
-        <div className="storage-stats">
-          <MetricCard icon={<PixelIcon name="service" />} label="Service" value="ONLINE" description="Go HTTP API" trend="live" trendDirection="up" />
-          <MetricCard icon={<PixelIcon name="auth" />} label="Session" value="COOKIE" description="HttpOnly auth boundary" />
-          <MetricCard icon={<PixelIcon name="routes" />} label="Plugin routes" value="4" description="Mounted behind auth" />
-          <MetricCard icon={<PixelIcon name="header" />} label="Actor header" value="READY" description="X-WeOpen-Actor-ID" />
-        </div>
-        <Card className="api-route-panel">
-          <Card.Header><Card.Title>Route Map</Card.Title></Card.Header>
-          <Card.Content>
-            <div className="api-route-list">
-              {apiRoutes.map(([path, access, status]) => (
-                <div className="api-route-row" key={path}>
-                  <code>{path}</code>
-                  <span>{access}</span>
-                  <StatusChip tone={status === "200 OK" ? "success" : "neutral"}>{status}</StatusChip>
-                </div>
-              ))}
-            </div>
-          </Card.Content>
-        </Card>
-      </section>
-  );
+export default async function ApiPage() {
+  const { catalog, error } = await loadInitialRouteCatalog();
+  return <ApiDirectory initialCatalog={catalog} initialError={error} />;
+}
+
+async function loadInitialRouteCatalog(): Promise<{ catalog: ApiRouteCatalog | null; error?: string }> {
+  const requestHeaders = await headers();
+  const cookie = requestHeaders.get("cookie") ?? "";
+
+  try {
+    const response = await fetch(backendApiUrl("/api/routes"), {
+      cache: "no-store",
+      headers: {
+        Accept: "application/json",
+        Cookie: cookie
+      }
+    });
+    if (!response.ok) {
+      return { catalog: null, error: await routeCatalogError(response) };
+    }
+    const body = (await response.json()) as ApiRouteCatalog;
+    return { catalog: { groups: Array.isArray(body.groups) ? body.groups : [] } };
+  } catch {
+    return { catalog: null, error: "接口目录读取失败" };
+  }
+}
+
+async function routeCatalogError(response: Response): Promise<string> {
+  try {
+    const body = (await response.json()) as { error?: { message?: string } };
+    return body.error?.message ?? "接口目录读取失败";
+  } catch {
+    return "接口目录读取失败";
+  }
 }

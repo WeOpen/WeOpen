@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/WeOpen/WeOpen/internal/core/plugin"
+	"github.com/WeOpen/WeOpen/platform/core/plugin"
 	"github.com/WeOpen/WeOpen/services/api/internal/adapters/secrets"
 	"github.com/WeOpen/WeOpen/services/api/internal/domain/audit"
 	"github.com/WeOpen/WeOpen/services/api/internal/domain/auth"
@@ -31,6 +31,7 @@ type PluginRoute struct {
 	Handler         http.Handler
 	Permissions     []plugin.Permission
 	PermissionRules []PermissionRule
+	Catalog         RouteGroup
 }
 
 // PermissionRule narrows plugin-route permissions by HTTP method and plugin-local path.
@@ -71,6 +72,11 @@ func NewServer(options ...ServerOptions) http.Handler {
 		mux.HandleFunc("/api/admin/roles", adminHandlers.roles)
 		mux.HandleFunc("/api/admin/sessions", adminHandlers.sessions)
 		mux.HandleFunc("/api/admin/sessions/", adminHandlers.sessionByID)
+		routeCatalogHandlers := routeCatalogHandlers{
+			auth:   opts.Auth,
+			groups: routeCatalog(opts.PluginRoutes),
+		}
+		mux.HandleFunc("/api/routes", routeCatalogHandlers.routes)
 	}
 	if opts.Auth != nil && opts.Secrets != nil && opts.Audit != nil {
 		settingsHandlers := settingsHandlers{
@@ -87,7 +93,7 @@ func NewServer(options ...ServerOptions) http.Handler {
 			states = pluginstate.NewMemoryStore()
 		}
 		pluginStatesForRoutes = states
-		pluginHandlers := pluginHandlers{auth: opts.Auth, registry: opts.Plugins, states: states}
+		pluginHandlers := pluginHandlers{auth: opts.Auth, registry: opts.Plugins, states: states, routeIndex: pluginRouteIndex(opts.PluginRoutes)}
 		mux.HandleFunc("/api/plugins", pluginHandlers.plugins)
 		mux.HandleFunc("/api/plugins/", pluginHandlers.pluginByID)
 		pluginByIDHandler = http.HandlerFunc(pluginHandlers.pluginByID)

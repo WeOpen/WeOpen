@@ -60,11 +60,18 @@ export type SyncDomainsResult = {
 };
 
 type AssetsResponse = {
-  assets: DomainAsset[];
+  assets?: DomainAsset[] | null;
 };
 
 type DNSRecordsResponse = {
-  records: DNSRecordSnapshot[];
+  records?: DNSRecordSnapshot[] | null;
+};
+
+type SyncDomainsWireResult = {
+  assets?: DomainAsset[] | null;
+  syncedAssets?: number | null;
+  syncedDnsRecords?: number | null;
+  syncedAt?: string | null;
 };
 
 
@@ -76,7 +83,7 @@ export async function listDomainAssets(): Promise<DomainAsset[]> {
   });
   await ensureDomainResponse(response, "域名资产读取失败");
   const body = (await response.json()) as AssetsResponse;
-  return body.assets;
+  return normalizeDomainAssets(body.assets);
 }
 
 /** syncDomains asks the API to read Cloudflare inventory and refresh DNS/certificate snapshots. */
@@ -87,7 +94,14 @@ export async function syncDomains(): Promise<SyncDomainsResult> {
     headers: { Accept: "application/json" }
   });
   await ensureDomainResponse(response, "域名同步失败");
-  return response.json() as Promise<SyncDomainsResult>;
+  const body = (await response.json()) as SyncDomainsWireResult;
+  const assets = normalizeDomainAssets(body.assets);
+  return {
+    assets,
+    syncedAssets: body.syncedAssets ?? assets.length,
+    syncedDnsRecords: body.syncedDnsRecords ?? 0,
+    syncedAt: body.syncedAt ?? new Date().toISOString()
+  };
 }
 
 /** listDomainDNSRecords reads stored DNS snapshots; DNS mutation is disabled in v1. */
@@ -98,7 +112,7 @@ export async function listDomainDNSRecords(assetId: string): Promise<DNSRecordSn
   });
   await ensureDomainResponse(response, "DNS 记录读取失败");
   const body = (await response.json()) as DNSRecordsResponse;
-  return body.records;
+  return Array.isArray(body.records) ? body.records : [];
 }
 
 async function ensureDomainResponse(response: Response, fallback: string) {
@@ -116,4 +130,23 @@ async function ensureDomainResponse(response: Response, fallback: string) {
     message = "请先登录后再管理域名资产";
   }
   throw new Error(message);
+}
+
+function normalizeDomainAssets(assets: DomainAsset[] | null | undefined): DomainAsset[] {
+  return Array.isArray(assets) ? assets.map(normalizeDomainAsset) : [];
+}
+
+function normalizeDomainAsset(asset: DomainAsset): DomainAsset {
+  return {
+    ...asset,
+    certificate: {
+      status: asset.certificate?.status ?? "unchecked",
+      daysRemaining: asset.certificate?.daysRemaining ?? 0,
+      checkedAt: asset.certificate?.checkedAt,
+      error: asset.certificate?.error,
+      expiresAt: asset.certificate?.expiresAt,
+      issuer: asset.certificate?.issuer
+    },
+    nameServers: Array.isArray(asset.nameServers) ? asset.nameServers : []
+  };
 }

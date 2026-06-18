@@ -2,7 +2,7 @@
 
 WeOpen 是一个面向个人开发者的低成本、插件化个人管理平台。它把博客、R2 文件管理、开发工具箱、域名资产、设置和审计能力收敛到一个统一后台，并预留 Web、API、Desktop 多端复用路径。
 
-> 当前分支已完成平台骨架、认证/设置、插件框架、博客、R2 存储和 Devtools 插件；Domains、Desktop 深化和部署硬化仍在后续里程碑中推进。详细计划见 [`PLAN.md`](PLAN.md)。
+> 当前分支已完成平台骨架、认证/设置、插件框架、博客、R2 存储和 Devtools 插件；Domains、Desktop 深化和部署硬化仍在后续里程碑中推进。详细计划见 [`docs/PLAN.md`](docs/PLAN.md)。
 
 ## 目录
 
@@ -60,7 +60,7 @@ flowchart TB
   Desktop --> API
 
   API --> Core[平台核心<br/>auth / settings / audit / plugin registry]
-  API --> BackendPlugins[后端内置插件<br/>internal/plugins]
+  API --> BackendPlugins[后端内置插件<br/>platform/plugins]
   BackendPlugins --> BlogPlugin[blog]
   BackendPlugins --> StoragePlugin[storage_r2]
   BackendPlugins --> DevtoolsPlugin[devtools manifest only]
@@ -94,9 +94,9 @@ flowchart LR
   subgraph Shared[共享模块]
     UI[packages/ui]
     PluginSDK[packages/plugin-sdk]
-    Core[internal/core]
-    Providers[internal/providers]
-    Plugins[internal/plugins]
+    Core[platform/core]
+    Providers[platform/providers]
+    Plugins[platform/plugins]
   end
 
   WebRoutes --> WebFeatures
@@ -139,22 +139,22 @@ sequenceDiagram
 │  ├─ web/                 # Next.js Web 后台
 │  └─ desktop/             # Wails v3 桌面端
 ├─ services/
-│  └─ api/                 # Go API 服务
+│  └─ api/                 # Go API 服务（Vercel 项目 #2，serverless）
+│     └─ migrations/       # 数据库迁移 SQL
+├─ platform/               # 共享 Go 平台库
+│  ├─ core/                # 平台核心 contracts（插件协议/注册表）
+│  ├─ providers/           # R2、Cloudflare 等外部 provider 适配器
+│  └─ plugins/             # 后端内置插件
 ├─ packages/
 │  ├─ ui/                  # 共享 React UI primitives
-│  ├─ plugin-sdk/          # 前端插件 SDK
-│  ├─ sdk/                 # OpenAPI 生成 SDK 的预留位置
+│  ├─ plugin-sdk/          # 前端插件 manifest/registry 契约
+│  ├─ api-client/          # 类型化 API 客户端（原 sdk）
 │  └─ config/              # 共享 TS/ESLint 配置
-├─ internal/
-│  ├─ core/                # 平台核心 Go contracts
-│  ├─ providers/           # R2、Cloudflare 等外部 provider
-│  └─ plugins/             # 后端内置插件
-├─ db/
-│  ├─ migrations/          # 数据库迁移
-│  └─ seed/                # 种子数据预留
-├─ docs/                   # PRD、设计、开发规范、计划文档
+├─ infra/                  # 部署与运维（Vercel、env、说明）
+├─ docs/                   # PRD、设计、ADR、开发规范、计划文档
+├─ experiments/            # 与平台解耦的实验/参考项目
 ├─ CHANGELOG.md            # Keep a Changelog 格式的人工维护变更日志
-├─ PLAN.md                 # 里程碑实施计划
+├─ docs/PLAN.md            # 里程碑实施计划
 ├─ VERSION                 # 仓库统一版本号
 ├─ pnpm-workspace.yaml
 └─ go.work
@@ -288,7 +288,7 @@ go test ./services/api/...
 Go workspace 根目录不是单一 Go module，因此不要把 `go test ./...` 当成根目录全量验证命令。需要覆盖内部模块时显式列出模块路径，例如：
 
 ```bash
-go test ./services/api/... ./internal/core/... ./internal/plugins/blog/... ./internal/plugins/devtools/... ./internal/plugins/storage_r2/... ./internal/providers/r2/...
+go test ./services/api/... ./platform/core/... ./platform/plugins/blog/... ./platform/plugins/devtools/... ./platform/plugins/storage_r2/... ./platform/providers/r2/...
 ```
 
 ## 常用命令
@@ -331,8 +331,8 @@ go test ./services/api/... ./internal/core/... ./internal/plugins/blog/... ./int
 | `NEXT_PUBLIC_API_BASE_URL` | 浏览器直连 API 的可选地址；默认留空并走 Web 同源 `/api` 代理 | 留空 |
 | `WEOPEN_API_BASE_URL` | Web 服务端代理访问 Go API 的地址 | `http://localhost:8080` |
 | `NEXT_PUBLIC_SHOW_DEV_CREDENTIALS` | 是否在 local 登录页显示本地凭据提示；不暴露密码值 | `false` |
-| `DATABASE_URL` | PostgreSQL 兼容数据库连接；配置后 API auth/session/RBAC 使用 SQL store | 完整持久化时配置 |
-| `MIGRATIONS_DIR` | API 启动时加载 SQL migrations 的目录 | `db/migrations` |
+| `DATABASE_URL` | PostgreSQL 兼容数据库连接；配置后 API auth/session/RBAC、secrets、audit、plugin state、login rate-limit、blog、storage、domains 使用 SQL store | 完整持久化时配置 |
+| `MIGRATIONS_DIR` | API 启动时加载 SQL migrations 的目录 | `services/api/migrations` |
 | `SESSION_SECRET` | Session 签名/派生密钥 | 生产必须替换 |
 | `SECRET_ENCRYPTION_KEY` | 外部服务密钥加密 key | 生产必须替换 |
 | `ADMIN_EMAIL` | 本地单用户账号 | `admin@example.com` |
@@ -357,6 +357,7 @@ go test ./services/api/... ./internal/core/... ./internal/plugins/blog/... ./int
 
 - [产品需求文档](docs/PRD-personal-management-platform.md)
 - [技术设计文档](docs/DESIGN-personal-management-platform.md)
-- [实施计划](PLAN.md)
+- [实施计划](docs/PLAN.md)
 - [开发规范](docs/development/DEVELOPMENT_STANDARDS.md)
+- [插件开发说明](docs/development/PLUGIN_DEVELOPMENT.md)
 - [分层架构重构设计](docs/plans/2026-05-14-layered-architecture-restructure-design.md)

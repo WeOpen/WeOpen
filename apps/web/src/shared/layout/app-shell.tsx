@@ -1,13 +1,14 @@
 "use client";
 
-import { AdminShell, createAdminNavigation } from "@weopen/ui";
+import { AdminShell, ThemeToggle, createAdminNavigation } from "@weopen/ui";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { SessionControl } from "@/features/auth/session-control";
 import { pluginManifests } from "@/plugins/registry";
 import { currentUser, hasAnyPermission, type AuthUser } from "@/shared/api/auth";
-import { listPlugins, type BackendPlugin } from "@/shared/api/plugins";
+import { PLUGIN_REGISTRY_CHANGED_EVENT, listPlugins, type BackendPlugin } from "@/shared/api/plugins";
+import { useRouteRefresh } from "@/shared/hooks/use-route-refresh";
 
 /** AppShell composes the shared custom Nothing-style management shell for Web routes. */
 export function AppShell({
@@ -17,7 +18,7 @@ export function AppShell({
   const [user, setUser] = useState<AuthUser | null>(null);
   const [plugins, setPlugins] = useState<BackendPlugin[] | null>(null);
 
-  useEffect(() => {
+  const loadShellState = useCallback(() => {
     let isMounted = true;
     void Promise.allSettled([currentUser(), listPlugins()]).then(([userResult, pluginResult]) => {
       if (!isMounted) {
@@ -28,6 +29,21 @@ export function AppShell({
     });
     return () => {
       isMounted = false;
+    };
+  }, []);
+
+  useRouteRefresh({
+    refresh: loadShellState
+  });
+
+  useEffect(() => {
+    function onPluginRegistryChanged(event: Event) {
+      setPlugins((event as CustomEvent<BackendPlugin[]>).detail);
+    }
+
+    window.addEventListener(PLUGIN_REGISTRY_CHANGED_EVENT, onPluginRegistryChanged);
+    return () => {
+      window.removeEventListener(PLUGIN_REGISTRY_CHANGED_EVENT, onPluginRegistryChanged);
     };
   }, []);
 
@@ -56,6 +72,7 @@ export function AppShell({
     <AdminShell
       appMark="W"
       appName="WeOpen"
+      actionSlot={<ThemeToggle className="admin-theme-toggle" defaultTheme="dark" storageKey="weopen-theme" />}
       currentPath={pathname}
       environmentLabel={process.env.NODE_ENV?.toUpperCase() ?? "LOCAL"}
       footerActionSlot={<SessionControl compact />}

@@ -1,8 +1,10 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
 import { decodeBase64, decodeUrl, encodeBase64, encodeUrl } from "./tools";
 import { CopyButton } from "./copy-button";
+import type { ToolResult } from "./types";
 import { Alert, Button, Textarea } from "@weopen/ui";
 
 type EncodingMode = "base64-encode" | "base64-decode" | "url-encode" | "url-decode";
@@ -14,10 +16,15 @@ const modeLabels: Record<EncodingMode, string> = {
   "url-decode": "URL decode"
 };
 
-export function EncodingTool() {
-  const [input, setInput] = useState("https://weopen.dev/?q=developer tools");
+const emptyResult: ToolResult = { ok: true, output: "" };
+
+export function EncodingTool({ statusSlot }: { statusSlot?: ReactNode }) {
+  const [input, setInput] = useState("");
   const [mode, setMode] = useState<EncodingMode>("url-encode");
   const result = useMemo(() => {
+    if (!input) {
+      return emptyResult;
+    }
     if (mode === "base64-encode") {
       return encodeBase64(input);
     }
@@ -37,23 +44,26 @@ export function EncodingTool() {
           <h2 id="encoding-tool-heading">Encoding lab</h2>
           <p>Base64 and URL encode/decode tools use browser APIs only, so tokens and URLs never leave the page.</p>
         </div>
-        <div className="tool-actions">
-          {(Object.keys(modeLabels) as EncodingMode[]).map((nextMode) => (
-            <Button
-              aria-pressed={mode === nextMode}
-              key={nextMode}
-              onPress={() => setMode(nextMode)}
-              variant={mode === nextMode ? "primary" : "secondary"}
-            >
-              {modeLabels[nextMode]}
-            </Button>
-          ))}
-          <CopyButton disabled={!result.ok} value={result.output} />
+        <div className="tool-panel-header-meta">
+          {statusSlot}
+          <div className="tool-actions">
+            {(Object.keys(modeLabels) as EncodingMode[]).map((nextMode) => (
+              <Button
+                aria-pressed={mode === nextMode}
+                key={nextMode}
+                onPress={() => setMode(nextMode)}
+                variant={mode === nextMode ? "primary" : "secondary"}
+              >
+                {modeLabels[nextMode]}
+              </Button>
+            ))}
+            <CopyButton disabled={!result.ok} value={result.output} />
+          </div>
         </div>
       </div>
 
       <div className="tool-grid">
-        <Textarea className="tool-textarea" label="Input" onChange={(event) => setInput(event.target.value)} spellCheck={false} value={input} />
+        <Textarea className="tool-textarea" label="Input" onChange={(event) => setInput(event.target.value)} placeholder="Paste text or encoded content here" spellCheck={false} value={input} />
         <Textarea className="tool-textarea" label="Output" readOnly spellCheck={false} value={result.ok ? result.output : ""} />
       </div>
       {!result.ok ? (

@@ -25,6 +25,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added a same-origin Web API proxy for browser calls so auth cookies keep working when Web and Go API run on different hosts.
 - Added login failure rate limiting, cooldown responses, and login success/failure audit entries.
 - Added production configuration rejection for default or placeholder admin/session secrets.
+- Added segmented Settings sections for system secrets, personal access, audit logs, and product information.
+- Added live account profile and password-change panels backed by authenticated API calls.
+- Added an authenticated API route catalog surface so admin users can inspect core and plugin routes from the Web console.
+- Added platform/plugin route catalog endpoints and tests for Devtools, Domains, Blog, Storage R2, and core API groups.
 
 ### Changed
 
@@ -38,6 +42,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The settings screen now reads live provider secret summaries, access-control data, sessions, and audit entries instead of static mock rows.
 - Plugin registry, dashboard, and login version displays now read canonical manifest/project versions instead of mock version overrides.
 - Login now hides local credential hints by default, starts with an empty email field, renders live API/environment status, and no longer returns raw session tokens in the login JSON response.
+- Reworked Settings access-control management with role selection, session summaries, loading states, empty states, and compact Nothing-style card alignment.
+- Restructured shared SDK and Go internal packages into `packages/api-client` and `platform/*` boundaries for clearer workspace ownership.
+- Refined API, Tools, Settings, dashboard, and plugin panels with consistent metric cards, runtime chips, dot-matrix scrollbars, and responsive card grids.
 
 ### Fixed
 
@@ -46,11 +53,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed plugin route permission matching to fail closed for unmatched unsafe plugin endpoints.
 - Fixed disabled plugin handling so backend plugin routes reject requests when the plugin is turned off.
 - Fixed the design-system page JSX string escaping so Web typechecking succeeds.
+- Fixed the API route catalog metadata for password changes so `/api/auth/password` is documented as `POST`.
+- Fixed Settings session rows and header chips so long session IDs no longer collide with status/action controls.
+- Fixed dashboard and custom table overflow styling so horizontal and vertical scroll behavior remains usable across admin pages.
 
 ### Security
 
 - Added password policy enforcement for newly created users and password changes, with first-login password-change state on admin-created users.
 - Added permission-aware navigation/action disabling for plugin and user-management surfaces.
+- Added UI affordances for MFA enrollment, password policy validation, secret redaction, and permission-scoped admin access management.
 
 ## [0.1.0] - 2026-06-07
 

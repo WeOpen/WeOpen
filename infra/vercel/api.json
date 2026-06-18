@@ -1,0 +1,21 @@
+{
+  "project": "weopen-api",
+  "rootDirectory": "services/api",
+  "framework": null,
+  "environmentVariables": {
+    "APP_ENV": "production",
+    "APP_URL": "https://weopen-api.example.vercel.app",
+    "WEB_ORIGIN": "https://weopen-web.example.vercel.app",
+    "DATABASE_URL": "postgres://...",
+    "MIGRATIONS_DIR": "migrations",
+    "SESSION_SECRET": "replace-with-random-secret",
+    "SECRET_ENCRYPTION_KEY": "replace-with-random-secret",
+    "ADMIN_EMAIL": "admin@example.com",
+    "ADMIN_PASSWORD": "replace-and-rotate-after-first-login",
+    "R2_ACCOUNT_ID": "cloudflare-account-id",
+    "R2_BUCKET": "weopen",
+    "R2_ACCESS_KEY_ID": "r2-access-key-id",
+    "R2_SECRET_ACCESS_KEY": "r2-secret-access-key",
+    "CLOUDFLARE_API_TOKEN": "optional-cloudflare-api-token"
+  }
+}

@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/WeOpen/WeOpen/internal/core/plugin"
+	"github.com/WeOpen/WeOpen/platform/core/plugin"
 	"github.com/WeOpen/WeOpen/services/api/internal/domain/auth"
 	_ "modernc.org/sqlite"
 )

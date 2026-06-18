@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import type { StorageObject, StorageVisibility } from "@/shared/api/storage-r2";
 import {
   deleteStorageObject,
@@ -9,9 +9,12 @@ import {
   uploadStorageFile
 } from "@/shared/api/storage-r2";
 import { formatBytes, slugifyFilename } from "@/shared/format";
+import { useRouteRefresh } from "@/shared/hooks/use-route-refresh";
 import { ObjectTable } from "./object-table";
 import { UploadPanel } from "./upload-panel";
 import { Alert, MetricCard, PageHeader, PixelIcon } from "@weopen/ui";
+
+const storageRefreshPathnames = ["/storage", "/plugins/storage-r2"] as const;
 
 export function StoragePage() {
   const [objects, setObjects] = useState<StorageObject[]>([]);
@@ -19,7 +22,7 @@ export function StoragePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
 
-  useEffect(() => {
+  const loadObjects = useCallback(() => {
     let cancelled = false;
     async function load() {
       setIsLoading(true);
@@ -45,6 +48,11 @@ export function StoragePage() {
       cancelled = true;
     };
   }, []);
+
+  useRouteRefresh({
+    pathnames: storageRefreshPathnames,
+    refresh: loadObjects
+  });
 
   const totalBytes = useMemo(() => {
     return objects.reduce((sum, object) => sum + object.size, 0);
@@ -132,6 +140,7 @@ export function StoragePage() {
       <div className="storage-layout">
         <UploadPanel isUploading={isUploading} keyPrefix="uploads" onUpload={upload} />
         <ObjectTable
+          isLoading={isLoading}
           objects={objects}
           onDelete={remove}
           onVisibilityChange={changeVisibility}

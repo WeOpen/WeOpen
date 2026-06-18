@@ -12,12 +12,15 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@weopen/api-client": "workspace:*",
     "@weopen/plugin-sdk": "workspace:*",
-    "@weopen/sdk": "workspace:*",
     "@weopen/ui": "workspace:*",
+    "motion": "^12.40.0",
     "next": "^16.0.8",
     "react": "^19.2.1",
-    "react-dom": "^19.2.1"
+    "react-dom": "^19.2.1",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
     "@types/node": "^24.10.1",

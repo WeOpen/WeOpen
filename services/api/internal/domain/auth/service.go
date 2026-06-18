@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/WeOpen/WeOpen/internal/core/plugin"
+	"github.com/WeOpen/WeOpen/platform/core/plugin"
 )
 
 var (

@@ -1,8 +1,9 @@
 export type {
   DeveloperTool,
+  DeveloperToolPanel,
   JsonObject,
   JwtDecodeResult,
   RegexMatch,
   RegexResult,
   ToolResult
-} from "@weopen/sdk/devtools";
+} from "@weopen/api-client/devtools";

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/WeOpen/WeOpen/internal/core/plugin"
+	"github.com/WeOpen/WeOpen/platform/core/plugin"
 )
 
 // Store reads and writes plugin enablement state by plugin manifest.

@@ -59,3 +59,7 @@ thesvg/
 .playwright-mcp/
 .agents/
 .codex-artifacts/
+
+# local scratch / generated
+/tmp/
+/test-results/

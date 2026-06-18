@@ -26,7 +26,7 @@ export type BlogPost = {
   contentMarkdown: string;
   coverObjectKey?: string;
   status: BlogPostStatus;
-  terms: BlogTerm[];
+  terms: BlogTerm[] | null;
   publishedAt?: string;
   createdAt: string;
   updatedAt: string;
@@ -61,7 +61,7 @@ export async function listBlogPosts(status?: BlogPostStatus): Promise<BlogPost[]
   });
   await ensureBlogResponse(response, "文章列表读取失败");
   const body = (await response.json()) as BlogPostsResponse;
-  return body.posts;
+  return Array.isArray(body.posts) ? body.posts : [];
 }
 
 /** getBlogPost reads one post by API ID and surfaces server error messages when available. */

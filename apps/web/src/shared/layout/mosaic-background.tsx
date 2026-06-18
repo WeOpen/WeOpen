@@ -20,6 +20,8 @@ type TrailPoint = {
   y: number;
 };
 
+type ThemeMode = "dark" | "light";
+
 const CELL_SIZE = 10;
 const GAP_SIZE = 2;
 const MAX_DPR = 1.5;
@@ -77,18 +79,24 @@ function mixChannel(from: number, to: number, amount: number): number {
   return Math.round(from + (to - from) * amount);
 }
 
-function accentColor(tile: Tile, energy: number, time: number): string {
+function currentThemeMode(): ThemeMode {
+  return document.documentElement.dataset.theme === "light" ? "light" : "dark";
+}
+
+function accentColor(tile: Tile, energy: number, time: number, theme: ThemeMode): string {
   const pulse = 0.06 * Math.sin(time * 0.004 + tile.phase);
-  const amount = Math.max(0, Math.min(1, energy + pulse)) * 0.55;
-  const base = 18 + tile.tone * 14;
-  const r = mixChannel(base, 37, amount);
-  const g = mixChannel(base, 206, amount);
-  const b = mixChannel(base, 83, amount);
+  const amount = Math.max(0, Math.min(1, energy + pulse)) * (theme === "light" ? 0.34 : 0.55);
+  const base = theme === "light" ? 218 + tile.tone * 20 : 18 + tile.tone * 14;
+  const r = mixChannel(base, theme === "light" ? 56 : 37, amount);
+  const g = mixChannel(base, theme === "light" ? 176 : 206, amount);
+  const b = mixChannel(base, theme === "light" ? 104 : 83, amount);
   return `rgb(${r}, ${g}, ${b})`;
 }
 
-function baseColor(tile: Tile): string {
-  const value = Math.round(9 + tile.tone * 14 + Math.min(tile.size / 20, 1) * 4);
+function baseColor(tile: Tile, theme: ThemeMode): string {
+  const value = theme === "light"
+    ? Math.round(224 + tile.tone * 18 + Math.min(tile.size / 20, 1) * 5)
+    : Math.round(9 + tile.tone * 14 + Math.min(tile.size / 20, 1) * 4);
   return `rgb(${value}, ${value}, ${value})`;
 }
 
@@ -131,12 +139,12 @@ function generateTiles(width: number, height: number): Tile[] {
   return tiles;
 }
 
-function drawBase(context: CanvasRenderingContext2D, width: number, height: number, tiles: Tile[]): void {
-  context.fillStyle = "#050505";
+function drawBase(context: CanvasRenderingContext2D, width: number, height: number, tiles: Tile[], theme: ThemeMode): void {
+  context.fillStyle = theme === "light" ? "#f4f6f8" : "#050505";
   context.fillRect(0, 0, width, height);
 
   for (const tile of tiles) {
-    context.fillStyle = baseColor(tile);
+    context.fillStyle = baseColor(tile, theme);
     context.fillRect(tile.x, tile.y, tile.size, tile.size);
   }
 }
@@ -184,6 +192,7 @@ export function MosaicBackground() {
     let dpr = 1;
     let tiles: Tile[] = [];
     let trail: TrailPoint[] = [];
+    let theme = currentThemeMode();
     let animationFrame = 0;
     let resizeTimer = 0;
     let lastFrame = 0;
@@ -204,7 +213,7 @@ export function MosaicBackground() {
       baseContext.setTransform(dpr, 0, 0, dpr, 0, 0);
 
       tiles = generateTiles(width, height);
-      drawBase(baseContext, width, height, tiles);
+      drawBase(baseContext, width, height, tiles, theme);
       context.drawImage(baseCanvas, 0, 0, width, height);
     };
 
@@ -276,6 +285,17 @@ export function MosaicBackground() {
       prefersReducedMotion = event.matches;
     };
 
+    const handleThemeChange = () => {
+      const nextTheme = currentThemeMode();
+      if (nextTheme === theme) {
+        return;
+      }
+      theme = nextTheme;
+      setupCanvas();
+    };
+
+    const themeObserver = new MutationObserver(handleThemeChange);
+
     const render = (time: number) => {
       animationFrame = window.requestAnimationFrame(render);
 
@@ -292,7 +312,7 @@ export function MosaicBackground() {
           continue;
         }
 
-        context.fillStyle = accentColor(tile, Math.min(1, energy), time);
+        context.fillStyle = accentColor(tile, Math.min(1, energy), time, theme);
         context.fillRect(tile.x, tile.y, tile.size, tile.size);
       }
 
@@ -319,10 +339,12 @@ export function MosaicBackground() {
     window.addEventListener("blur", handlePointerClear);
     window.addEventListener("resize", handleResize);
     motionPreference.addEventListener("change", handleMotionPreference);
+    themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ["class", "data-theme"] });
 
     return () => {
       window.cancelAnimationFrame(animationFrame);
       window.clearTimeout(resizeTimer);
+      themeObserver.disconnect();
       window.removeEventListener("pointermove", handlePointerMove);
       window.removeEventListener("pointerdown", handlePointerDown);
       window.removeEventListener("pointerleave", handlePointerClear);

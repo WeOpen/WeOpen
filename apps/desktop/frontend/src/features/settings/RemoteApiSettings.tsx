@@ -5,7 +5,7 @@ import {
   testRemoteAPIConnection,
   type RemoteApiConnectionStatus,
   type RemoteApiSettings as RemoteApiSettingsValue
-} from "@/lib/apiClient";
+} from "@/shared/api/apiClient";
 
 type RemoteApiSettingsProps = {
   settings: RemoteApiSettingsValue;

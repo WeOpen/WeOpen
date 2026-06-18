@@ -82,3 +82,14 @@ export class PluginRegistry<TComponent = unknown> {
     return [...plugins].sort((a, b) => a.manifest.id.localeCompare(b.manifest.id));
   }
 }
+
+/** createPluginRegistry registers a compile-time plugin list in one place. */
+export function createPluginRegistry<TComponent = unknown>(
+  plugins: Array<Omit<RegisteredPlugin<TComponent>, "enabled"> & { enabled?: boolean }>
+) {
+  const registry = new PluginRegistry<TComponent>();
+  for (const plugin of plugins) {
+    registry.register(plugin);
+  }
+  return registry;
+}

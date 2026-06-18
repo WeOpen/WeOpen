@@ -9,11 +9,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/WeOpen/WeOpen/internal/plugins/blog"
-	domainplugin "github.com/WeOpen/WeOpen/internal/plugins/domains"
-	storage "github.com/WeOpen/WeOpen/internal/plugins/storage_r2"
-	cloudflareprovider "github.com/WeOpen/WeOpen/internal/providers/cloudflare"
-	r2provider "github.com/WeOpen/WeOpen/internal/providers/r2"
+	"github.com/WeOpen/WeOpen/platform/plugins/blog"
+	domainplugin "github.com/WeOpen/WeOpen/platform/plugins/domains"
+	storage "github.com/WeOpen/WeOpen/platform/plugins/storage_r2"
+	cloudflareprovider "github.com/WeOpen/WeOpen/platform/providers/cloudflare"
+	r2provider "github.com/WeOpen/WeOpen/platform/providers/r2"
 	dbadapter "github.com/WeOpen/WeOpen/services/api/internal/adapters/db"
 	apihttp "github.com/WeOpen/WeOpen/services/api/internal/adapters/http"
 	"github.com/WeOpen/WeOpen/services/api/internal/adapters/secrets"
@@ -26,18 +26,41 @@ import (
 // databaseConnector opens a configured SQL database and returns its placeholder dialect plus a close hook.
 type databaseConnector func(context.Context, config.Config) (*sql.DB, dbadapter.SQLDialect, func() error, error)
 
+// NewHandler wires the API application services and returns an http.Handler shared by local and serverless runtimes.
+func NewHandler(cfg config.Config) (http.Handler, error) {
+	handler, _, err := newHandlerWithDatabaseConnector(cfg, connectConfiguredDatabase)
+	return handler, err
+}
+
 // NewHTTPServer wires the API application services and returns the configured HTTP server.
 func NewHTTPServer(cfg config.Config) (*http.Server, error) {
 	return newHTTPServerWithDatabaseConnector(cfg, connectConfiguredDatabase)
 }
 
 func newHTTPServerWithDatabaseConnector(cfg config.Config, connectDatabase databaseConnector) (*http.Server, error) {
-	stores, err := newRuntimeStores(context.Background(), cfg, connectDatabase)
+	handler, closeDatabase, err := newHandlerWithDatabaseConnector(cfg, connectDatabase)
 	if err != nil {
 		return nil, err
 	}
+
+	server := &http.Server{
+		Addr:              cfg.Addr,
+		Handler:           handler,
+		ReadHeaderTimeout: 5 * time.Second,
+	}
+	if closeDatabase != nil {
+		server.RegisterOnShutdown(func() { _ = closeDatabase() })
+	}
+	return server, nil
+}
+
+func newHandlerWithDatabaseConnector(cfg config.Config, connectDatabase databaseConnector) (http.Handler, func() error, error) {
+	stores, err := newRuntimeStores(context.Background(), cfg, connectDatabase)
+	if err != nil {
+		return nil, nil, err
+	}
 	authService := auth.NewService(stores.authStore)
-	secretService := secrets.NewService(secrets.NewMemoryStore(), secrets.NewCrypto(cfg.SecretEncryptionKey))
+	secretService := secrets.NewService(stores.secretStore, secrets.NewCrypto(cfg.SecretEncryptionKey))
 	auditService := audit.NewServiceWithStore(stores.auditStore)
 
 	r2Client, err := r2provider.NewClient(r2provider.Config{
@@ -48,45 +71,38 @@ func newHTTPServerWithDatabaseConnector(cfg config.Config, connectDatabase datab
 	})
 	if err != nil {
 		closeDatabaseIfNeeded(stores.close)
-		return nil, fmt.Errorf("initialize r2 provider: %w", err)
+		return nil, nil, fmt.Errorf("initialize r2 provider: %w", err)
 	}
-	storageService := storage.NewService(storage.NewMemoryRepository(), r2Client, storageAuditRecorder{audit: auditService})
-	blogService := blog.NewServiceWithCoverValidator(blog.NewMemoryRepository(), blogAuditRecorder{audit: auditService}, storageService)
+	storageService := storage.NewService(stores.storageRepository, r2Client, storageAuditRecorder{audit: auditService})
+	blogService := blog.NewServiceWithCoverValidator(stores.blogRepository, blogAuditRecorder{audit: auditService}, storageService)
 	cloudflareClient, err := cloudflareprovider.NewClientWithTokenSource(cloudflareprovider.Config{}, cloudflareTokenSource{
 		secrets:  secretService,
 		fallback: cfg.CloudflareAPIToken,
 	})
 	if err != nil {
 		closeDatabaseIfNeeded(stores.close)
-		return nil, fmt.Errorf("initialize cloudflare provider: %w", err)
+		return nil, nil, fmt.Errorf("initialize cloudflare provider: %w", err)
 	}
 	domainService := domainplugin.NewService(
-		domainplugin.NewMemoryRepository(),
+		stores.domainRepository,
 		cloudflareClient,
 		domainplugin.NewTLSCertificateChecker(),
 		domainsAuditRecorder{audit: auditService},
 	)
 	pluginRegistry := newBuiltinPluginRegistry(blogService, storageService, domainService)
 
-	server := &http.Server{
-		Addr: cfg.Addr,
-		Handler: apihttp.NewServer(apihttp.ServerOptions{
-			WebOrigin:     cfg.WebOrigin,
-			Auth:          authService,
-			Secrets:       secretService,
-			Audit:         auditService,
-			Plugins:       pluginRegistry,
-			PluginStates:  stores.pluginStates,
-			PluginRoutes:  builtinPluginRoutes(blogService, storageService, domainService),
-			LoginAttempts: stores.loginAttempts,
-			SecureCookies: cfg.IsProductionLike(),
-		}),
-		ReadHeaderTimeout: 5 * time.Second,
-	}
-	if stores.close != nil {
-		server.RegisterOnShutdown(func() { _ = stores.close() })
-	}
-	return server, nil
+	handler := apihttp.NewServer(apihttp.ServerOptions{
+		WebOrigin:     cfg.WebOrigin,
+		Auth:          authService,
+		Secrets:       secretService,
+		Audit:         auditService,
+		Plugins:       pluginRegistry,
+		PluginStates:  stores.pluginStates,
+		PluginRoutes:  builtinPluginRoutes(blogService, storageService, domainService),
+		LoginAttempts: stores.loginAttempts,
+		SecureCookies: cfg.IsProductionLike(),
+	})
+	return handler, stores.close, nil
 }
 
 func closeDatabaseIfNeeded(closeDatabase func() error) {
@@ -96,11 +112,15 @@ func closeDatabaseIfNeeded(closeDatabase func() error) {
 }
 
 type runtimeStores struct {
-	authStore     auth.Store
-	auditStore    audit.Store
-	pluginStates  pluginstate.Store
-	loginAttempts auth.LoginRateLimitStore
-	close         func() error
+	authStore         auth.Store
+	auditStore        audit.Store
+	secretStore       secrets.Store
+	blogRepository    blog.Repository
+	storageRepository storage.Repository
+	domainRepository  domainplugin.Repository
+	pluginStates      pluginstate.Store
+	loginAttempts     auth.LoginRateLimitStore
+	close             func() error
 }
 
 func newRuntimeStores(ctx context.Context, cfg config.Config, connectDatabase databaseConnector) (runtimeStores, error) {
@@ -110,10 +130,14 @@ func newRuntimeStores(ctx context.Context, cfg config.Config, connectDatabase da
 			return runtimeStores{}, fmt.Errorf("initialize memory auth store: %w", err)
 		}
 		return runtimeStores{
-			authStore:     authStore,
-			auditStore:    audit.NewMemoryStore(),
-			pluginStates:  pluginstate.NewMemoryStore(),
-			loginAttempts: auth.NewMemoryLoginRateLimitStore(),
+			authStore:         authStore,
+			auditStore:        audit.NewMemoryStore(),
+			secretStore:       secrets.NewMemoryStore(),
+			blogRepository:    blog.NewMemoryRepository(),
+			storageRepository: storage.NewMemoryRepository(),
+			domainRepository:  domainplugin.NewMemoryRepository(),
+			pluginStates:      pluginstate.NewMemoryStore(),
+			loginAttempts:     auth.NewMemoryLoginRateLimitStore(),
 		}, nil
 	}
 
@@ -135,11 +159,15 @@ func newRuntimeStores(ctx context.Context, cfg config.Config, connectDatabase da
 		pluginDialect = pluginstate.SQLDialectPostgres
 	}
 	return runtimeStores{
-		authStore:     authStore,
-		auditStore:    dbadapter.NewSQLAuditStore(database, dbadapter.WithSQLDialect(dialect)),
-		pluginStates:  pluginstate.NewSQLStore(database, pluginstate.WithSQLDialect(pluginDialect)),
-		loginAttempts: dbadapter.NewSQLLoginRateLimitStore(database, dbadapter.WithSQLDialect(dialect)),
-		close:         closeDatabase,
+		authStore:         authStore,
+		auditStore:        dbadapter.NewSQLAuditStore(database, dbadapter.WithSQLDialect(dialect)),
+		secretStore:       dbadapter.NewSQLSecretStore(database, dbadapter.WithSQLSecretDialect(dialect)),
+		blogRepository:    dbadapter.NewSQLBlogRepository(database, dbadapter.WithSQLDialect(dialect)),
+		storageRepository: dbadapter.NewSQLStorageRepository(database, dbadapter.WithSQLDialect(dialect)),
+		domainRepository:  dbadapter.NewSQLDomainRepository(database, dbadapter.WithSQLDialect(dialect)),
+		pluginStates:      pluginstate.NewSQLStore(database, pluginstate.WithSQLDialect(pluginDialect)),
+		loginAttempts:     dbadapter.NewSQLLoginRateLimitStore(database, dbadapter.WithSQLDialect(dialect)),
+		close:             closeDatabase,
 	}, nil
 }
 

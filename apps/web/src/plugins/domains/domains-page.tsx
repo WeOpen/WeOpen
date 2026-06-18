@@ -1,21 +1,24 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { DNSRecordSnapshot, DomainAsset } from "../../shared/api/domains";
 import {
   listDomainAssets,
   listDomainDNSRecords,
   syncDomains
 } from "../../shared/api/domains";
+import { useRouteRefresh } from "../../shared/hooks/use-route-refresh";
 import { DomainDetail } from "./domain-detail";
 import { DNSRecordTable } from "./dns-record-table";
 import { summarizeDomainAssets } from "./domain-utils";
 import type { PluginManifest } from "@weopen/plugin-sdk";
-import { Alert, Button, Card, MetricCard, PageHeader, PixelIcon } from "@weopen/ui";
+import { Alert, Button, Card, MetricCard, PageHeader, PixelIcon, SkeletonStack } from "@weopen/ui";
 
 type DomainsPageProps = {
   manifest?: PluginManifest;
 };
+
+const domainsRefreshPathnames = ["/domains", "/plugins/domains"] as const;
 
 export function DomainsPage({ manifest }: DomainsPageProps) {
   const [assets, setAssets] = useState<DomainAsset[]>([]);
@@ -25,9 +28,9 @@ export function DomainsPage({ manifest }: DomainsPageProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
 
-  useEffect(() => {
+  const loadAssets = useCallback(() => {
     let cancelled = false;
-    async function loadAssets() {
+    async function load() {
       setIsLoading(true);
       try {
         const nextAssets = await listDomainAssets();
@@ -49,11 +52,16 @@ export function DomainsPage({ manifest }: DomainsPageProps) {
         }
       }
     }
-    void loadAssets();
+    void load();
     return () => {
       cancelled = true;
     };
   }, []);
+
+  useRouteRefresh({
+    pathnames: domainsRefreshPathnames,
+    refresh: loadAssets
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -169,6 +177,9 @@ export function DomainsPage({ manifest }: DomainsPageProps) {
             </div>
           </Card.Header>
           <Card.Content>
+            {isLoading && !assets.length ? (
+              <SkeletonStack className="domains-list-items" rowHeight={48} rows={7} widths={["100%", "88%", "94%", "82%"]} />
+            ) : (
             <div className="domains-list-items">
               {visibleAssets.map((asset) => (
                 <Button
@@ -183,6 +194,7 @@ export function DomainsPage({ manifest }: DomainsPageProps) {
                 </Button>
               ))}
             </div>
+            )}
           </Card.Content>
         </Card>
 

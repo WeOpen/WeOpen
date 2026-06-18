@@ -1,25 +1,26 @@
 // Built-in plugin manifests drive web navigation/widgets; backend manifests and permissions remain authoritative.
+import { definePluginManifest } from "@weopen/plugin-sdk";
 import type { PluginManifest } from "@weopen/plugin-sdk";
 
 export const builtinPluginManifests: PluginManifest[] = [
-  {
+  definePluginManifest({
     id: "blog",
     name: "Blog",
-    description: "管理 Markdown 文章、草稿、标签、分类和发布状态。",
+    description: "Manage Markdown posts, drafts, tags, categories, and publishing state.",
     version: "0.1.0",
     permissions: ["blog:read", "blog:write"],
-    nav: [{ title: "Blog", path: "/blog", icon: "file-text", order: 10 }],
+    nav: [{ title: "Blog", path: "/blog", icon: "blog", order: 10 }],
     widgets: [
       {
         id: "blog-posts",
-        title: "博客文章",
-        description: "文章管理插件",
+        title: "Blog Posts",
+        description: "Post management plugin",
         href: "/blog",
         status: "neutral"
       }
     ]
-  },
-  {
+  }),
+  definePluginManifest({
     id: "devtools",
     name: "Developer Tools",
     description: "Local-first JSON, encoding, time, UUID, JWT, hash, HMAC, and regex utilities.",
@@ -36,39 +37,39 @@ export const builtinPluginManifests: PluginManifest[] = [
         status: "neutral"
       }
     ]
-  },
-  {
+  }),
+  definePluginManifest({
     id: "domains",
     name: "Domains",
-    description: "只读同步 Cloudflare 域名、DNS、证书状态和到期提醒；v1 禁用 DNS 写入。",
+    description: "Read-only Cloudflare domain, DNS, certificate status, and expiration monitoring; DNS writes are disabled in v1.",
     version: "0.1.0",
     permissions: ["domain:read", "domain:write"],
-    nav: [{ title: "Domains", path: "/domains", icon: "globe", order: 30 }],
+    nav: [{ title: "Domains", path: "/domains", icon: "domains", order: 30 }],
     widgets: [
       {
         id: "domains-watch",
-        title: "域名监控",
-        description: "只读域名、DNS 与证书风险",
+        title: "Domain Monitor",
+        description: "Read-only domain, DNS, and certificate risk",
         href: "/domains",
         status: "neutral"
       }
     ]
-  },
-  {
+  }),
+  definePluginManifest({
     id: "storage-r2",
     name: "Storage R2",
-    description: "管理 R2 对象、博客素材和备份文件。",
+    description: "Manage R2 objects, blog media, and backup files.",
     version: "0.1.0",
     permissions: ["storage:read", "storage:write"],
-    nav: [{ title: "Storage R2", path: "/storage", icon: "hard-drive", order: 40 }],
+    nav: [{ title: "Storage R2", path: "/storage", icon: "storage", order: 40 }],
     widgets: [
       {
         id: "storage-objects",
-        title: "R2 文件",
-        description: "对象存储索引和直传",
+        title: "R2 Files",
+        description: "Object index and direct uploads",
         href: "/storage",
         status: "neutral"
       }
     ]
-  }
+  })
 ];

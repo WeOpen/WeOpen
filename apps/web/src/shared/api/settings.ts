@@ -18,6 +18,10 @@ type SettingsResponse = {
   }>;
 };
 
+type SettingsWireResponse = {
+  secrets?: SettingsResponse["secrets"] | null;
+};
+
 
 /** getSettings reads redacted provider secret summaries. */
 export async function getSettings(): Promise<SettingsResponse> {
@@ -25,7 +29,8 @@ export async function getSettings(): Promise<SettingsResponse> {
     headers: { Accept: "application/json" }
   });
   await ensureApiResponse(response, "设置读取失败");
-  return response.json() as Promise<SettingsResponse>;
+  const body = (await response.json()) as SettingsWireResponse;
+  return normalizeSettingsResponse(body);
 }
 
 /** updateSettings writes provider secrets through the authenticated API settings boundary. */
@@ -41,5 +46,12 @@ export async function updateSettings(input: UpdateSettingsInput): Promise<Settin
 
   await ensureApiResponse(response, "保存设置失败，请确认已登录。");
 
-  return response.json() as Promise<SettingsResponse>;
+  const body = (await response.json()) as SettingsWireResponse;
+  return normalizeSettingsResponse(body);
+}
+
+function normalizeSettingsResponse(body: SettingsWireResponse): SettingsResponse {
+  return {
+    secrets: Array.isArray(body.secrets) ? body.secrets : []
+  };
 }

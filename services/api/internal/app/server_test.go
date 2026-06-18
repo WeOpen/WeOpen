@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"database/sql"
+	"encoding/json"
 	"io/fs"
 	"net/http"
 	"net/http/httptest"
@@ -16,7 +17,54 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-func TestNewHTTPServerUsesSQLAuthStoreWhenDatabaseConfigured(t *testing.T) {
+func TestNewHandlerRespondsToHealthChecks(t *testing.T) {
+	t.Parallel()
+
+	handler, err := NewHandler(testConfigWithoutDatabase())
+	if err != nil {
+		t.Fatalf("expected handler: %v", err)
+	}
+	req := httptest.NewRequest(http.MethodGet, "/healthz", nil)
+	rec := httptest.NewRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected health status %d, got %d body=%s", http.StatusOK, rec.Code, rec.Body.String())
+	}
+}
+
+func TestNewHandlerServesDevtoolsCatalogRoute(t *testing.T) {
+	t.Parallel()
+
+	handler, err := NewHandler(testConfigWithoutDatabase())
+	if err != nil {
+		t.Fatalf("expected handler: %v", err)
+	}
+	token := loginAndReturnToken(t, handler)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/plugins/devtools/tools", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	rec := httptest.NewRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected devtools catalog status %d, got %d body=%s", http.StatusOK, rec.Code, rec.Body.String())
+	}
+	var body struct {
+		Tools  []map[string]any `json:"tools"`
+		Panels []map[string]any `json:"panels"`
+	}
+	if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
+		t.Fatalf("expected devtools catalog JSON: %v", err)
+	}
+	if len(body.Tools) == 0 || len(body.Panels) == 0 {
+		t.Fatalf("expected tools and panels from catalog, got %+v", body)
+	}
+}
+
+func TestNewHTTPServerUsesSQLStoresWhenDatabaseConfigured(t *testing.T) {
 	t.Parallel()
 
 	database, err := sql.Open("sqlite", ":memory:")
@@ -56,6 +104,40 @@ func TestNewHTTPServerUsesSQLAuthStoreWhenDatabaseConfigured(t *testing.T) {
 	secondServer.Handler.ServeHTTP(patchRec, patchReq)
 	if patchRec.Code != http.StatusOK {
 		t.Fatalf("expected SQL-seeded admin permission to manage plugins, got %d body=%s", patchRec.Code, patchRec.Body.String())
+	}
+
+	settingsReq := httptest.NewRequest(http.MethodPatch, "/api/settings", bytes.NewBufferString(`{"r2SecretAccessKey":"persisted-secret-value"}`))
+	settingsReq.Header.Set("Authorization", "Bearer "+token)
+	settingsReq.Header.Set("Content-Type", "application/json")
+	settingsRec := httptest.NewRecorder()
+	secondServer.Handler.ServeHTTP(settingsRec, settingsReq)
+	if settingsRec.Code != http.StatusOK {
+		t.Fatalf("expected settings secret save, got %d body=%s", settingsRec.Code, settingsRec.Body.String())
+	}
+
+	thirdServer, err := newHTTPServerWithDatabaseConnector(cfg, connector)
+	if err != nil {
+		t.Fatalf("expected third SQL-backed server: %v", err)
+	}
+	listReq := httptest.NewRequest(http.MethodGet, "/api/settings", nil)
+	listReq.Header.Set("Authorization", "Bearer "+token)
+	listRec := httptest.NewRecorder()
+	thirdServer.Handler.ServeHTTP(listRec, listReq)
+	if listRec.Code != http.StatusOK {
+		t.Fatalf("expected settings secret list, got %d body=%s", listRec.Code, listRec.Body.String())
+	}
+	var settingsBody struct {
+		Secrets []struct {
+			Provider string `json:"provider"`
+			Name     string `json:"name"`
+			Last4    string `json:"last4"`
+		} `json:"secrets"`
+	}
+	if err := json.Unmarshal(listRec.Body.Bytes(), &settingsBody); err != nil {
+		t.Fatalf("expected settings JSON: %v", err)
+	}
+	if len(settingsBody.Secrets) != 1 || settingsBody.Secrets[0].Provider != "r2" || settingsBody.Secrets[0].Last4 != "alue" {
+		t.Fatalf("expected persisted redacted secret metadata, got %+v", settingsBody.Secrets)
 	}
 }
 
@@ -127,6 +209,16 @@ CREATE TABLE IF NOT EXISTS login_attempts (
   locked_until TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+CREATE TABLE IF NOT EXISTS secrets (
+  id TEXT PRIMARY KEY,
+  provider TEXT NOT NULL,
+  name TEXT NOT NULL,
+  encrypted_value TEXT NOT NULL,
+  last4 TEXT NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE (provider, name)
+);
 `
 	if err := os.WriteFile(filepath.Join(migrationsDir, "000001_auth.up.sql"), []byte(migration), fs.FileMode(0o644)); err != nil {
 		t.Fatalf("expected migration write: %v", err)
@@ -139,6 +231,23 @@ CREATE TABLE IF NOT EXISTS login_attempts (
 		WebOrigin:           "http://localhost:3000",
 		DatabaseURL:         "sqlite://test-auth-store",
 		MigrationsDir:       migrationsDir,
+		SessionSecret:       "local-session-secret",
+		SecretEncryptionKey: "local-secret-key",
+		AdminEmail:          "admin@example.com",
+		AdminPassword:       "admin",
+		R2AccountID:         "local-account",
+		R2Bucket:            "weopen-local",
+		R2AccessKeyID:       "local-r2-access",
+		R2SecretAccessKey:   "local-r2-secret",
+	}
+}
+
+func testConfigWithoutDatabase() config.Config {
+	return config.Config{
+		Addr:                ":0",
+		AppEnv:              "local",
+		AppURL:              "http://localhost:8080",
+		WebOrigin:           "http://localhost:3000",
 		SessionSecret:       "local-session-secret",
 		SecretEncryptionKey: "local-secret-key",
 		AdminEmail:          "admin@example.com",

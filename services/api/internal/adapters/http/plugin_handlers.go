@@ -6,15 +6,16 @@ import (
 	stdhttp "net/http"
 	"strings"
 
-	"github.com/WeOpen/WeOpen/internal/core/plugin"
+	"github.com/WeOpen/WeOpen/platform/core/plugin"
 	"github.com/WeOpen/WeOpen/services/api/internal/domain/auth"
 	"github.com/WeOpen/WeOpen/services/api/internal/domain/pluginstate"
 )
 
 type pluginHandlers struct {
-	auth     *auth.Service
-	registry *plugin.Registry
-	states   pluginstate.Store
+	auth       *auth.Service
+	registry   *plugin.Registry
+	states     pluginstate.Store
+	routeIndex map[string]RouteGroup
 }
 
 type pluginResponse struct {
@@ -25,6 +26,9 @@ type pluginResponse struct {
 	Permissions []plugin.Permission   `json:"permissions"`
 	Settings    []plugin.SettingField `json:"settings,omitempty"`
 	Navigation  []plugin.NavItem      `json:"navigation,omitempty"`
+	RouteGroup  *RouteGroup           `json:"routeGroup,omitempty"`
+	RouteCount  int                   `json:"routeCount"`
+	RoutePrefix string                `json:"routePrefix,omitempty"`
 	Enabled     bool                  `json:"enabled"`
 }
 
@@ -92,6 +96,7 @@ func (h pluginHandlers) list(w stdhttp.ResponseWriter, r *stdhttp.Request) {
 	response := pluginsResponse{Plugins: make([]pluginResponse, 0, len(registered))}
 	for _, item := range registered {
 		manifest := item.Plugin.Manifest()
+		routeGroup := h.routeIndex[manifest.ID]
 		response.Plugins = append(response.Plugins, pluginResponse{
 			ID:          manifest.ID,
 			Name:        manifest.Name,
@@ -100,6 +105,9 @@ func (h pluginHandlers) list(w stdhttp.ResponseWriter, r *stdhttp.Request) {
 			Permissions: manifest.Permissions,
 			Settings:    manifest.Settings,
 			Navigation:  manifest.Navigation,
+			RouteGroup:  routeGroupOrNil(routeGroup),
+			RouteCount:  len(routeGroup.Routes),
+			RoutePrefix: pluginRoutePrefix(routeGroup),
 			Enabled:     item.Enabled,
 		})
 	}
@@ -139,6 +147,37 @@ func (h pluginHandlers) findRegisteredPlugin(id string) (plugin.RegisteredPlugin
 		}
 	}
 	return plugin.RegisteredPlugin{}, false
+}
+
+func pluginRouteIndex(routes []PluginRoute) map[string]RouteGroup {
+	index := map[string]RouteGroup{}
+	for _, route := range routes {
+		pluginID := pluginIDFromPrefix(route.Prefix)
+		if pluginID == "" || route.Catalog.ID == "" {
+			continue
+		}
+		index[pluginID] = route.Catalog
+	}
+	return index
+}
+
+func routeGroupOrNil(group RouteGroup) *RouteGroup {
+	if group.ID == "" && len(group.Routes) == 0 {
+		return nil
+	}
+	return &group
+}
+
+func pluginRoutePrefix(group RouteGroup) string {
+	for _, route := range group.Routes {
+		if strings.HasPrefix(route.Path, "/api/plugins/") {
+			parts := strings.Split(strings.Trim(route.Path, "/"), "/")
+			if len(parts) >= 3 {
+				return "/" + strings.Join(parts[:3], "/")
+			}
+		}
+	}
+	return ""
 }
 
 func (h pluginHandlers) requireUser(w stdhttp.ResponseWriter, r *stdhttp.Request) (auth.User, bool) {

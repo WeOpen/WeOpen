@@ -28,7 +28,7 @@ const textTargets = [
     label: "desktop appVersion",
     pattern: /(const\s+appVersion\s*=\s*)"([^"]+)"/g
   },
-  ...findPluginGoFiles(join(root, "internal/plugins")).map((path) => ({
+  ...findPluginGoFiles(join(root, "platform/plugins")).map((path) => ({
     path: relative(root, path),
     label: "backend plugin Version()",
     pattern: /(func\s+\(p\s+Plugin\)\s+Version\(\)\s+string\s+\{\s+return\s+)"([^"]+)"(\s+\})/g
@@ -136,6 +136,7 @@ function findPackageJsons(startDir) {
     "coverage",
     "dist",
     "node_modules",
+    "thesvg",
     "wailsjs"
   ]);
   const results = [];

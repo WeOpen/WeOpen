@@ -9,10 +9,11 @@ WeOpen is a personal management platform built as a pnpm + Go workspace. The mai
 - `apps/web`: Next.js management UI and plugin UI container.
 - `services/api`: Go HTTP API for auth, settings, audit logs, plugin metadata, and plugin routes.
 - `apps/desktop`: Wails v3 desktop shell with a React/Vite frontend and small Go service bindings.
-- `internal/core`: shared platform domain contracts, currently centered on the plugin contract and registry.
-- `internal/plugins`: built-in backend plugin implementations.
-- `internal/providers`: external provider adapters, currently including R2.
+- `platform/core`: shared platform domain contracts, currently centered on the plugin contract and registry.
+- `platform/plugins`: built-in backend plugin implementations.
+- `platform/providers`: external provider adapters, currently including R2.
 - `packages/ui`: shared React components.
+- `packages/api-client`: TypeScript API client used by web and desktop surfaces.
 - `packages/plugin-sdk`: TypeScript plugin manifest/registry types used by the web app.
 - `packages/config`: shared ESLint and TypeScript config.
 
@@ -48,9 +49,9 @@ Go tests:
 
 ```bash
 go test ./services/api/...
-go test ./internal/...
+go test ./platform/...
 go test ./apps/desktop/...
-go test ./internal/plugins/blog -run TestName
+go test ./platform/plugins/blog -run TestName
 go test ./services/api/internal/adapters/http -run TestName
 ```
 
@@ -85,7 +86,7 @@ Copy `.env.example` when local environment variables are needed. Important defau
 
 ### Plugin system
 
-Backend plugin contracts live in `internal/core/plugin`. A plugin exposes a stable ID, manifest, optional dashboard widgets, route registration hook, and migration hook. The registry stores registered plugins, tracks enabled state, and returns deterministic plugin ordering by ID.
+Backend plugin contracts live in `platform/core/plugin`. A plugin exposes a stable ID, manifest, optional dashboard widgets, route registration hook, and migration hook. The registry stores registered plugins, tracks enabled state, and returns deterministic plugin ordering by ID.
 
 API bootstrap now lives in `services/api/internal/app`, and `services/api/cmd/api/main.go` is kept as slim startup wiring only.
 
@@ -116,15 +117,12 @@ When adding a plugin with UI, keep the plugin registry files in sync and place f
 
 ### Current persistence boundary
 
-The design docs describe Postgres-backed architecture, but current API startup is still mostly in-memory:
+API startup chooses stores by configuration:
 
-- Auth uses `services/api/internal/domain/auth` memory stores by default.
-- Secrets use `services/api/internal/adapters/secrets` memory stores by default.
-- Blog and storage plugins use memory repositories.
-- Plugin state defaults to memory unless a SQL-backed store from `services/api/internal/domain/pluginstate` is explicitly passed.
-- `services/api/internal/adapters/db` only exposes a small `database/sql` opener and is not wired into API startup yet.
+- When `DATABASE_URL` is unset, local/test runs use in-memory auth, secrets, audit, plugin state, login rate-limit, blog, storage, and domains stores.
+- When `DATABASE_URL` is set, startup applies `services/api/migrations` and wires SQL-backed auth/session/RBAC, secrets, audit logs, plugin state, login rate-limit, blog, storage, and domains stores.
 
-Do not assume data survives API restarts unless the code path explicitly uses persistent storage.
+Do not assume any data survives API restarts unless the runtime has a valid `DATABASE_URL` and the relevant migrations have applied.
 
 ### Desktop app
 

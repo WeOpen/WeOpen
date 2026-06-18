@@ -113,11 +113,11 @@ personal-platform/
 - `services/api`：Go API 服务，负责认证、业务逻辑、插件 API、外部服务调用。
 - `apps/desktop`：Wails v3 桌面端，复用 React UI，调用本地 Go 或远程 API。
 - `packages/ui`：跨 Web/桌面复用的 React 组件。
-- `packages/sdk`：由 OpenAPI 生成的 TypeScript API Client。
+- `packages/api-client`：由 OpenAPI 生成的 TypeScript API Client。
 - `packages/plugin-sdk`：插件 manifest、权限、导航、组件扩展点类型。
 - `internal/core`：平台核心领域逻辑。
 - `internal/plugins`：内置插件后端实现。
-- `db/migrations`：数据库迁移。
+- `services/api/migrations`：数据库迁移。
 
 ## 4. 技术选型
 
@@ -189,7 +189,7 @@ APP_ENV=
 APP_URL=
 WEB_ORIGIN=
 DATABASE_URL=
-MIGRATIONS_DIR=db/migrations
+MIGRATIONS_DIR=services/api/migrations
 SESSION_SECRET=
 SECRET_ENCRYPTION_KEY=
 R2_ACCOUNT_ID=
@@ -277,7 +277,7 @@ services/api/openapi.yaml
 生成：
 
 ```text
-packages/sdk/src/client.ts
+packages/api-client/src/client.ts
 ```
 
 Web 和桌面前端都通过 SDK 调用远程 API。

@@ -17,9 +17,9 @@ export type AdminSession = {
   createdAt: string;
 };
 
-type UsersResponse = { users: AuthUser[] };
-type RolesResponse = { roles: AdminRole[] };
-type SessionsResponse = { sessions: AdminSession[] };
+type UsersResponse = { users?: AuthUser[] | null };
+type RolesResponse = { roles?: AdminRole[] | null };
+type SessionsResponse = { sessions?: AdminSession[] | null };
 type UserResponse = { user: AuthUser };
 
 export async function listUsers(): Promise<AuthUser[]> {
@@ -28,7 +28,7 @@ export async function listUsers(): Promise<AuthUser[]> {
   });
   await ensureApiResponse(response, "用户列表读取失败");
   const body = (await response.json()) as UsersResponse;
-  return body.users;
+  return Array.isArray(body.users) ? body.users.map(normalizeAuthUser) : [];
 }
 
 export async function createUser(input: {
@@ -47,7 +47,7 @@ export async function createUser(input: {
   });
   await ensureApiResponse(response, "用户创建失败");
   const body = (await response.json()) as UserResponse;
-  return body.user;
+  return normalizeAuthUser(body.user);
 }
 
 export async function updateUser(
@@ -64,7 +64,7 @@ export async function updateUser(
   });
   await ensureApiResponse(response, "用户更新失败");
   const body = (await response.json()) as UserResponse;
-  return body.user;
+  return normalizeAuthUser(body.user);
 }
 
 export async function listRoles(): Promise<AdminRole[]> {
@@ -73,7 +73,7 @@ export async function listRoles(): Promise<AdminRole[]> {
   });
   await ensureApiResponse(response, "角色列表读取失败");
   const body = (await response.json()) as RolesResponse;
-  return body.roles;
+  return Array.isArray(body.roles) ? body.roles.map(normalizeRole) : [];
 }
 
 export async function listSessions(userId?: string): Promise<AdminSession[]> {
@@ -83,7 +83,7 @@ export async function listSessions(userId?: string): Promise<AdminSession[]> {
   });
   await ensureApiResponse(response, "会话列表读取失败");
   const body = (await response.json()) as SessionsResponse;
-  return body.sessions;
+  return Array.isArray(body.sessions) ? body.sessions : [];
 }
 
 export async function revokeSession(sessionId: string): Promise<void> {
@@ -91,4 +91,19 @@ export async function revokeSession(sessionId: string): Promise<void> {
     method: "DELETE"
   });
   await ensureApiResponse(response, "会话撤销失败");
+}
+
+function normalizeAuthUser(user: AuthUser): AuthUser {
+  return {
+    ...user,
+    permissions: Array.isArray(user.permissions) ? user.permissions : [],
+    roles: Array.isArray(user.roles) ? user.roles : []
+  };
+}
+
+function normalizeRole(role: AdminRole): AdminRole {
+  return {
+    ...role,
+    permissions: Array.isArray(role.permissions) ? role.permissions : []
+  };
 }

@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { createUser, listRoles, listSessions, listUsers, revokeSession, updateUser, type AdminRole, type AdminSession } from "@/shared/api/admin";
 import { currentUser, hasPermission, type AuthUser } from "@/shared/api/auth";
-import { Alert, Button, Card, Input, StatusChip } from "@weopen/ui";
+import { useRouteRefresh } from "@/shared/hooks/use-route-refresh";
+import { Alert, Button, Card, Input, SelectField, SkeletonStack, StatusChip } from "@weopen/ui";
 
 export function AdminAccessPanel() {
   const [current, setCurrent] = useState<AuthUser | null>(null);
@@ -11,27 +12,49 @@ export function AdminAccessPanel() {
   const [roles, setRoles] = useState<AdminRole[]>([]);
   const [sessions, setSessions] = useState<SessionView[]>([]);
   const [message, setMessage] = useState("");
+  const [isCheckingCurrent, setIsCheckingCurrent] = useState(true);
+  const [isLoadingDirectory, setIsLoadingDirectory] = useState(false);
   const [isBusy, setIsBusy] = useState(false);
   const [form, setForm] = useState({
     displayName: "",
     email: "",
     password: "",
-    roles: "admin"
+    roles: ["admin"]
   });
 
   const canManageUsers = hasPermission(current, "user:manage");
   const roleNames = useMemo(() => roles.map((role) => role.name), [roles]);
+  const roleOptions = useMemo(() => roles.map((role) => ({
+    description: role.description,
+    label: role.name,
+    value: role.name
+  })), [roles]);
 
-  useEffect(() => {
+  const loadCurrentUser = useCallback(() => {
     let isMounted = true;
-    void currentUser().then((result) => {
-      if (!isMounted) return;
-      setCurrent(result?.user ?? null);
-    });
+    void currentUser()
+      .then((result) => {
+        if (!isMounted) return;
+        setCurrent(result?.user ?? null);
+      })
+      .catch(() => {
+        if (!isMounted) return;
+        setCurrent(null);
+      })
+      .finally(() => {
+        if (isMounted) {
+          setIsCheckingCurrent(false);
+        }
+      });
     return () => {
       isMounted = false;
     };
   }, []);
+
+  useRouteRefresh({
+    pathname: "/settings",
+    refresh: loadCurrentUser
+  });
 
   const refresh = useCallback(async (clearMessage = true) => {
     if (clearMessage) {
@@ -43,24 +66,37 @@ export function AdminAccessPanel() {
     setSessions(nextSessions.map(toSessionView));
   }, []);
 
-  useEffect(() => {
-    if (!canManageUsers) return;
+  const loadDirectory = useCallback(() => {
     let isMounted = true;
-    void Promise.all([listUsers(), listRoles(), listSessions()])
-      .then(([nextUsers, nextRoles, nextSessions]) => {
+    void (async () => {
+      await Promise.resolve();
+      if (!isMounted) return;
+      setIsLoadingDirectory(true);
+      try {
+        const [nextUsers, nextRoles, nextSessions] = await Promise.all([listUsers(), listRoles(), listSessions()]);
         if (!isMounted) return;
         setUsers(nextUsers);
         setRoles(nextRoles);
         setSessions(nextSessions.map(toSessionView));
-      })
-      .catch((err: unknown) => {
+      } catch (err: unknown) {
         if (!isMounted) return;
         setMessage(err instanceof Error ? err.message : "Access control loading failed");
-      });
+      } finally {
+        if (isMounted) {
+          setIsLoadingDirectory(false);
+        }
+      }
+    })();
     return () => {
       isMounted = false;
     };
-  }, [canManageUsers]);
+  }, []);
+
+  useRouteRefresh({
+    enabled: canManageUsers,
+    pathname: "/settings",
+    refresh: loadDirectory
+  });
 
   async function onCreate(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -72,9 +108,9 @@ export function AdminAccessPanel() {
         displayName: form.displayName,
         email: form.email,
         password: form.password,
-        roles: form.roles.split(",").map((role) => role.trim()).filter(Boolean)
+        roles: form.roles
       });
-      setForm({ displayName: "", email: "", password: "", roles: roleNames[0] ?? "admin" });
+      setForm({ displayName: "", email: "", password: "", roles: [roleNames[0] ?? "admin"] });
       await refresh(false);
       setMessage("User created. First login will require password change.");
     } catch (err) {
@@ -110,10 +146,17 @@ export function AdminAccessPanel() {
     }
   }
 
+  if (isCheckingCurrent) {
+    return <AccessControlLoadingState />;
+  }
+
   if (!canManageUsers) {
     return (
       <Card className="settings-session-card">
-        <Card.Header><Card.Title>Access Control</Card.Title></Card.Header>
+        <Card.Header>
+          <Card.Title>Access Control</Card.Title>
+          <StatusChip tone="neutral">Read only</StatusChip>
+        </Card.Header>
         <Card.Content>
           <Alert status="warning">
             <Alert.Content>
@@ -127,14 +170,27 @@ export function AdminAccessPanel() {
 
   return (
     <Card className="settings-session-card">
-      <Card.Header><Card.Title>Access Control</Card.Title></Card.Header>
+      <Card.Header>
+        <Card.Title>Access Control</Card.Title>
+        <StatusChip tone={isLoadingDirectory ? "neutral" : "success"}>
+          {isLoadingDirectory ? "Loading" : `${users.length} users`}
+        </StatusChip>
+      </Card.Header>
       <Card.Content>
         <form className="settings-form" onSubmit={onCreate}>
-          <Input label="New user email" name="email" onChange={(event) => setForm((value) => ({ ...value, email: event.target.value }))} required type="email" value={form.email} />
-          <Input label="Display name" name="displayName" onChange={(event) => setForm((value) => ({ ...value, displayName: event.target.value }))} value={form.displayName} />
-          <Input label="Temporary password" name="password" onChange={(event) => setForm((value) => ({ ...value, password: event.target.value }))} required type="password" value={form.password} />
-          <Input label="Roles (comma separated)" name="roles" onChange={(event) => setForm((value) => ({ ...value, roles: event.target.value }))} value={form.roles} />
-          <Button isPending={isBusy} type="submit" variant="secondary">Create user</Button>
+          <Input autoComplete="email" label="New user email" name="email" onChange={(event) => setForm((value) => ({ ...value, email: event.target.value }))} required type="email" value={form.email} />
+          <Input autoComplete="name" label="Display name" name="displayName" onChange={(event) => setForm((value) => ({ ...value, displayName: event.target.value }))} value={form.displayName} />
+          <Input autoComplete="new-password" label="Temporary password" name="password" onChange={(event) => setForm((value) => ({ ...value, password: event.target.value }))} required type="password" value={form.password} />
+          <SelectField
+            label="Roles"
+            name="roles"
+            onChange={(roles) => setForm((value) => ({ ...value, roles }))}
+            options={roleOptions}
+            placeholder={isLoadingDirectory ? "Loading roles" : "Select roles"}
+            selectionMode="multiple"
+            value={form.roles}
+          />
+          <Button isDisabled={!form.roles.length} isPending={isBusy} type="submit" variant="secondary">Create user</Button>
         </form>
 
         {message ? (
@@ -144,7 +200,9 @@ export function AdminAccessPanel() {
         ) : null}
 
         <div className="settings-provider-list" aria-label="Users">
-          {users.map((user) => (
+          {isLoadingDirectory ? (
+            <SkeletonStack rowHeight={44} rows={3} widths={["100%", "94%", "86%"]} />
+          ) : users.length ? users.map((user) => (
             <div key={user.id}>
               <span>{user.displayName || user.email}</span>
               <strong><i /> {user.status.toUpperCase()}</strong>
@@ -153,29 +211,62 @@ export function AdminAccessPanel() {
                 {user.status === "active" ? "Disable" : "Enable"}
               </Button>
             </div>
-          ))}
+          )) : (
+            <div>
+              <span>No users</span>
+              <strong><i /> EMPTY</strong>
+              <small>Create the first managed user with the form above.</small>
+            </div>
+          )}
         </div>
 
         <div className="settings-provider-list" aria-label="Roles">
-          {roles.map((role) => (
+          {isLoadingDirectory ? (
+            <SkeletonStack rowHeight={44} rows={2} widths={["94%", "82%"]} />
+          ) : roles.length ? roles.map((role) => (
             <div key={role.id}>
               <span>{role.name}</span>
               <strong><i /> {role.permissions.length} PERMS</strong>
               <small>{role.description}</small>
             </div>
-          ))}
+          )) : (
+            <div>
+              <span>No roles</span>
+              <strong><i /> EMPTY</strong>
+              <small>Role definitions have not been returned by the API.</small>
+            </div>
+          )}
         </div>
 
-        <div className="settings-provider-list" aria-label="Sessions">
-          {sessions.map((session) => (
+        <div className="settings-provider-list settings-session-list" aria-label="Sessions">
+          {isLoadingDirectory ? (
+            <SkeletonStack rowHeight={44} rows={3} widths={["100%", "90%", "80%"]} />
+          ) : sessions.length ? sessions.map((session) => (
             <div key={session.id}>
-              <span>{session.id}</span>
+              <span title={session.id}>{formatSessionId(session.id)}</span>
               <StatusChip tone={session.isActive ? "success" : "neutral"}>SESSION</StatusChip>
               <small>{session.userId} · expires {session.expiresAtLabel}</small>
               <Button isDisabled={isBusy} onPress={() => onRevokeSession(session.id)} size="xs" variant="ghost">Revoke</Button>
             </div>
-          ))}
+          )) : (
+            <div>
+              <span>No sessions</span>
+              <strong><i /> EMPTY</strong>
+              <small>No active API sessions were returned for managed users.</small>
+            </div>
+          )}
         </div>
+      </Card.Content>
+    </Card>
+  );
+}
+
+function AccessControlLoadingState() {
+  return (
+    <Card aria-busy="true" className="settings-session-card">
+      <Card.Header><Card.Title>Access Control</Card.Title></Card.Header>
+      <Card.Content>
+        <SkeletonStack rowHeight={44} rows={4} widths={["100%", "92%", "86%", "76%"]} />
       </Card.Content>
     </Card>
   );
@@ -193,4 +284,11 @@ function toSessionView(session: AdminSession): SessionView {
     expiresAtLabel: expiresAt.toLocaleString(),
     isActive: expiresAt.getTime() > Date.now()
   };
+}
+
+function formatSessionId(sessionId: string): string {
+  if (sessionId.length <= 20) {
+    return sessionId;
+  }
+  return `${sessionId.slice(0, 12)}...${sessionId.slice(-4)}`;
 }

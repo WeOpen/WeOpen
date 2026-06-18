@@ -13,6 +13,7 @@ type BlogPostEditorProps = {
   onCoverUpload: (file: File) => Promise<void>;
   onDelete: () => void;
   onNew: () => void;
+  onPreview: () => void;
   onSubmit: () => void;
   selectedPostId?: string;
 };
@@ -32,6 +33,7 @@ export function BlogPostEditor({
   onCoverUpload,
   onDelete,
   onNew,
+  onPreview,
   onSubmit,
   selectedPostId
 }: BlogPostEditorProps) {
@@ -55,9 +57,14 @@ export function BlogPostEditor({
             <div className="page-kicker">Markdown</div>
             <Card.Title>{selectedPostId ? "Editor" : "New Draft"}</Card.Title>
           </div>
-          <Button onPress={onNew} type="button" variant="secondary">
-            Reset
-          </Button>
+          <div className="blog-editor-toolbar-actions">
+            <Button onPress={onPreview} type="button" variant="secondary">
+              Preview
+            </Button>
+            <Button onPress={onNew} type="button" variant="secondary">
+              Reset
+            </Button>
+          </div>
         </div>
       </Card.Header>
       <Card.Content>

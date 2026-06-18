@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/WeOpen/WeOpen/internal/core/plugin"
+	"github.com/WeOpen/WeOpen/platform/core/plugin"
 	"github.com/WeOpen/WeOpen/services/api/internal/domain/auth"
 	"github.com/WeOpen/WeOpen/services/api/internal/domain/pluginstate"
 )

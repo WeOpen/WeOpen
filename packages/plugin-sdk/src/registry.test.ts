@@ -1,16 +1,17 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { DuplicatePluginError, PluginRegistry, PluginNotFoundError } from "./registry.ts";
+import { DuplicatePluginError, PluginRegistry, PluginNotFoundError, createPluginRegistry } from "./registry.ts";
+import { definePluginManifest } from "./manifest.ts";
 import type { PluginManifest } from "./manifest.ts";
 
 function manifest(id: string, order = 0): PluginManifest {
-  return {
+  return definePluginManifest({
     id,
     name: id,
     version: "0.1.0",
     permissions: [],
     nav: [{ title: id, path: `/${id}`, icon: "square", order }]
-  };
+  });
 }
 
 test("registry rejects duplicate plugin IDs", () => {
@@ -36,4 +37,14 @@ test("registry throws when enabling an unknown plugin", () => {
   const registry = new PluginRegistry();
 
   assert.throws(() => registry.setEnabled("missing", true), PluginNotFoundError);
+});
+
+test("createPluginRegistry registers compile-time plugin definitions", () => {
+  const registry = createPluginRegistry([
+    { manifest: manifest("blog", 20), component: "BlogPage" },
+    { manifest: manifest("tools", 10), component: "ToolsPage", enabled: false }
+  ]);
+
+  assert.deepEqual(registry.all().map((plugin) => plugin.manifest.id), ["blog", "tools"]);
+  assert.deepEqual(registry.navigation().map((item) => item.title), ["blog"]);
 });

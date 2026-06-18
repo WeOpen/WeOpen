@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { pluginManifests } from "@/plugins/registry";
 import { listPlugins, type BackendPlugin } from "@/shared/api/plugins";
-import { Button, Card, DataTable, MetricCard, PixelIcon, StatusChip, type StatusChipTone } from "@weopen/ui";
+import { useRouteRefresh } from "@/shared/hooks/use-route-refresh";
+import { Button, Card, DataTable, MetricCard, PixelIcon, Skeleton, StatusChip, type StatusChipTone } from "@weopen/ui";
 
 const activityRows = [
   { icon: "blog", label: "BLOG ACTIVITY", value: 68 },
@@ -34,7 +35,7 @@ type ModuleRow = (typeof moduleDefinitions)[number] & {
 export default function DashboardPage() {
   const [plugins, setPlugins] = useState<BackendPlugin[] | null>(null);
 
-  useEffect(() => {
+  const loadPlugins = useCallback(() => {
     let isMounted = true;
     void listPlugins().then((nextPlugins) => {
       if (isMounted) {
@@ -50,6 +51,11 @@ export default function DashboardPage() {
     };
   }, []);
 
+  useRouteRefresh({
+    pathname: "/dashboard",
+    refresh: loadPlugins
+  });
+
   const pluginState = useMemo(() => new Map((plugins ?? []).map((plugin) => [plugin.id, plugin.enabled])), [plugins]);
   const activePlugins = plugins?.filter((plugin) => plugin.enabled).length ?? pluginManifests.length;
   const disabledPlugins = plugins?.filter((plugin) => !plugin.enabled).length ?? 0;
@@ -62,7 +68,12 @@ export default function DashboardPage() {
     <>
       <section className="dashboard-metrics" aria-label="Platform status">
         <MetricCard icon={<PixelIcon name="api" />} label="API Status" value="ONLINE" description="UPTIME 7D 14H 22M" />
-        <MetricCard icon={<PixelIcon name="plugins" />} label="Plugins Installed" value={plugins?.length ?? pluginManifests.length} description={`ACTIVE ${activePlugins} · DISABLED ${disabledPlugins}`} />
+        <MetricCard
+          icon={<PixelIcon name="plugins" />}
+          label="Plugins Installed"
+          value={plugins ? plugins.length : <Skeleton as="span" height={38} radius="sm" width={58} />}
+          description={plugins ? `ACTIVE ${activePlugins} · DISABLED ${disabledPlugins}` : <Skeleton as="span" height={12} radius="pill" width={152} />}
+        />
         <MetricCard icon={<PixelIcon name="health" />} label="System Health" value="98.6%" description="LAST 24 HOURS" />
         <MetricCard icon={<PixelIcon name="storage" />} label="Storage R2 Usage" value="42.7%" description="215.4 GB / 504.0 GB" />
       </section>

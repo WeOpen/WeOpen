@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useState } from "react";
 import { Button, Card, Input, SelectField, Textarea } from "@weopen/ui";
 import type { ToolResult } from "./types";
@@ -8,9 +9,9 @@ import { CopyButton } from "./copy-button";
 
 const emptyResult: ToolResult = { ok: true, output: "" };
 
-export function HashTool() {
-  const [input, setInput] = useState("hello");
-  const [secret, setSecret] = useState("secret");
+export function HashTool({ statusSlot }: { statusSlot?: ReactNode }) {
+  const [input, setInput] = useState("");
+  const [secret, setSecret] = useState("");
   const [algorithm, setAlgorithm] = useState<HashAlgorithm>("SHA-256");
   const [hashResult, setHashResult] = useState<ToolResult>(emptyResult);
   const [hmacResult, setHmacResult] = useState<ToolResult>(emptyResult);
@@ -41,10 +42,11 @@ export function HashTool() {
           <h2 id="hash-tool-heading">Hash and HMAC</h2>
           <p>Use Web Crypto for SHA digests and keyed HMAC signatures. Secret values stay in memory only.</p>
         </div>
+        {statusSlot ? <div className="tool-panel-header-meta">{statusSlot}</div> : null}
       </div>
 
       <div className="tool-grid">
-        <Textarea className="tool-textarea tool-textarea-short" label="Input text" onChange={(event) => setInput(event.target.value)} spellCheck={false} value={input} />
+        <Textarea className="tool-textarea tool-textarea-short" label="Input text" onChange={(event) => setInput(event.target.value)} placeholder="Text to hash or sign" spellCheck={false} value={input} />
         <Card className="tool-card">
           <SelectField
             label="Algorithm"
@@ -52,7 +54,7 @@ export function HashTool() {
             options={hashAlgorithms.map((nextAlgorithm) => ({ label: nextAlgorithm, value: nextAlgorithm }))}
             value={algorithm}
           />
-          <Input label="HMAC secret" onChange={(event) => setSecret(event.target.value)} type="password" value={secret} />
+          <Input label="HMAC secret" onChange={(event) => setSecret(event.target.value)} placeholder="Secret for HMAC only" type="password" value={secret} />
         </Card>
       </div>
 

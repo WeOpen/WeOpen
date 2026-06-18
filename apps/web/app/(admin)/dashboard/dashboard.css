@@ -184,6 +184,29 @@
   overflow: hidden;
 }
 
+.dashboard-module-table.weopen-data-table {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  background: transparent !important;
+  border-color: #222222 !important;
+  box-shadow: none;
+}
+
+.dashboard-module-table .table__column {
+  background: transparent;
+  border-bottom-color: rgba(255, 255, 255, 0.095);
+  color: rgba(244, 246, 248, 0.68);
+}
+
+.dashboard-module-table .table__cell {
+  background: transparent;
+  border-bottom-color: rgba(255, 255, 255, 0.065);
+}
+
+.dashboard-module-table tbody tr:hover .table__cell {
+  background: rgba(255, 255, 255, 0.018);
+}
+
 .dashboard-module-id {
   font-weight: 650;
 }

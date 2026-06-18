@@ -4,7 +4,7 @@ import { LoginCheckedTime } from "@/features/auth/login-checked-time";
 import { builtinPluginManifests } from "@/plugins";
 import { backendApiUrl } from "@/shared/api/server-base";
 import { safeNextPath } from "@/shared/auth/routes";
-import { Card, PixelIcon, WeOpenMark } from "@weopen/ui";
+import { Card, PixelIcon, WeOpenWordmark } from "@weopen/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -42,7 +42,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
       <section className="auth-brand-panel" aria-label="WeOpen system identity">
         <h1 className="auth-brand-wordmark" aria-label="WeOpen">
-          <WeOpenMark className="auth-brand-w" />EOPEN
+          <WeOpenWordmark className="auth-brand-wordmark-mark" />
         </h1>
         <p>PERSONAL MANAGEMENT PLATFORM</p>
         <span>CONTROL. MANAGE. OPERATE.</span>

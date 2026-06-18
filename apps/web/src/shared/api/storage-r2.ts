@@ -52,7 +52,7 @@ export async function listStorageObjects(): Promise<StorageObject[]> {
   });
   await ensureStorageResponse(response, "文件列表读取失败");
   const body = (await response.json()) as ObjectsResponse;
-  return body.objects;
+  return Array.isArray(body.objects) ? body.objects : [];
 }
 
 /** createUploadURL asks the API to validate metadata and sign a short-lived R2 upload URL. */

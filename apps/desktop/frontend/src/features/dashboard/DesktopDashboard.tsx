@@ -3,8 +3,8 @@ import { Button, Card, StatusChip, type StatusChipTone } from "@weopen/ui";
 import {
   loadDashboardSummary,
   type RemoteApiSettings
-} from "@/lib/apiClient";
-import type { DashboardSummary } from "@weopen/sdk/client";
+} from "@/shared/api/apiClient";
+import type { DashboardSummary } from "@weopen/api-client/client";
 
 type DesktopDashboardProps = {
   settings: RemoteApiSettings;

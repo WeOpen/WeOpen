@@ -1,16 +1,25 @@
 "use client";
 
-import { Button, ConfirmActionDialog, DataTable, SelectField } from "@weopen/ui";
+import { Button, ConfirmActionDialog, DataTable, SelectField, SkeletonStack } from "@weopen/ui";
 import type { StorageObject, StorageVisibility } from "@/shared/api/storage-r2";
 import { formatBytes, formatTimestamp } from "@/shared/format";
 
 type ObjectTableProps = {
+  isLoading?: boolean;
   objects: StorageObject[];
   onDelete: (object: StorageObject) => Promise<void>;
   onVisibilityChange: (object: StorageObject, visibility: StorageVisibility) => Promise<void>;
 };
 
-export function ObjectTable({ objects, onDelete, onVisibilityChange }: ObjectTableProps) {
+export function ObjectTable({ isLoading = false, objects, onDelete, onVisibilityChange }: ObjectTableProps) {
+  if (isLoading && !objects.length) {
+    return (
+      <div aria-busy="true" className="weopen-data-table storage-table-wrap">
+        <SkeletonStack rowHeight={52} rows={7} widths={["100%", "94%", "88%", "96%"]} />
+      </div>
+    );
+  }
+
   const rows = objects.length ? objects : sampleObjects;
 
   return (

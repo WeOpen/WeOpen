@@ -1,15 +1,19 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
 import { Card, Input, Textarea } from "@weopen/ui";
 import { testRegex } from "./tools";
 import { CopyButton } from "./copy-button";
 
-export function RegexTool() {
-  const [pattern, setPattern] = useState("(?<plugin>blog|storage|devtools)");
-  const [flags, setFlags] = useState("gi");
-  const [input, setInput] = useState("Blog, storage, and Devtools are built-in plugins.");
-  const result = useMemo(() => testRegex(pattern, flags, input), [flags, input, pattern]);
+export function RegexTool({ statusSlot }: { statusSlot?: ReactNode }) {
+  const [pattern, setPattern] = useState("");
+  const [flags, setFlags] = useState("g");
+  const [input, setInput] = useState("");
+  const result = useMemo(
+    () => (pattern && input ? testRegex(pattern, flags, input) : { ok: true as const, matches: [], output: "" }),
+    [flags, input, pattern]
+  );
 
   return (
     <section className="tool-panel" aria-labelledby="regex-tool-heading">
@@ -18,15 +22,20 @@ export function RegexTool() {
           <h2 id="regex-tool-heading">Regex tester</h2>
           <p>Run JavaScript regular expressions locally and inspect match indexes plus named capture groups.</p>
         </div>
-        <CopyButton disabled={!result.ok} value={result.output} />
+        <div className="tool-panel-header-meta">
+          {statusSlot}
+          <div className="tool-actions">
+            <CopyButton disabled={!result.ok} value={result.output} />
+          </div>
+        </div>
       </div>
 
       <div className="tool-grid">
         <Card className="tool-card">
-          <Input label="Pattern" onChange={(event) => setPattern(event.target.value)} spellCheck={false} value={pattern} />
+          <Input label="Pattern" onChange={(event) => setPattern(event.target.value)} placeholder="Regular expression" spellCheck={false} value={pattern} />
           <Input label="Flags" onChange={(event) => setFlags(event.target.value)} spellCheck={false} value={flags} />
         </Card>
-        <Textarea className="tool-textarea" label="Sample text" onChange={(event) => setInput(event.target.value)} spellCheck={false} value={input} />
+        <Textarea className="tool-textarea" label="Sample text" onChange={(event) => setInput(event.target.value)} placeholder="Paste text to match" spellCheck={false} value={input} />
       </div>
 
       <div className="tool-results-list">

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	stdhttp "net/http"
 
-	"github.com/WeOpen/WeOpen/internal/core/plugin"
+	"github.com/WeOpen/WeOpen/platform/core/plugin"
 	"github.com/WeOpen/WeOpen/services/api/internal/adapters/secrets"
 	"github.com/WeOpen/WeOpen/services/api/internal/domain/audit"
 	"github.com/WeOpen/WeOpen/services/api/internal/domain/auth"

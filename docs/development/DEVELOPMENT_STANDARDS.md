@@ -38,7 +38,7 @@
 1. 用户最新明确要求。
 2. 仓库根目录 `AGENTS.md` 或会话中等效的仓库级指令。
 3. 本文档。
-4. `PLAN.md`、PRD、设计文档。
+4. `docs/PLAN.md`、PRD、设计文档。
 5. 局部代码风格和已有实现。
 
 如果技术约束与产品目标冲突，必须先记录冲突，再选择最小可行方案，不能假装两者都能满足。
@@ -50,7 +50,7 @@
 每次开发前必须：
 
 1. 运行 `git status --short`，确认当前工作区状态。
-2. 阅读相关 PRD、设计文档、`PLAN.md` 或 issue。
+2. 阅读相关 PRD、设计文档、`docs/PLAN.md` 或 issue。
 3. 明确本次变更的目标、非目标、影响范围和验收方式。
 4. 如果涉及外部 SDK、平台、框架或部署能力，优先查官方文档。
 5. 如果已有用户未提交改动，不得覆盖、删除或回滚。
@@ -112,7 +112,7 @@ Constraint: v1 plugins are compile-time built-ins
 Rejected: Runtime plugin loading | unsafe and unnecessary for v1
 Confidence: high
 Scope-risk: narrow
-Tested: go test ./internal/core/plugin
+Tested: go test ./platform/core/plugin
 Not-tested: Third-party plugin packages
 ```
 
@@ -464,7 +464,7 @@ v1 插件是编译期内置插件，不做远程动态安装。
 后端插件：
 
 ```text
-internal/plugins/<plugin-id>/
+platform/plugins/<plugin-id>/
   plugin.go
   service.go
   repository.go
@@ -619,7 +619,7 @@ go test ./apps/desktop/...
 
 - 产品需求：`docs/PRD-*.md`
 - 技术设计：`docs/DESIGN-*.md`
-- 开发计划：`PLAN.md`
+- 开发计划：`docs/PLAN.md`
 - 开发规范：`docs/development/DEVELOPMENT_STANDARDS.md`
 - 部署文档：`docs/deployment/`
 - 安全文档：`docs/security/`
@@ -660,7 +660,7 @@ pnpm changelog:staged
 - 当前受管版本字段包括：
   - 根目录和 workspace package 的 `package.json#version`。
   - `apps/desktop/main.go` 的 `appVersion`。
-  - `internal/plugins/*/plugin.go` 的后端插件 `Version()`。
+  - `platform/plugins/*/plugin.go` 的后端插件 `Version()`。
   - `apps/web/src/plugins/index.ts` 的前端插件 manifest `version`。
 - 版本号必须遵循 [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html)。
 - 版本变更流程：

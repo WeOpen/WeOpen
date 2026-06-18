@@ -1,1 +1,1 @@
-export * from "@weopen/sdk/devtools";
+export * from "@weopen/api-client/devtools";

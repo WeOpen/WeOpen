@@ -1,6 +1,7 @@
-import { Card, StatusChip } from "@weopen/ui";
+import type { ReactNode } from "react";
+import { Card } from "@weopen/ui";
 
-export function CronTool() {
+export function CronTool({ statusSlot }: { statusSlot?: ReactNode }) {
   return (
     <section className="tool-panel" aria-labelledby="cron-tool-heading">
       <div className="tool-panel-header">
@@ -8,7 +9,7 @@ export function CronTool() {
           <h2 id="cron-tool-heading">Cron parser</h2>
           <p>Deferred for v1 because a reliable cron parser would require approving a new dependency.</p>
         </div>
-        <StatusChip tone="warning">Deferred</StatusChip>
+        {statusSlot ? <div className="tool-panel-header-meta">{statusSlot}</div> : null}
       </div>
       <Card className="tool-card">
         <Card.Header>

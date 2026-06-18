@@ -2,12 +2,14 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import {
   Alert,
   AvatarStack,
   Badge,
   BorderBeam,
   Button,
+  Calendar,
   Card,
   Checkbox,
   Chip,
@@ -23,6 +25,7 @@ import {
   MarqueeRail,
   MetricCard,
   PageHeader,
+  Pagination,
   PixelIcon,
   ProgressRail,
   pushToastRecord,
@@ -31,6 +34,8 @@ import {
   SelectField,
   SegmentedControl,
   Separator,
+  Skeleton,
+  SkeletonStack,
   StatusChip,
   Switch,
   Tabs,
@@ -40,6 +45,14 @@ import {
   Tooltip,
   type ToastRecord
 } from "@weopen/ui";
+
+const TelemetryBoard = dynamic(
+  () => import("@/features/telemetry-board/telemetry-board").then((module) => module.TelemetryBoard),
+  {
+    loading: () => <div className="design-system-telemetry-loading" aria-label="Loading telemetry board" />,
+    ssr: false
+  }
+);
 
 type ComponentRow = {
   id: string;
@@ -74,19 +87,21 @@ const componentRows: ComponentRow[] = [
 ];
 
 const tokenRows = [
-  ["BG", "#000000"],
-  ["SURFACE", "#030303"],
-  ["BORDER", "#3A3A3A"],
+  ["BG", "transparent"],
+  ["GLASS", "rgba(255, 255, 255, 0.085)"],
+  ["GLASS 2", "rgba(255, 255, 255, 0.105)"],
+  ["BORDER", "#222222"],
+  ["BORDER HOVER", "#333333"],
   ["TEXT PRIMARY", "#E8E8E8"],
-  ["TEXT SECONDARY", "#9A9A9A"],
+  ["TEXT SECONDARY", "#999999"],
   ["ACCENT", "#D71921"],
-  ["SUCCESS", "#22C55E"],
-  ["WARNING", "#F59E0B"]
+  ["SUCCESS", "#4A9E5C"],
+  ["WARNING", "#D4A843"]
 ];
 
 const componentStats = [
-  ["Groups", "06"],
-  ["Primitives", "26"],
+  ["Groups", "07"],
+  ["Primitives", "32"],
   ["Motion", "180ms"],
   ["Radius", "0"]
 ];
@@ -100,6 +115,8 @@ export default function DesignSystemPage() {
   const [environment, setEnvironment] = useState("preview");
   const [enabledEnvironments, setEnabledEnvironments] = useState(["local", "preview"]);
   const [metricsEnabled, setMetricsEnabled] = useState(true);
+  const [calendarDate, setCalendarDate] = useState(new Date(2026, 5, 17));
+  const [paginationPage, setPaginationPage] = useState(6);
   const [selectedTab, setSelectedTab] = useState("overview");
   const [segment, setSegment] = useState("compact");
   const [toasts, setToasts] = useState<ToastRecord[]>([]);
@@ -205,7 +222,8 @@ export default function DesignSystemPage() {
               ["Feedback", "feedback"],
               ["Data", "data-display"],
               ["Overlay", "overlay-navigation"],
-              ["Motion", "motion-effects"]
+              ["Motion", "motion-effects"],
+              ["Telemetry", "telemetry"]
             ].map(([label, target]) => (
               <a
                 href={`#${target}`}
@@ -608,13 +626,60 @@ export default function DesignSystemPage() {
 
             <ComponentPreviewCard
               api={[
+                ["selectedDate", "Controlled selected day"],
+                ["onSelect", "Receives the normalized local Date"],
+                ["minDate / maxDate", "Constrain available day buttons"]
+              ]}
+              code="<Calendar selectedDate={date} onSelect={setDate} />"
+              detail="Single date selection and month navigation"
+              index="15"
+              title="Calendar"
+              tone="accent"
+              wide
+            >
+              <div className="design-system-calendar-preview">
+                <Calendar
+                  disabledDates={[new Date(2026, 5, 21), new Date(2026, 5, 22)]}
+                  maxDate={new Date(2028, 11, 31)}
+                  minDate={new Date(2024, 0, 1)}
+                  onSelect={setCalendarDate}
+                  selectedDate={calendarDate}
+                  weekStartsOn={1}
+                />
+              </div>
+            </ComponentPreviewCard>
+
+            <ComponentPreviewCard
+              api={[
+                ["page", "Controlled current page"],
+                ["totalPages", "Total available pages"],
+                ["siblingCount", "Visible pages around current page"]
+              ]}
+              code="<Pagination page={page} totalPages={16} onPageChange={setPage} />"
+              detail="Page navigation with compact ellipsis"
+              index="16"
+              title="Pagination"
+              tone="success"
+              wide
+            >
+              <div className="design-system-pagination-preview">
+                <Pagination
+                  onPageChange={setPaginationPage}
+                  page={paginationPage}
+                  totalPages={16}
+                />
+              </div>
+            </ComponentPreviewCard>
+
+            <ComponentPreviewCard
+              api={[
                 ["label", "Metric label"],
                 ["value", "Hero metric value"],
                 ["trendDirection", "up | down | neutral"]
               ]}
               code={'<MetricCard label="Coverage" value="98%" />'}
               detail="Hero number, trend, icon"
-              index="15"
+              index="17"
               title="Metric Card"
               tone="accent"
             >
@@ -636,7 +701,7 @@ export default function DesignSystemPage() {
               ]}
               code={'<EmptyState title="No components" />'}
               detail="Empty content fallback"
-              index="16"
+              index="18"
               title="Empty State"
               tone="neutral"
             >
@@ -646,6 +711,28 @@ export default function DesignSystemPage() {
                 icon={<PixelIcon name="empty" />}
                 title="No components"
               />
+            </ComponentPreviewCard>
+
+            <ComponentPreviewCard
+              api={[
+                ["variant", "block | text | circle"],
+                ["width / height", "CSS sizing for the placeholder"],
+                ["SkeletonStack", "Repeated rows for loading lists"]
+              ]}
+              code={'<Skeleton width="64%" height={16} />'}
+              detail="Page, list, and card loading placeholder"
+              index="19"
+              title="Skeleton"
+              tone="accent"
+            >
+              <div className="design-system-field-stack">
+                <Skeleton height={18} radius="pill" width="72%" />
+                <Skeleton height={44} radius="md" width="100%" />
+                <div className="design-system-inline-control">
+                  <Skeleton height={38} variant="circle" width={38} />
+                  <SkeletonStack rowHeight={12} rows={3} widths={["88%", "64%", "74%"]} />
+                </div>
+              </div>
             </ComponentPreviewCard>
           </ComponentSection>
 
@@ -662,7 +749,7 @@ export default function DesignSystemPage() {
               ]}
               code={'<ConfirmActionDialog trigger={<Button />} />'}
               detail="Confirmation flow"
-              index="17"
+              index="20"
               title="Confirm Dialog"
               tone="danger"
             >
@@ -684,7 +771,7 @@ export default function DesignSystemPage() {
               ]}
               code="<ToastViewport toasts={toasts} />"
               detail="Viewport notification stack"
-              index="18"
+              index="21"
               title="Toast"
               tone="success"
             >
@@ -702,7 +789,7 @@ export default function DesignSystemPage() {
               ]}
               code={'<ThemeToggle defaultTheme="dark" />'}
               detail="Theme state control"
-              index="19"
+              index="22"
               title="Theme Toggle"
               tone="neutral"
             >
@@ -720,7 +807,7 @@ export default function DesignSystemPage() {
               ]}
               code={'<KeyboardShortcut keys={["⌘", "K"]} />'}
               detail="Keyboard hints"
-              index="20"
+              index="23"
               title="Keyboard"
               tone="success"
             >
@@ -735,7 +822,7 @@ export default function DesignSystemPage() {
               ]}
               code="<CommandSurface items={items} />"
               detail="Command palette surface"
-              index="21"
+              index="24"
               title="Command Surface"
               tone="accent"
               wide
@@ -763,7 +850,7 @@ export default function DesignSystemPage() {
               ]}
               code="<MarqueeRail items={items} />"
               detail="MagicUI-style marquee"
-              index="22"
+              index="25"
               title="Marquee Rail"
               tone="accent"
               wide
@@ -779,7 +866,7 @@ export default function DesignSystemPage() {
               ]}
               code="<BorderBeam>Release 0.1</BorderBeam>"
               detail="Animated border highlight"
-              index="23"
+              index="26"
               title="Border Beam"
               tone="warning"
             >
@@ -797,7 +884,7 @@ export default function DesignSystemPage() {
               ]}
               code="<AvatarStack items={items} />"
               detail="Presence stack"
-              index="24"
+              index="27"
               title="Avatar Stack"
               tone="success"
             >
@@ -820,7 +907,7 @@ export default function DesignSystemPage() {
               ]}
               code={'<Tooltip content="Token locked">Hover</Tooltip>'}
               detail="Portal hover hint"
-              index="25"
+              index="28"
               title="Tooltip"
               tone="neutral"
             >
@@ -837,7 +924,7 @@ export default function DesignSystemPage() {
               ]}
               code={'<Separator orientation="horizontal" />'}
               detail="Structural divider"
-              index="26"
+              index="29"
               title="Separator"
               tone="neutral"
             >
@@ -847,6 +934,16 @@ export default function DesignSystemPage() {
                 <span>After</span>
               </div>
             </ComponentPreviewCard>
+          </ComponentSection>
+
+          <ComponentSection
+            description="Live-instrument visualizations adapted from the NULLFRAME telemetry dashboard (MIT)."
+            eyebrow="Group 07"
+            title="Telemetry"
+          >
+            <div className="design-system-telemetry-panel">
+              <TelemetryBoard />
+            </div>
           </ComponentSection>
         </div>
 

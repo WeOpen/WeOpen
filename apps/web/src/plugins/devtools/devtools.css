@@ -47,40 +47,26 @@
   width: 100%;
 }
 
-.tool-catalog h2,
 .tool-panel h2,
 .tool-card h3 {
   margin: 0;
-}
-
-.tool-catalog h2 {
-  font-size: 14px;
-}
-
-.tool-list {
-  display: grid;
-  gap: 8px;
-  list-style: none;
-  margin: 12px 0 0;
-  padding: 0;
-}
-
-.tool-list li {
-  align-items: center;
-  display: flex;
-  gap: 8px;
-  justify-content: space-between;
-}
-
-.tool-list li span:first-child {
-  color: var(--weopen-muted);
-  font-size: 13px;
 }
 
 .tool-panel {
   display: grid;
   gap: 16px;
   min-height: 520px;
+}
+
+.tool-catalog-state {
+  align-content: center;
+  justify-items: start;
+  min-height: 220px;
+}
+
+.tool-catalog-state p {
+  color: var(--weopen-muted);
+  margin: 0;
 }
 
 .tool-panel-header,
@@ -99,12 +85,25 @@
   margin: 6px 0 0;
 }
 
+.tool-panel-header-meta,
 .tool-actions {
   align-items: center;
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   justify-content: flex-end;
+}
+
+.tool-panel-header-meta {
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.tool-status-chips {
+  align-items: center;
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
 .tool-grid {
@@ -232,6 +231,7 @@
     flex-direction: column;
   }
 
+  .tool-panel-header-meta,
   .tool-actions {
     justify-content: flex-start;
   }

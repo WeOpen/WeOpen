@@ -54,9 +54,9 @@ const navSweepTransition = { duration: 0.28, ease: [0.16, 1, 0.3, 1] } as const;
 const navGlyphTransition = { duration: 0.18, ease: "easeOut" } as const;
 
 const navItemVariants = {
-  active: { backgroundColor: "#181818", borderLeftColor: "var(--accent)", color: "var(--text-display)", x: 0 },
+  active: { backgroundColor: "rgba(0, 0, 0, 0)", borderLeftColor: "var(--accent)", color: "var(--text-display)", x: 0 },
   idle: { backgroundColor: "rgba(0, 0, 0, 0)", borderLeftColor: "rgba(0, 0, 0, 0)", color: "var(--text-primary)", x: 0 },
-  hover: { backgroundColor: "#181818", borderLeftColor: "var(--accent)", color: "var(--text-display)", x: 2 }
+  hover: { backgroundColor: "rgba(0, 0, 0, 0)", borderLeftColor: "var(--accent)", color: "var(--text-display)", x: 2 }
 } as const;
 
 const navSweepVariants = {
@@ -68,6 +68,7 @@ const navSweepVariants = {
 export function AdminShell({
   actionSlot,
   appName,
+  appMark,
   brandHref = "/dashboard",
   children,
   currentPath,
@@ -81,6 +82,7 @@ export function AdminShell({
   versionLabel = "0.1.0"
 }: AdminShellProps) {
   const [isNavOpen, setIsNavOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [systemClock, setSystemClock] = useState<SystemClockState | null>(null);
   const mainScrollRef = useRef<HTMLElement>(null);
   const settingsHref = hrefForNavItem(navItems, "/settings", "#settings");
@@ -100,11 +102,12 @@ export function AdminShell({
   const systemTimeDisplay = systemClock ? formatUserTimeDisplay(systemClock.now, systemClock.label, systemClock.timeZone) : null;
 
   return (
-    <div className="weopen-admin-shell">
+    <div className={cn("weopen-admin-shell", { "weopen-admin-shell-sidebar-collapsed": isSidebarCollapsed })}>
       <ScrollRail containerRef={mainScrollRef} />
 
       <aside aria-label="管理导航" className="weopen-admin-sidebar">
         <NavigationPanel
+          appMark={appMark}
           appName={appName}
           brandHref={brandHref}
           currentPath={currentPath}
@@ -127,6 +130,7 @@ export function AdminShell({
               </Button>
             </div>
             <NavigationPanel
+              appMark={appMark}
               appName={appName}
               brandHref={brandHref}
               currentPath={currentPath}
@@ -152,6 +156,15 @@ export function AdminShell({
           })}
           aria-label="System status"
         >
+          <button
+            aria-label={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            aria-pressed={isSidebarCollapsed}
+            className="weopen-admin-sidebar-toggle"
+            onClick={() => setIsSidebarCollapsed((current) => !current)}
+            type="button"
+          >
+            <PixelIcon name={isSidebarCollapsed ? "chevron-right" : "chevron-left"} variant="bare" />
+          </button>
           <div className="weopen-admin-topbar-mobile-nav">
             <Button
               aria-label="打开导航"
@@ -168,8 +181,15 @@ export function AdminShell({
             <strong className="weopen-admin-topbar-time-value">
               {systemTimeDisplay ? (
                 <>
-                  <time dateTime={systemClock?.now.toISOString()}>{systemTimeDisplay.time}</time>
-                  <small>{systemTimeDisplay.timeZone}</small>
+                  <span className="weopen-admin-topbar-clock-line">
+                    <span className="weopen-admin-topbar-clock-led" />
+                    <time className="weopen-admin-topbar-clock" dateTime={systemClock?.now.toISOString()}>{systemTimeDisplay.time}</time>
+                    <span className="weopen-admin-topbar-clock-sec">{systemTimeDisplay.second}</span>
+                  </span>
+                  <span className="weopen-admin-topbar-clock-meta">
+                    <span>{systemTimeDisplay.weekday}</span>
+                    <small>{systemTimeDisplay.date} · {systemTimeDisplay.timeZone}</small>
+                  </span>
                 </>
               ) : (
                 <>
@@ -205,7 +225,7 @@ export function AdminShell({
   );
 }
 
-function formatUserTimeDisplay(date: Date, label: string, timeZone?: string): { time: string; timeZone: string } {
+function formatUserTimeDisplay(date: Date, label: string, timeZone?: string): { date: string; second: string; time: string; timeZone: string; weekday: string } {
   const parts = new Intl.DateTimeFormat("en-US", {
     day: "2-digit",
     hour: "2-digit",
@@ -218,13 +238,26 @@ function formatUserTimeDisplay(date: Date, label: string, timeZone?: string): { 
   }).formatToParts(date);
   const values = new Map(parts.map((part) => [part.type, part.value]));
 
+  const month = new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    ...(timeZone ? { timeZone } : {})
+  }).format(date).toUpperCase();
+  const weekday = new Intl.DateTimeFormat("en-US", {
+    weekday: "long",
+    ...(timeZone ? { timeZone } : {})
+  }).format(date).toUpperCase();
+
   return {
-    time: `${values.get("year") ?? "0000"}-${values.get("month") ?? "00"}-${values.get("day") ?? "00"} ${values.get("hour") ?? "00"}:${values.get("minute") ?? "00"}:${values.get("second") ?? "00"}`,
-    timeZone: label
+    date: `${values.get("day") ?? "00"} ${month} ${values.get("year") ?? "0000"}`,
+    second: values.get("second") ?? "00",
+    time: `${values.get("hour") ?? "00"}:${values.get("minute") ?? "00"}`,
+    timeZone: label,
+    weekday
   };
 }
 
 function NavigationPanel({
+  appMark,
   appName,
   brandHref,
   currentPath,
@@ -235,6 +268,7 @@ function NavigationPanel({
   settingsHref,
   footerActionSlot
 }: {
+  appMark?: ReactNode;
   appName: string;
   brandHref: string;
   currentPath?: string;
@@ -252,6 +286,7 @@ function NavigationPanel({
   return (
     <div className={cn("weopen-admin-nav-card", { "weopen-admin-nav-card-drawer": isDrawer })}>
       <LinkComponent className="weopen-admin-brand" href={brandHref}>
+        {appMark ? <span aria-hidden="true" className="weopen-admin-brand-mark">{appMark}</span> : null}
         <strong>{appName.toUpperCase()}</strong>
       </LinkComponent>
 
@@ -284,7 +319,7 @@ function NavigationPanel({
                   variant="ghost"
                 >
                   {glyph}
-                  <span>{item.label}</span>
+                  <span className="weopen-admin-nav-label">{item.label}</span>
                   {item.badge ? <Chip size="sm" variant="outline">{item.badge}</Chip> : null}
                 </Button>
               );
@@ -311,7 +346,7 @@ function NavigationPanel({
                   variants={navSweepVariants}
                 />
                 {glyph}
-                <span>{item.label}</span>
+                <span className="weopen-admin-nav-label">{item.label}</span>
                 {item.badge ? <Chip size="sm" variant="outline">{item.badge}</Chip> : null}
               </MotionLink>
             );

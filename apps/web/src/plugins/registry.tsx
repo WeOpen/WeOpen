@@ -1,4 +1,4 @@
-import { PluginRegistry } from "@weopen/plugin-sdk";
+import { createPluginRegistry } from "@weopen/plugin-sdk";
 import type { PluginManifest } from "@weopen/plugin-sdk";
 import { BlogPluginPage } from "@/features/blog";
 import { builtinPluginManifests } from "./index";
@@ -16,18 +16,24 @@ const pluginComponents: Partial<Record<string, WebPluginComponent>> = {
   "storage-r2": StorageR2PluginPage
 };
 
-export const webPluginRegistry = new PluginRegistry<WebPluginComponent>();
-
-for (const manifest of builtinPluginManifests) {
-  webPluginRegistry.register({
+export const webPluginRegistry = createPluginRegistry<WebPluginComponent>(
+  builtinPluginManifests.map((manifest) => ({
     manifest,
     component: pluginComponents[manifest.id] ?? PlaceholderPluginPage
-  });
-}
+  }))
+);
 
 export const pluginNavigation = webPluginRegistry.navigation();
 
 export const pluginManifests = webPluginRegistry.manifests(true);
+
+export function hasPluginUI(pluginId: string) {
+  try {
+    return Boolean(webPluginRegistry.get(pluginId).component);
+  } catch {
+    return false;
+  }
+}
 
 export function pluginDashboardWidgets() {
   return webPluginRegistry
@@ -49,14 +55,14 @@ export function PlaceholderPluginPage({ manifest }: { manifest: PluginManifest }
         <Card.Content>
           <dl>
             <div>
-              <dt>版本</dt>
+              <dt>Version</dt>
               <dd>{manifest.version}</dd>
             </div>
             <div>
-              <dt>权限</dt>
+              <dt>Permissions</dt>
               <dd>
                 <StatusChip tone={manifest.permissions.length ? "accent" : "neutral"}>
-                  {manifest.permissions.length ? manifest.permissions.join(", ") : "无特殊权限"}
+                  {manifest.permissions.length ? manifest.permissions.join(", ") : "Public"}
                 </StatusChip>
               </dd>
             </div>

@@ -2,13 +2,13 @@ go 1.25.2
 
 use (
 	./apps/desktop
-	./internal/core
-	./internal/plugins/blog
-	./internal/plugins/devtools
-	./internal/plugins/domains
-	./internal/plugins/storage_r2
-	./internal/providers/cloudflare
-	./internal/providers/domains
-	./internal/providers/r2
+	./platform/core
+	./platform/plugins/blog
+	./platform/plugins/devtools
+	./platform/plugins/domains
+	./platform/plugins/storage_r2
+	./platform/providers/cloudflare
+	./platform/providers/domains
+	./platform/providers/r2
 	./services/api
 )

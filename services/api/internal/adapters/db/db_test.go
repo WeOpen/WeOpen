@@ -85,5 +85,5 @@ func TestSplitSQLStatementsDropsEmptyFragments(t *testing.T) {
 
 func rootMigrationFS(t *testing.T) fs.FS {
 	t.Helper()
-	return os.DirFS(filepath.Join("..", "..", "..", "..", "..", "db", "migrations"))
+	return os.DirFS(filepath.Join("..", "..", "..", "migrations"))
 }

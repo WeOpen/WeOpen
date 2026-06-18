@@ -25,17 +25,18 @@ export function certificateTone(status: CertificateRiskStatus): DomainTone {
 }
 
 export function summarizeDomainAssets(assets: DomainAsset[]): DomainSummary {
-  const providers = Array.from(new Set(assets.map((asset) => asset.provider))).sort();
+  const safeAssets = Array.isArray(assets) ? assets : [];
+  const providers = Array.from(new Set(safeAssets.map((asset) => asset.provider))).sort();
   return {
-    total: assets.length,
-    active: assets.filter((asset) => asset.status === "active").length,
-    warnings: assets.filter((asset) => certificateTone(asset.certificate.status) !== "success").length,
+    total: safeAssets.length,
+    active: safeAssets.filter((asset) => asset.status === "active").length,
+    warnings: safeAssets.filter((asset) => certificateTone(asset.certificate?.status ?? "unchecked") !== "success").length,
     providers
   };
 }
 
 export function formatCertificateSummary(asset: DomainAsset): string {
-  const certificate = asset.certificate;
+  const certificate = asset.certificate ?? { daysRemaining: 0, status: "unchecked" as const };
   switch (certificate.status) {
     case "unchecked":
       return "Not checked yet";

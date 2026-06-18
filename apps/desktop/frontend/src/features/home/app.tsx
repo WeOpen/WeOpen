@@ -6,7 +6,7 @@ import { RemoteApiSettings } from "@/features/settings/RemoteApiSettings";
 import {
   loadRemoteApiSettings,
   type RemoteApiSettings as RemoteApiSettingsValue
-} from "@/lib/apiClient";
+} from "@/shared/api/apiClient";
 import "@weopen/ui/styles.css";
 import "./style.css";
 

@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/WeOpen/WeOpen/internal/core/plugin"
+	"github.com/WeOpen/WeOpen/platform/core/plugin"
 	"github.com/WeOpen/WeOpen/services/api/internal/domain/auth"
 	"github.com/WeOpen/WeOpen/services/api/internal/domain/pluginstate"
 )
@@ -36,6 +36,12 @@ func TestPluginHandlersListAndUpdatePluginState(t *testing.T) {
 	}
 	if !listBody.Plugins[0].Enabled {
 		t.Fatal("expected plugin to start enabled")
+	}
+	if listBody.Plugins[0].RouteCount != 1 || listBody.Plugins[0].RoutePrefix != "/api/plugins/blog" {
+		t.Fatalf("expected plugin route metadata, got %+v", listBody.Plugins[0])
+	}
+	if listBody.Plugins[0].RouteGroup == nil || listBody.Plugins[0].RouteGroup.ID != "plugin-blog" {
+		t.Fatalf("expected plugin route catalog, got %+v", listBody.Plugins[0].RouteGroup)
 	}
 
 	patchReq := httptest.NewRequest(stdhttp.MethodPatch, "/api/plugins/blog", strings.NewReader(`{"enabled":false}`))
@@ -132,5 +138,22 @@ func newAuthenticatedPluginServer(t *testing.T, states pluginstate.Store) (stdht
 		Permissions: []plugin.Permission{plugin.PermissionBlogRead},
 	}))
 
-	return NewServer(ServerOptions{Auth: authService, Plugins: registry, PluginStates: states}), login.Token
+	return NewServer(ServerOptions{
+		Auth:         authService,
+		Plugins:      registry,
+		PluginStates: states,
+		PluginRoutes: []PluginRoute{
+			{
+				Prefix:  "/api/plugins/blog",
+				Handler: stdhttp.HandlerFunc(func(w stdhttp.ResponseWriter, r *stdhttp.Request) {}),
+				Catalog: RouteGroup{
+					ID:    "plugin-blog",
+					Title: "Blog Plugin",
+					Routes: []RouteDefinition{
+						{ID: "plugin.blog.posts.list", Method: stdhttp.MethodGet, Path: "/api/plugins/blog/posts"},
+					},
+				},
+			},
+		},
+	}), login.Token
 }

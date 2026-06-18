@@ -12,7 +12,9 @@ export type Permission =
   | "secret:read"
   | "secret:write"
   | "audit:read"
-  | "task:schedule";
+  | "plugin:manage"
+  | "task:schedule"
+  | "user:manage";
 
 /** PluginNavItem is a serializable navigation entry contributed by a plugin manifest. */
 export type PluginNavItem = {
@@ -62,3 +64,8 @@ export type RegisteredPlugin<TComponent = unknown> = {
   component?: TComponent;
   enabled: boolean;
 };
+
+/** definePluginManifest preserves manifest literal types while validating the shared shape. */
+export function definePluginManifest<TManifest extends PluginManifest>(manifest: TManifest): TManifest {
+  return manifest;
+}

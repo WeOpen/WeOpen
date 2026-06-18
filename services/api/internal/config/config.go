@@ -36,7 +36,7 @@ func LoadFromLookup(lookup func(string) (string, bool)) (Config, error) {
 		AppURL:              valueOrDefault(lookup, "APP_URL", "http://localhost:8080"),
 		WebOrigin:           valueOrDefault(lookup, "WEB_ORIGIN", "http://localhost:3000"),
 		DatabaseURL:         valueOrDefault(lookup, "DATABASE_URL", ""),
-		MigrationsDir:       valueOrDefault(lookup, "MIGRATIONS_DIR", "db/migrations"),
+		MigrationsDir:       valueOrDefault(lookup, "MIGRATIONS_DIR", "services/api/migrations"),
 		SessionSecret:       valueOrDefault(lookup, "SESSION_SECRET", ""),
 		SecretEncryptionKey: valueOrDefault(lookup, "SECRET_ENCRYPTION_KEY", ""),
 		AdminEmail:          valueOrDefault(lookup, "ADMIN_EMAIL", "admin@example.com"),

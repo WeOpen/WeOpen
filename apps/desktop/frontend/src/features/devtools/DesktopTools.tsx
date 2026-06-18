@@ -11,7 +11,7 @@ import {
   generateUuid,
   testRegex,
   type ToolResult
-} from "@weopen/sdk/devtools";
+} from "@weopen/api-client/devtools";
 
 const defaultJson = '{"name":"WeOpen","desktop":true}';
 
